@@ -8,13 +8,13 @@ import (
 
 func TestFetchBlockCount(t *testing.T) {
 	url := "http://seed2.neo.org:10332/"
-	res := FetchSeedNode(url)
+	res := fetchSeedNode(url)
 	log.Printf("%v", res)
 }
 
 func TestFetchDownNodeBlockCount(t *testing.T) {
 	url := "http://seed1.cityofzion.io:8080"
-	res := FetchSeedNode(url)
+	res := fetchSeedNode(url)
 	log.Printf("%v", res)
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
+	nep9 "github.com/o3labs/NEP9-go"
 	"github.com/o3labs/neo-utils/neoutils/btckey"
 )
 
@@ -77,4 +78,8 @@ func ConvertByteArrayToBigInt(hexString string) *big.Int {
 	reversedHex := hex.EncodeToString(reversed)
 	v, _ := new(big.Int).SetString(reversedHex, 16)
 	return v
+}
+
+func ParseNEP9URI(uri string) (*nep9.NEP9, error) {
+	return nep9.ParseNEP9URI(uri)
 }

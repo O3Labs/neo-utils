@@ -42,3 +42,14 @@ func TestConverting(t *testing.T) {
 
 	log.Printf("%v", value)
 }
+
+func TestParseNEP9(t *testing.T) {
+	uri := "neo:AeNkbJdiMx49kBStQdDih7BzfDwyTNVRfb?assetID=602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7&amount=0.11&description=for%20a%20coffee"
+	nep9, err := ParseNEP9URI(uri)
+	if err != nil {
+		log.Printf("%v", err)
+		t.Fail()
+		return
+	}
+	log.Printf("%+v", nep9)
+}
