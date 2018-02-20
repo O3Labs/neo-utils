@@ -80,6 +80,20 @@ func ConvertByteArrayToBigInt(hexString string) *big.Int {
 	return v
 }
 
-func ParseNEP9URI(uri string) (*nep9.NEP9, error) {
-	return nep9.ParseNEP9URI(uri)
+type SimplifiedNEP9 struct {
+	To      string  `json:"to"`
+	AssetID string  `json:"assetID"`
+	Amount  float64 `json:"amount"`
+}
+
+func ParseNEP9URI(uri string) (*SimplifiedNEP9, error) {
+	parsed, err := nep9.ParseNEP9URI(uri)
+	if err != nil {
+		return nil, err
+	}
+	return &SimplifiedNEP9{
+		To:      parsed.To,
+		AssetID: parsed.AssetID,
+		Amount:  parsed.Amount,
+	}, nil
 }
