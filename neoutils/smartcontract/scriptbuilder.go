@@ -28,7 +28,8 @@ type ScriptBuilderInterface interface {
 	generateContractInvocationScript(scriptHash ScriptHash, operation string, args []interface{}) []byte
 	generateTransactionAttributes(attributes map[TransactionAttribute][]byte) ([]byte, error)
 	generateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
-	generateTransactionOutput() ([]byte, error)
+
+	generateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
 
 	ToBytes() []byte
 	FullHexString() string
@@ -122,6 +123,12 @@ func (s *ScriptBuilder) pushHexString(hexString string) error {
 
 func (s *ScriptBuilder) pushData(data interface{}) error {
 	switch e := data.(type) {
+	case TransactionOutput:
+		log.Printf("output = %+v", e)
+		s.RawBytes = append(s.RawBytes, e.Asset.ToLittleEndianBytes()...)
+		s.pushData(e.Value)
+		s.pushData(e.Address)
+		return nil
 	case UTXO:
 		//reverse txID to little endian
 		log.Printf("pusing %v %v\n", e.TXID, e.Index)
@@ -172,6 +179,9 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		return nil
 	case int:
 		s.pushInt(e)
+		return nil
+	case int64:
+		s.pushInt(int(e))
 		return nil
 	}
 	return nil
@@ -249,9 +259,72 @@ func (s *ScriptBuilder) generateTransactionInput(unspent Unspent, assetToSend Na
 	return s.ToBytes(), nil
 }
 
-func (s *ScriptBuilder) generateTransactionOutput(assetToSend NativeAsset, amountToSend float64) ([]byte, error) {
+func (s *ScriptBuilder) generateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error) {
 
 	//output = [output_count] + [assetID(32)] + [amount(8)] + [sender_scripthash(20)] = 60 x output_count bytes
-	//if the running
-	return nil, nil
+
+	sendingAsset := unspent.Assets[assetToSend]
+	if sendingAsset == nil {
+		return nil, fmt.Errorf("Asset %v not found in UTXO", assetToSend)
+	}
+
+	if amountToSend > sendingAsset.TotalAmount() {
+		return nil, fmt.Errorf("Don't have enough balance. Sending %v but only have %v", amountToSend, sendingAsset.TotalAmount())
+	}
+	//sort min first
+	sendingAsset.SortMinFirst()
+
+	runningAmount := float64(0)
+	index := 0
+	count := 0
+	inputs := []UTXO{}
+	for runningAmount < amountToSend {
+		addingUTXO := sendingAsset.UTXOs[index]
+		inputs = append(inputs, addingUTXO)
+		runningAmount += addingUTXO.Value
+		index += 1
+		count += 1
+	}
+
+	//if the total amount of inputs is over amountToSend
+	//we need to send the rest back to the sending address
+	totalAmountInInputs := runningAmount
+
+	needTwoOutputTransaction := totalAmountInInputs != amountToSend
+
+	list := []TransactionOutput{}
+	log.Printf("needTwoOutputTransaction = %v", needTwoOutputTransaction)
+	if needTwoOutputTransaction {
+		sendingOutput := TransactionOutput{
+			Asset:   assetToSend,
+			Value:   int64(amountToSend * float64(100000000)),
+			Address: receiver,
+		}
+		list = append(list, sendingOutput)
+
+		returningAmount := totalAmountInInputs - amountToSend
+
+		//return the left over to sender
+		returningOutput := TransactionOutput{
+			Asset:   assetToSend,
+			Value:   int64(returningAmount * float64(100000000)),
+			Address: sender,
+		}
+		list = append(list, returningOutput)
+	} else {
+		out := TransactionOutput{
+			Asset:   assetToSend,
+			Value:   int64(amountToSend * float64(100000000)),
+			Address: receiver,
+		}
+		list = append(list, out)
+	}
+
+	//number of outputs
+	s.pushData(len(list))
+	for _, v := range list {
+		s.pushData(v)
+	}
+
+	return s.ToBytes(), nil
 }

@@ -148,3 +148,20 @@ func TestGenerateTransactionInput(t *testing.T) {
 	//go
 	//2c0848942be7b95beeda620ed484c26c763459a987a5836ea3d87e12dc2658dad00 fe65fc0c69b6d8bea4c7ff2e3b158ae089f055e1af8567ab747a120ec70f641b 00
 }
+
+func TestGenerateTransactionOutput(t *testing.T) {
+	s := NewScriptBuilder()
+	assetToSend := gas
+	amountToSend := float64(5000)
+	unspent := UTXOData()
+	sender := ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+	receiver := ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+	//TODO FIGURE THIS OUT
+	b, err := s.generateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend)
+	if err != nil {
+		log.Printf("%v", err)
+		t.Fail()
+	}
+	log.Printf("%x", b)
+	//52e72d286979ee6cb1b7e65dfddfb2e384100b8d148e7758de42e4168b71792c600088526a741423ba2703c53263e8d6e522dc32203339dcd8eee9e72d286979ee6cb1b7e65dfddfb2e384100b8d148e7758de42e4168b71792c6000584fa73d1423ba2703c53263e8d6e522dc32203339dcd8eee9
+}

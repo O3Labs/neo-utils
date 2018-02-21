@@ -10,6 +10,12 @@ type Transaction struct {
 	Script     []byte
 }
 
+type TransactionOutput struct {
+	Asset   NativeAsset
+	Value   int64
+	Address NEOAddress
+}
+
 func (t *Transaction) ToBytes() []byte {
 
 	return nil
