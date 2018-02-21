@@ -1,4 +1,4 @@
-package neoutils
+package smartcontract
 
 //https://github.com/neo-project/neo-vm/blob/master/src/neo-vm/OpCode.cs
 

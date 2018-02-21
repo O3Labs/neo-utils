@@ -6,7 +6,7 @@ import (
 )
 
 func TestScriptHashToNEOAddress(t *testing.T) {
-	hash := "e9eed8dc39332032dc22e5d6e86332c50327ba23"
+	hash := "84a392ce6cddcc5892b9368aed43227e09b26341"
 	address := ScriptHashToNEOAddress(hash)
 
 	scripthash := NEOAddressToScriptHash(address)
@@ -18,7 +18,7 @@ func TestScriptHashToNEOAddress(t *testing.T) {
 }
 
 func TestNEOAddressToScriptHash(t *testing.T) {
-	hash := NEOAddressToScriptHash("APYB8TgR8K3rAMfYt2cCfQj3zV2Rt1oTPe")
+	hash := NEOAddressToScriptHash("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
 	log.Printf("%v", hash)
 }
 
