@@ -1,7 +1,6 @@
 package smartcontract
 
 func reverseBytes(b []byte) []byte {
-	// Protect from big.Ints that have 1 len bytes.
 	if len(b) < 2 {
 		return b
 	}
