@@ -1,12 +1,13 @@
 package neoutils
 
 import (
+	"encoding/hex"
 	"log"
 	"testing"
 )
 
 func TestScriptHashToNEOAddress(t *testing.T) {
-	hash := "84a392ce6cddcc5892b9368aed43227e09b26341"
+	hash := "3e19aa4d560976942e74849ce4cc4ffa8c1d9040"
 	address := ScriptHashToNEOAddress(hash)
 
 	scripthash := NEOAddressToScriptHash(address)
@@ -20,6 +21,8 @@ func TestScriptHashToNEOAddress(t *testing.T) {
 func TestNEOAddressToScriptHash(t *testing.T) {
 	hash := NEOAddressToScriptHash("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
 	log.Printf("%v", hash)
+	b, _ := hex.DecodeString(hash)
+	log.Printf("%x", ReverseBytes(b))
 }
 
 func TestValidateNEOAddress(t *testing.T) {
@@ -37,7 +40,7 @@ func TestValidateNEOAddressInvalidAddress(t *testing.T) {
 }
 
 func TestConverting(t *testing.T) {
-	hex := "00e1f505"
+	hex := "e02e"
 	value := ConvertByteArrayToBigInt(hex)
 
 	log.Printf("%v", value)

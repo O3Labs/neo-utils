@@ -25,11 +25,14 @@ func ParseNEOAddress(address string) NEOAddress {
 }
 
 type ScriptBuilderInterface interface {
-	generateContractInvocationScript(scriptHash ScriptHash, operation string, args []interface{}) []byte
+	generateContractInvocationData(scriptHash ScriptHash, operation string, args []interface{}) []byte
 	generateTransactionAttributes(attributes map[TransactionAttribute][]byte) ([]byte, error)
 	generateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
 
 	generateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
+	generateInvocationScriptWithSignatures(signatures []TransactionSignature) []byte
+
+	emptyTransactionAttributes() []byte
 
 	ToBytes() []byte
 	FullHexString() string
@@ -74,22 +77,41 @@ func (s *ScriptBuilder) pushInt(value int) error {
 		return nil
 	case value >= 1 && value < 16:
 		rawValue := byte(PUSH1) + byte(value) - 1
+		log.Printf("raw pushInt %x %v", rawValue, rawValue)
 		s.RawBytes = append(s.RawBytes, rawValue)
 		return nil
 	case value >= 16:
 		num := make([]byte, 8)
+
 		binary.LittleEndian.PutUint64(num, uint64(value))
-		s.RawBytes = append(s.RawBytes, bytes.TrimRight(num, "\x00")...)
+		// s.pushData(bytes.Trim(num, "\x00"))
+		s.pushData(num)
 		return nil
 	}
 	return nil
 }
 
 func (s *ScriptBuilder) pushLength(count int) {
+	if count == 0 {
+		s.RawBytes = append(s.RawBytes, 0x00)
+		return
+	}
 	countBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(countBytes, uint64(count))
-	trimmedCountByte := bytes.TrimRight(countBytes, "\x00")
+	trimmedCountByte := bytes.Trim(countBytes, "\x00")
 	s.RawBytes = append(s.RawBytes, trimmedCountByte...)
+}
+
+func uintToBytes(value uint) []byte {
+	countBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(countBytes, uint64(value))
+	return bytes.TrimRight(countBytes, "\x00")
+}
+
+func uint16ToFixBytes(value uint16) []byte {
+	countBytes := make([]byte, 2)
+	binary.LittleEndian.PutUint16(countBytes, value)
+	return countBytes //bytes.TrimRight(countBytes, "\x00")
 }
 
 func (s *ScriptBuilder) pushHexString(hexString string) error {
@@ -123,15 +145,31 @@ func (s *ScriptBuilder) pushHexString(hexString string) error {
 
 func (s *ScriptBuilder) pushData(data interface{}) error {
 	switch e := data.(type) {
+	case TransactionSignature:
+		signatureLength := len(e.SignedData)
+		b := []byte{}
+		b = append(b, uintToBytes(uint(signatureLength))...)
+		b = append(b, e.SignedData...)
+
+		s.pushLength(len(b)) //this should be 0x41
+		s.RawBytes = append(s.RawBytes, b...)
+		log.Printf("b %x (%v)", b, len(b))
+		s.RawBytes = append(s.RawBytes, 0x23) //0x23 = 35 this is the length of the next [publickey.length(2)]+[publickey(33)]]
+
+		log.Printf("PublicKey %x (%v)", e.PublicKey, len(e.PublicKey))
+		s.pushData(e.PublicKey)
+		return nil
 	case TransactionOutput:
-		log.Printf("output = %+v", e)
-		s.RawBytes = append(s.RawBytes, e.Asset.ToLittleEndianBytes()...)
-		s.pushData(e.Value)
-		s.pushData(e.Address)
+
+		s.RawBytes = append(s.RawBytes, e.Asset.ToLittleEndianBytes()...) //32 bytes
+		amountToSendBytes := make([]byte, 8)
+		binary.LittleEndian.PutUint64(amountToSendBytes, uint64(e.Value))
+		s.RawBytes = append(s.RawBytes, amountToSendBytes...) //8 bytes
+		s.RawBytes = append(s.RawBytes, e.Address...)         //20 bytes
 		return nil
 	case UTXO:
 		//reverse txID to little endian
-		log.Printf("pusing %v %v\n", e.TXID, e.Index)
+		log.Printf("pusing utxo %v %v\n", e.TXID, e.Index)
 		b, err := hex.DecodeString(e.TXID)
 		if err != nil {
 			return err
@@ -139,7 +177,8 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		littleEndianTXID := reverseBytes(b)
 		index := e.Index
 		s.RawBytes = append(s.RawBytes, littleEndianTXID...)
-		s.pushInt(index)
+		intBytes := uint16ToFixBytes(uint16(index))
+		s.RawBytes = append(s.RawBytes, intBytes...)
 		return nil
 	case TradingVersion:
 		s.RawBytes = append(s.RawBytes, byte(e))
@@ -174,13 +213,15 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		for i := len(e) - 1; i >= 0; i-- {
 			s.pushData(e[i])
 		}
-		s.pushData(count)
+		s.pushInt(count)
 		s.pushOpCode(PACK)
 		return nil
 	case int:
+		log.Printf("push int %v", int(e))
 		s.pushInt(e)
 		return nil
 	case int64:
+		log.Printf("push int64 %v", int(e))
 		s.pushInt(int(e))
 		return nil
 	}
@@ -197,8 +238,12 @@ func NewScriptHash(hexString string) (ScriptHash, error) {
 	return ScriptHash(reversed), nil
 }
 
+func (s ScriptHash) ToBigEndian() []byte {
+	return reverseBytes([]byte(s))
+}
+
 // This is in a format of main(string operation, []object args) in c#
-func (s *ScriptBuilder) generateContractInvocationScript(scriptHash ScriptHash, operation string, args []interface{}) []byte {
+func (s *ScriptBuilder) generateContractInvocationData(scriptHash ScriptHash, operation string, args []interface{}) []byte {
 	if args != nil {
 		s.pushData(args)
 	}
@@ -206,6 +251,11 @@ func (s *ScriptBuilder) generateContractInvocationScript(scriptHash ScriptHash, 
 	s.pushOpCode(APPCALL)                                             //use APPCALL only
 	s.pushData(scriptHash)                                            // script hash of the smart contract that we want to invoke
 	s.RawBytes = append([]byte{byte(len(s.RawBytes))}, s.RawBytes...) //the length of the entire raw bytes
+	return s.ToBytes()
+}
+
+func (s *ScriptBuilder) emptyTransactionAttributes() []byte {
+	s.pushData(0x00)
 	return s.ToBytes()
 }
 
@@ -232,7 +282,7 @@ func (s *ScriptBuilder) generateTransactionInput(unspent Unspent, assetToSend Na
 	}
 
 	if amountToSend > sendingAsset.TotalAmount() {
-		return nil, fmt.Errorf("Don't have enough balance. Sending %v but only have %v", amountToSend, sendingAsset.TotalAmount())
+		return nil, fmt.Errorf("input Don't have enough balance. Sending %v but only have %v", amountToSend, sendingAsset.TotalAmount())
 	}
 
 	//sort min first
@@ -269,7 +319,7 @@ func (s *ScriptBuilder) generateTransactionOutput(sender NEOAddress, receiver NE
 	}
 
 	if amountToSend > sendingAsset.TotalAmount() {
-		return nil, fmt.Errorf("Don't have enough balance. Sending %v but only have %v", amountToSend, sendingAsset.TotalAmount())
+		return nil, fmt.Errorf("output Don't have enough balance. Sending %v but only have %v", amountToSend, sendingAsset.TotalAmount())
 	}
 	//sort min first
 	sendingAsset.SortMinFirst()
@@ -321,10 +371,32 @@ func (s *ScriptBuilder) generateTransactionOutput(sender NEOAddress, receiver NE
 	}
 
 	//number of outputs
-	s.pushData(len(list))
+	s.pushLength(len(list))
 	for _, v := range list {
 		s.pushData(v)
 	}
 
 	return s.ToBytes(), nil
+}
+
+func (s *ScriptBuilder) generateInvocationScriptWithSignatures(signatures []TransactionSignature) []byte {
+
+	numberOfSignatures := len(signatures)
+	if numberOfSignatures == 0 {
+		return nil
+	}
+
+	s.pushLength(numberOfSignatures)
+
+	for _, signature := range signatures {
+		s.pushData(signature)
+	}
+
+	if numberOfSignatures >= 1 {
+		s.pushOpCode(CHECKSIG)
+	} else {
+		s.pushOpCode(CHECKMULTISIG)
+	}
+	log.Printf("signature data %x", s.ToBytes())
+	return s.ToBytes()
 }
