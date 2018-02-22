@@ -36,7 +36,7 @@ func UTXODataForSmartContract() Unspent {
 
 	gasTX1 := UTXO{
 		Index: 0,
-		TXID:  "02166ca4235f00cfd34515c91bd1aa8f11abe3a4d3e1d50d03ad938c7a7cdbf4",
+		TXID:  "880081a69debf8f94187f83e91e67af5d53615bdd2383d3611b7a8eead049ea4",
 		Value: float64(1) / float64(100000000),
 	}
 
@@ -95,28 +95,23 @@ func outputs() []byte {
 
 func attributes() []byte {
 	s := NewScriptBuilder()
-	return s.emptyTransactionAttributes()
-	// attributes := map[TransactionAttribute][]byte{}
-
-	// b, err := s.generateTransactionAttributes(attributes)
-	// if err != nil {
-	// 	return nil
-	// }
-	// log.Printf("attribute = %v", b)
-	// return b
+	// return s.emptyTransactionAttributes()
+	attributes := map[TransactionAttribute][]byte{}
+	attributes[Remark] = []byte("test")
+	b, err := s.generateTransactionAttributes(attributes)
+	if err != nil {
+		return nil
+	}
+	return b
 }
 func TestMintTokensToInvocation(t *testing.T) {
 	scriptHash, _ := NewScriptHash("ce575ae1bb6153330d20c560acb434dc5755241b")
 
 	tx := NewInvocationTransaction()
-	tx.Data = mintTokensToData() //correct
-	log.Printf("Data %x (%v)", tx.Data, len(tx.Data))
-	tx.Inputs = inputs() //correct
-	log.Printf("input %x (%v)", tx.Inputs, len(tx.Inputs))
+	tx.Data = mintTokensToData()
+	tx.Inputs = inputs()
 	tx.Outputs = outputs()
-	log.Printf("output %x (%v)", tx.Outputs, len(tx.Outputs))
 	tx.Attributes = attributes()
-	log.Printf("attr = %x", tx.Attributes)
 
 	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
 	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
@@ -125,8 +120,7 @@ func TestMintTokensToInvocation(t *testing.T) {
 		t.Fail()
 	}
 	privateKeyInHex := hex.EncodeToString(privateNetwallet.PrivateKey)
-	log.Printf("private key = %v", privateKeyInHex)
-	log.Printf("raw to sign %x", tx.ToBytes())
+
 	signedData, err := neoutils.Sign(tx.ToBytes(), privateKeyInHex)
 	if err != nil {
 		log.Printf("err signing %v", err)
@@ -141,14 +135,12 @@ func TestMintTokensToInvocation(t *testing.T) {
 	scripts := s.generateInvocationScriptWithSignatures(signatures)
 
 	tx.Script = scripts
-	log.Printf("Script %x (%v)", tx.Script, len(tx.Script))
+
 	endPayload := []byte{}
 	endPayload = append(endPayload, tx.ToBytes()...)
 	endPayload = append(endPayload, scriptHash.ToBigEndian()...)
-	//7084afefdafb1a91289969d2856aa512b098b7
 
 	log.Printf("%x", endPayload)
-
 }
 
 func TestManualSignTransaction(t *testing.T) {

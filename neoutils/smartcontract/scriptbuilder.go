@@ -150,17 +150,12 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		b := []byte{}
 		b = append(b, uintToBytes(uint(signatureLength))...)
 		b = append(b, e.SignedData...)
-
 		s.pushLength(len(b)) //this should be 0x41
 		s.RawBytes = append(s.RawBytes, b...)
-		log.Printf("b %x (%v)", b, len(b))
 		s.RawBytes = append(s.RawBytes, 0x23) //0x23 = 35 this is the length of the next [publickey.length(2)]+[publickey(33)]]
-
-		log.Printf("PublicKey %x (%v)", e.PublicKey, len(e.PublicKey))
 		s.pushData(e.PublicKey)
 		return nil
 	case TransactionOutput:
-
 		s.RawBytes = append(s.RawBytes, e.Asset.ToLittleEndianBytes()...) //32 bytes
 		amountToSendBytes := make([]byte, 8)
 		binary.LittleEndian.PutUint64(amountToSendBytes, uint64(e.Value))
@@ -169,7 +164,6 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		return nil
 	case UTXO:
 		//reverse txID to little endian
-		log.Printf("pusing utxo %v %v\n", e.TXID, e.Index)
 		b, err := hex.DecodeString(e.TXID)
 		if err != nil {
 			return err
