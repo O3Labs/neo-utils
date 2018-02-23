@@ -3,7 +3,6 @@ package neorpc
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/url"
 )
@@ -11,12 +10,15 @@ import (
 type NEORPCInterface interface {
 	GetContractState(scripthash string) GetContractStateResponse
 	SendRawTransaction(rawTransactionInHex string) SendRawTransactionResponse
-	makeRequest()
+	makeRequest(method string, params []interface{}, out interface{}) error
 }
 
 type NEORPC struct {
 	Endpoint url.URL
 }
+
+//make sure all method interface is implemented
+var _ NEORPCInterface = (*NEORPC)(nil)
 
 func NewNEORPC(endpoint string) *NEORPC {
 	u, err := url.Parse(endpoint)
@@ -32,23 +34,19 @@ func (n *NEORPC) makeRequest(method string, params []interface{}, out interface{
 	jsonValue, _ := json.Marshal(request)
 	req, err := http.NewRequest("POST", n.Endpoint.String(), bytes.NewBuffer(jsonValue))
 	if err != nil {
-		log.Printf("error request %v", err)
 		return err
 	}
 	req.Header.Add("content-type", "application/json")
 	res, _ := http.DefaultClient.Do(req)
-
 	defer res.Body.Close()
-
 	err = json.NewDecoder(res.Body).Decode(&out)
 	if err != nil {
-		log.Printf("error %v", err)
 		return err
 	}
 
 	return nil
-
 }
+
 func (n *NEORPC) GetContractState(scripthash string) GetContractStateResponse {
 	response := GetContractStateResponse{}
 	params := []interface{}{scripthash, 1}
