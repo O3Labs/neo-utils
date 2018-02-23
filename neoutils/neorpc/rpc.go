@@ -13,22 +13,22 @@ type NEORPCInterface interface {
 	makeRequest(method string, params []interface{}, out interface{}) error
 }
 
-type NEORPC struct {
+type NEORPCClient struct {
 	Endpoint url.URL
 }
 
 //make sure all method interface is implemented
-var _ NEORPCInterface = (*NEORPC)(nil)
+var _ NEORPCInterface = (*NEORPCClient)(nil)
 
-func NewNEORPC(endpoint string) *NEORPC {
+func NewClient(endpoint string) *NEORPCClient {
 	u, err := url.Parse(endpoint)
 	if err != nil {
 		return nil
 	}
-	return &NEORPC{Endpoint: *u}
+	return &NEORPCClient{Endpoint: *u}
 }
 
-func (n *NEORPC) makeRequest(method string, params []interface{}, out interface{}) error {
+func (n *NEORPCClient) makeRequest(method string, params []interface{}, out interface{}) error {
 	request := NewRequest(method, params)
 
 	jsonValue, _ := json.Marshal(request)
@@ -47,7 +47,7 @@ func (n *NEORPC) makeRequest(method string, params []interface{}, out interface{
 	return nil
 }
 
-func (n *NEORPC) GetContractState(scripthash string) GetContractStateResponse {
+func (n *NEORPCClient) GetContractState(scripthash string) GetContractStateResponse {
 	response := GetContractStateResponse{}
 	params := []interface{}{scripthash, 1}
 	err := n.makeRequest("getcontractstate", params, &response)
@@ -57,7 +57,7 @@ func (n *NEORPC) GetContractState(scripthash string) GetContractStateResponse {
 	return response
 }
 
-func (n *NEORPC) SendRawTransaction(rawTransactionInHex string) SendRawTransactionResponse {
+func (n *NEORPCClient) SendRawTransaction(rawTransactionInHex string) SendRawTransactionResponse {
 	response := SendRawTransactionResponse{}
 	params := []interface{}{rawTransactionInHex, 1}
 	err := n.makeRequest("sendrawtransaction", params, &response)

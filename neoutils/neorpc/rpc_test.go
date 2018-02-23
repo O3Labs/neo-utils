@@ -8,7 +8,7 @@ import (
 )
 
 func TestEndpoint(t *testing.T) {
-	client := neorpc.NewNEORPC("http://localhost:30333")
+	client := neorpc.NewClient("http://localhost:30333")
 	if client == nil {
 		t.Fail()
 	}
@@ -16,7 +16,7 @@ func TestEndpoint(t *testing.T) {
 }
 
 func TestGetContractState(t *testing.T) {
-	client := neorpc.NewNEORPC("http://localhost:30333")
+	client := neorpc.NewClient("http://localhost:30333")
 	if client == nil {
 		t.Fail()
 	}
@@ -26,7 +26,7 @@ func TestGetContractState(t *testing.T) {
 }
 
 func TestSendRawTransaction(t *testing.T) {
-	client := neorpc.NewNEORPC("http://localhost:30333")
+	client := neorpc.NewClient("http://localhost:30333")
 	if client == nil {
 		t.Fail()
 	}
