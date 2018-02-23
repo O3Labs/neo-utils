@@ -10,6 +10,7 @@ import (
 type NEORPCInterface interface {
 	GetContractState(scripthash string) GetContractStateResponse
 	SendRawTransaction(rawTransactionInHex string) SendRawTransactionResponse
+	GetRawTransaction(txID string) GetRawTransactionResponse
 	makeRequest(method string, params []interface{}, out interface{}) error
 }
 
@@ -61,6 +62,16 @@ func (n *NEORPCClient) SendRawTransaction(rawTransactionInHex string) SendRawTra
 	response := SendRawTransactionResponse{}
 	params := []interface{}{rawTransactionInHex, 1}
 	err := n.makeRequest("sendrawtransaction", params, &response)
+	if err != nil {
+		return response
+	}
+	return response
+}
+
+func (n *NEORPCClient) GetRawTransaction(txID string) GetRawTransactionResponse {
+	response := GetRawTransactionResponse{}
+	params := []interface{}{txID, 1}
+	err := n.makeRequest("getrawtransaction", params, &response)
 	if err != nil {
 		return response
 	}

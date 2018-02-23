@@ -34,3 +34,14 @@ func TestSendRawTransaction(t *testing.T) {
 	result := client.SendRawTransaction(raw)
 	log.Printf("%+v", result)
 }
+
+func TestGetRawTransaction(t *testing.T) {
+
+	client := neorpc.NewClient("http://localhost:30333")
+	if client == nil {
+		t.Fail()
+	}
+	txID := "bde02f8c6482e23d5b465259e3e438f0acacaba2a7a938d5eecd90bba0e9d1ad"
+	result := client.GetRawTransaction(txID)
+	log.Printf("%+v", result)
+}
