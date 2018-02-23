@@ -14,7 +14,7 @@ type SmartContract struct {
 	ScriptHash smartcontract.ScriptHash
 }
 
-func NewSmartContract(scriptHashHex string) SmartContractInterface {
+func UseSmartContract(scriptHashHex string) SmartContractInterface {
 	scripthash, err := smartcontract.NewScriptHash(scriptHashHex)
 	if err != nil {
 		return nil

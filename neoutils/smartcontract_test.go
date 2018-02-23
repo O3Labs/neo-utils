@@ -8,10 +8,10 @@ import (
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
 )
 
-var validSmartContract = neoutils.NewSmartContract("ce575ae1bb6153330d20c560acb434dc5755241b")
+var validSmartContract = neoutils.UseSmartContract("ce575ae1bb6153330d20c560acb434dc5755241b")
 
 func TestInvalidSmartContractStruct(t *testing.T) {
-	sc := neoutils.NewSmartContract("ce575ae1bb6153330d2")
+	sc := neoutils.UseSmartContract("ce575ae1bb6153330d2")
 	if sc != nil {
 		t.Fail()
 		return
@@ -21,7 +21,7 @@ func TestInvalidSmartContractStruct(t *testing.T) {
 
 func TestSmartContractStruct(t *testing.T) {
 
-	sc := neoutils.NewSmartContract("ce575ae1bb6153330d20c560acb434dc5755241b")
+	sc := neoutils.UseSmartContract("ce575ae1bb6153330d20c560acb434dc5755241b")
 	if sc == nil {
 		t.Fail()
 		return
