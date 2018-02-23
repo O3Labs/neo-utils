@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
-	nep9 "github.com/o3labs/NEP9-go"
+	nep9 "github.com/o3labs/NEP9-go/nep9"
 	"github.com/o3labs/neo-utils/neoutils/btckey"
 )
 
@@ -87,12 +87,13 @@ type SimplifiedNEP9 struct {
 }
 
 func ParseNEP9URI(uri string) (*SimplifiedNEP9, error) {
-	parsed, err := nep9.ParseNEP9URI(uri)
+
+	parsed, err := nep9.NewURI(uri)
 	if err != nil {
 		return nil, err
 	}
 	return &SimplifiedNEP9{
-		To:      parsed.To,
+		To:      parsed.Address,
 		AssetID: parsed.AssetID,
 		Amount:  parsed.Amount,
 	}, nil

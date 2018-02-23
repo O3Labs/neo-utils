@@ -9,6 +9,16 @@ import (
 	"github.com/o3labs/neo-utils/neoutils/sss"
 )
 
+func TestNewWallet(t *testing.T) {
+	w, err := NewWallet()
+	if err != nil {
+		t.Fail()
+		return
+	}
+	log.Printf("address %v", w.Address)
+	log.Printf("WIF %v", w.WIF)
+}
+
 func TestGenKey(t *testing.T) {
 	privateKey := "0C28FCA386C7A227600B2FE50B7CAE11EC86D3BF1FBE471BE89827E19D72AA1D"
 	wallet, _ := GeneratePublicKeyFromPrivateKey(privateKey)

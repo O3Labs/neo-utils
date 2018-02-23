@@ -1,7 +1,6 @@
 package smartcontract
 
 import (
-	"log"
 	"sort"
 )
 
@@ -20,7 +19,6 @@ func (b *Balance) TotalAmount() float64 {
 	total := float64(0)
 	for _, v := range b.UTXOs {
 		total += v.Value
-		log.Printf("value = %v", v.Value)
 	}
 	return total
 }

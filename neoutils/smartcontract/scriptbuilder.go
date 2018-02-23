@@ -293,6 +293,7 @@ func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend Na
 		runningAmount += addingUTXO.Value
 		index += 1
 		count += 1
+		log.Printf("runningAmount %.8f", runningAmount)
 	}
 
 	s.pushLength(count)

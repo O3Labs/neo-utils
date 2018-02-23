@@ -8,7 +8,7 @@ import (
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
 )
 
-var validSmartContract = neoutils.UseSmartContract("ce575ae1bb6153330d20c560acb434dc5755241b")
+var validSmartContract = neoutils.UseSmartContract("b7c1f850a025e34455e7e98c588c784385077fb1")
 
 func TestInvalidSmartContractStruct(t *testing.T) {
 	sc := neoutils.UseSmartContract("ce575ae1bb6153330d2")
@@ -33,12 +33,12 @@ func UTXODataForSmartContract() smartcontract.Unspent {
 
 	gasTX1 := smartcontract.UTXO{
 		Index: 0,
-		TXID:  "969ab37e0560aa2717fa8a7878c84ef37946e40bf34a06933f779a1f1b1816e2",
-		Value: float64(1) / float64(100000000),
+		TXID:  "307d756074d9ee11220ccebf003bedb99f9b1a54e194a25e6ea5df1a7b2de84b",
+		Value: float64(713399700000) / float64(100000000),
 	}
 
 	gasBalance := smartcontract.Balance{
-		Amount: float64(715800000000) / float64(100000000),
+		Amount: float64(713399700000) / float64(100000000),
 		UTXOs:  []smartcontract.UTXO{gasTX1},
 	}
 
@@ -70,13 +70,13 @@ func TestInvokeFunctionRawTransaction(t *testing.T) {
 		t.Fail()
 	}
 
-	to := smartcontract.ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+	to := smartcontract.ParseNEOAddress("AM8pnu1yK7ViMt7Sw2nPpbtPQXTwjjkykn")
 	if to == nil {
 		//invalid neo address
 		t.Fail()
 		return
 	}
-	args := []interface{}{to, 1000}
+	args := []interface{}{to, 1}
 	unspent := UTXODataForSmartContract()
 
 	transactionID := "thisisauniquetoken_from_stripe"
