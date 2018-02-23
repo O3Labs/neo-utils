@@ -1,14 +1,14 @@
-package rpc_test
+package neorpc_test
 
 import (
 	"log"
 	"testing"
 
-	"github.com/o3labs/neo-utils/neoutils/rpc"
+	"github.com/o3labs/neo-utils/neoutils/neorpc"
 )
 
 func TestEndpoint(t *testing.T) {
-	client := rpc.NewNEORPC("http://localhost:30333")
+	client := neorpc.NewNEORPC("http://localhost:30333")
 	if client == nil {
 		t.Fail()
 	}
@@ -16,7 +16,7 @@ func TestEndpoint(t *testing.T) {
 }
 
 func TestGetContractState(t *testing.T) {
-	client := rpc.NewNEORPC("http://localhost:30333")
+	client := neorpc.NewNEORPC("http://localhost:30333")
 	if client == nil {
 		t.Fail()
 	}
@@ -26,7 +26,7 @@ func TestGetContractState(t *testing.T) {
 }
 
 func TestSendRawTransaction(t *testing.T) {
-	client := rpc.NewNEORPC("http://localhost:30333")
+	client := neorpc.NewNEORPC("http://localhost:30333")
 	if client == nil {
 		t.Fail()
 	}

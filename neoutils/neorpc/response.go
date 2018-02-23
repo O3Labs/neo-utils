@@ -1,4 +1,4 @@
-package rpc
+package neorpc
 
 type GetContractStateResult struct {
 	Version     int      `json:"version"`

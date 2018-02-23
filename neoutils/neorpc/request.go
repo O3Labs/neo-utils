@@ -1,4 +1,4 @@
-package rpc
+package neorpc
 
 type JSONRPCRequest struct {
 	Jsonrpc string        `json:"jsonrpc"`
