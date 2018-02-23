@@ -16,6 +16,7 @@ type NEOAddress []byte
 func (s ScriptHash) ToString() string {
 	return hex.EncodeToString(s)
 }
+
 func ParseNEOAddress(address string) NEOAddress {
 	v, b, _ := btckey.B58checkdecode(address)
 	if v != 0x17 {
@@ -151,6 +152,8 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		s.pushLength(len(b)) //this should be 0x41
 		s.RawBytes = append(s.RawBytes, b...)
 		s.RawBytes = append(s.RawBytes, 0x23) //0x23 = 35 this is the length of the next [publickey.length(2)]+[publickey(33)]]
+		//this part is for verification script
+		//push public key in there and call CHECKSIG or CHECKMULTISIG
 		s.pushData(e.PublicKey)
 		return nil
 	case TransactionOutput:
@@ -335,7 +338,7 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 	needTwoOutputTransaction := totalAmountInInputs != amountToSend
 
 	list := []TransactionOutput{}
-	log.Printf("needTwoOutputTransaction = %v", needTwoOutputTransaction)
+
 	if needTwoOutputTransaction {
 		sendingOutput := TransactionOutput{
 			Asset:   assetToSend,
@@ -384,11 +387,11 @@ func (s *ScriptBuilder) GenerateInvocationAndVerificationScriptWithSignatures(si
 		s.pushData(signature)
 	}
 
+	//WARNING: CHECKMULTISIG is not tested
 	if numberOfSignatures >= 1 {
 		s.pushOpCode(CHECKSIG)
 	} else {
 		s.pushOpCode(CHECKMULTISIG)
 	}
-	log.Printf("signature data %x", s.ToBytes())
 	return s.ToBytes()
 }
