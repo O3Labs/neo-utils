@@ -1,7 +1,5 @@
 package smartcontract
 
-import "log"
-
 type Transaction struct {
 	Type       TransactionType
 	Version    TradingVersion
@@ -9,7 +7,8 @@ type Transaction struct {
 	Attributes []byte
 	Inputs     []byte
 	Outputs    []byte
-	Script     []byte
+	//scripts contains two parts, Invocation script and Verification script
+	Script []byte
 }
 
 type TransactionOutput struct {
@@ -23,7 +22,6 @@ func (t *Transaction) ToBytes() []byte {
 	payload = append(payload, byte(t.Type))
 	payload = append(payload, byte(t.Version))
 	payload = append(payload, t.Data...)
-	log.Printf("data %x", t.Data)
 	payload = append(payload, t.Attributes...)
 	payload = append(payload, t.Inputs...)
 	payload = append(payload, t.Outputs...)

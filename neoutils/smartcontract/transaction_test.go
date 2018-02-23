@@ -28,7 +28,7 @@ func mintTokensToData() []byte {
 		return nil
 	}
 	args := []interface{}{to, 1000}
-	b := s.generateContractInvocationData(scriptHash, "mintTokensTo", args)
+	b := s.GenerateContractInvocationData(scriptHash, "mintTokensTo", args)
 	return b
 }
 
@@ -69,7 +69,7 @@ func inputs() []byte {
 	assetToSend := gas
 	amount := float64(0.00000001)
 	unspent := UTXODataForSmartContract()
-	b, err := s.generateTransactionInput(unspent, assetToSend, amount)
+	b, err := s.GenerateTransactionInput(unspent, assetToSend, amount)
 	if err != nil {
 		log.Printf("err = %v", err)
 
@@ -85,7 +85,7 @@ func outputs() []byte {
 	unspent := UTXODataForSmartContract()
 	sender := ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
 	receiver := ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
-	b, err := s.generateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend)
+	b, err := s.GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend)
 	if err != nil {
 		log.Printf("%v", err)
 		return nil
@@ -95,15 +95,16 @@ func outputs() []byte {
 
 func attributes() []byte {
 	s := NewScriptBuilder()
-	// return s.emptyTransactionAttributes()
+	// return s.EmptyTransactionAttributes()
 	attributes := map[TransactionAttribute][]byte{}
 	attributes[Remark] = []byte("test")
-	b, err := s.generateTransactionAttributes(attributes)
+	b, err := s.GenerateTransactionAttributes(attributes)
 	if err != nil {
 		return nil
 	}
 	return b
 }
+
 func TestMintTokensToInvocation(t *testing.T) {
 	scriptHash, _ := NewScriptHash("ce575ae1bb6153330d20c560acb434dc5755241b")
 
@@ -132,50 +133,12 @@ func TestMintTokensToInvocation(t *testing.T) {
 		PublicKey:  privateNetwallet.PublicKey,
 	}
 	signatures := []TransactionSignature{signature}
-	scripts := s.generateInvocationScriptWithSignatures(signatures)
+	scripts := s.GenerateInvocationAndVerificationScriptWithSignatures(signatures)
 
 	tx.Script = scripts
 
 	endPayload := []byte{}
 	endPayload = append(endPayload, tx.ToBytes()...)
-	endPayload = append(endPayload, scriptHash.ToBigEndian()...)
-
-	log.Printf("%x", endPayload)
-}
-
-func TestManualSignTransaction(t *testing.T) {
-	fromSWift := "d1004208e8030000000000001423ba2703c53263e8d6e522dc32203339dcd8eee952c10c6d696e74546f6b656e73546f671b245557dc34b4ac60c5200d335361bbe15a57ce00016aa53d22ebf7dd72c95c8a2b1bc1af9ddc80bea2a9fd810172968b33ff4ef409000001e72d286979ee6cb1b7e65dfddfb2e384100b8d148e7758de42e4168b71792c600123ba2703c53263e8d6e522dc32203339dcd8eee9"
-
-	tx, _ := hex.DecodeString(fromSWift)
-
-	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
-	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
-	if err != nil {
-		log.Printf("%v", err)
-		t.Fail()
-	}
-	privateKeyInHex := hex.EncodeToString(privateNetwallet.PrivateKey)
-	signedData, err := neoutils.Sign(tx, privateKeyInHex)
-	if err != nil {
-		log.Printf("err signing %v", err)
-		t.Fail()
-	}
-	log.Printf("signed = %x", signedData)
-
-	s := NewScriptBuilder()
-	signature := TransactionSignature{
-		SignedData: signedData,
-		PublicKey:  privateNetwallet.PublicKey,
-	}
-	signatures := []TransactionSignature{signature}
-	scripts := s.generateInvocationScriptWithSignatures(signatures)
-
-	log.Printf("scripts = %x", scripts)
-	scriptHash, _ := NewScriptHash("ce575ae1bb6153330d20c560acb434dc5755241b")
-
-	endPayload := []byte{}
-	endPayload = append(endPayload, tx...)
-	endPayload = append(endPayload, scripts...)
 	endPayload = append(endPayload, scriptHash.ToBigEndian()...)
 
 	log.Printf("%x", endPayload)

@@ -25,20 +25,18 @@ func ParseNEOAddress(address string) NEOAddress {
 }
 
 type ScriptBuilderInterface interface {
-	generateContractInvocationData(scriptHash ScriptHash, operation string, args []interface{}) []byte
-	generateTransactionAttributes(attributes map[TransactionAttribute][]byte) ([]byte, error)
-	generateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
-
-	generateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
-	generateInvocationScriptWithSignatures(signatures []TransactionSignature) []byte
-
-	emptyTransactionAttributes() []byte
-
+	GenerateContractInvocationData(scriptHash ScriptHash, operation string, args []interface{}) []byte
+	GenerateTransactionAttributes(attributes map[TransactionAttribute][]byte) ([]byte, error)
+	GenerateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
+	GenerateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
+	GenerateInvocationAndVerificationScriptWithSignatures(signatures []TransactionSignature) []byte
+	EmptyTransactionAttributes() []byte
 	ToBytes() []byte
 	FullHexString() string
+	Clear()
+
 	pushInt(value int) error
 	pushData(data interface{}) error
-	Clear()
 	pushLength(count int)
 }
 
@@ -237,7 +235,7 @@ func (s ScriptHash) ToBigEndian() []byte {
 }
 
 // This is in a format of main(string operation, []object args) in c#
-func (s *ScriptBuilder) generateContractInvocationData(scriptHash ScriptHash, operation string, args []interface{}) []byte {
+func (s *ScriptBuilder) GenerateContractInvocationData(scriptHash ScriptHash, operation string, args []interface{}) []byte {
 	if args != nil {
 		s.pushData(args)
 	}
@@ -248,12 +246,12 @@ func (s *ScriptBuilder) generateContractInvocationData(scriptHash ScriptHash, op
 	return s.ToBytes()
 }
 
-func (s *ScriptBuilder) emptyTransactionAttributes() []byte {
+func (s *ScriptBuilder) EmptyTransactionAttributes() []byte {
 	s.pushData(0x00)
 	return s.ToBytes()
 }
 
-func (s *ScriptBuilder) generateTransactionAttributes(attributes map[TransactionAttribute][]byte) ([]byte, error) {
+func (s *ScriptBuilder) GenerateTransactionAttributes(attributes map[TransactionAttribute][]byte) ([]byte, error) {
 
 	count := len(attributes)
 	s.pushLength(count) //number of transaction attributes
@@ -267,7 +265,7 @@ func (s *ScriptBuilder) generateTransactionAttributes(attributes map[Transaction
 	return s.ToBytes(), nil
 }
 
-func (s *ScriptBuilder) generateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error) {
+func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error) {
 	//inputs = [input_count] + [[txID(32)] + [txIndex(2)]] = 34 x input_count bytes
 
 	sendingAsset := unspent.Assets[assetToSend]
@@ -303,7 +301,7 @@ func (s *ScriptBuilder) generateTransactionInput(unspent Unspent, assetToSend Na
 	return s.ToBytes(), nil
 }
 
-func (s *ScriptBuilder) generateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error) {
+func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error) {
 
 	//output = [output_count] + [assetID(32)] + [amount(8)] + [sender_scripthash(20)] = 60 x output_count bytes
 
@@ -373,7 +371,7 @@ func (s *ScriptBuilder) generateTransactionOutput(sender NEOAddress, receiver NE
 	return s.ToBytes(), nil
 }
 
-func (s *ScriptBuilder) generateInvocationScriptWithSignatures(signatures []TransactionSignature) []byte {
+func (s *ScriptBuilder) GenerateInvocationAndVerificationScriptWithSignatures(signatures []TransactionSignature) []byte {
 
 	numberOfSignatures := len(signatures)
 	if numberOfSignatures == 0 {
