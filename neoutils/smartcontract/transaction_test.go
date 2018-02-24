@@ -1,11 +1,8 @@
 package smartcontract
 
 import (
-	"encoding/hex"
 	"log"
 	"testing"
-
-	"github.com/o3labs/neo-utils/neoutils"
 )
 
 func TestInvocationTransactionToBytes(t *testing.T) {
@@ -59,14 +56,14 @@ func UTXODataForSmartContract() Unspent {
 	unspent := Unspent{
 		Assets: map[NativeAsset]*Balance{},
 	}
-	unspent.Assets[neo] = &neoBalance
-	unspent.Assets[gas] = &gasBalance
+	unspent.Assets[NEO] = &neoBalance
+	unspent.Assets[GAS] = &gasBalance
 	return unspent
 }
 
 func inputs() []byte {
 	s := NewScriptBuilder()
-	assetToSend := gas
+	assetToSend := GAS
 	amount := float64(0.00000001)
 	unspent := UTXODataForSmartContract()
 	b, err := s.GenerateTransactionInput(unspent, assetToSend, amount)
@@ -80,7 +77,7 @@ func inputs() []byte {
 
 func outputs() []byte {
 	s := NewScriptBuilder()
-	assetToSend := gas
+	assetToSend := GAS
 	amountToSend := float64(0.00000001)
 	unspent := UTXODataForSmartContract()
 	sender := ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
@@ -105,41 +102,41 @@ func attributes() []byte {
 	return b
 }
 
-func TestMintTokensToInvocation(t *testing.T) {
-	scriptHash, _ := NewScriptHash("ce575ae1bb6153330d20c560acb434dc5755241b")
+// func TestMintTokensToInvocation(t *testing.T) {
+// 	scriptHash, _ := NewScriptHash("ce575ae1bb6153330d20c560acb434dc5755241b")
 
-	tx := NewInvocationTransaction()
-	tx.Data = mintTokensToData()
-	tx.Inputs = inputs()
-	tx.Outputs = outputs()
-	tx.Attributes = attributes()
+// 	tx := NewInvocationTransaction()
+// 	tx.Data = mintTokensToData()
+// 	tx.Inputs = inputs()
+// 	tx.Outputs = outputs()
+// 	tx.Attributes = attributes()
 
-	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
-	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
-	if err != nil {
-		log.Printf("%v", err)
-		t.Fail()
-	}
-	privateKeyInHex := hex.EncodeToString(privateNetwallet.PrivateKey)
+// 	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
+// 	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
+// 	if err != nil {
+// 		log.Printf("%v", err)
+// 		t.Fail()
+// 	}
+// 	privateKeyInHex := hex.EncodeToString(privateNetwallet.PrivateKey)
 
-	signedData, err := neoutils.Sign(tx.ToBytes(), privateKeyInHex)
-	if err != nil {
-		log.Printf("err signing %v", err)
-		t.Fail()
-	}
-	s := NewScriptBuilder()
-	signature := TransactionSignature{
-		SignedData: signedData,
-		PublicKey:  privateNetwallet.PublicKey,
-	}
-	signatures := []TransactionSignature{signature}
-	scripts := s.GenerateInvocationAndVerificationScriptWithSignatures(signatures)
+// 	signedData, err := neoutils.Sign(tx.ToBytes(), privateKeyInHex)
+// 	if err != nil {
+// 		log.Printf("err signing %v", err)
+// 		t.Fail()
+// 	}
+// 	s := NewScriptBuilder()
+// 	signature := TransactionSignature{
+// 		SignedData: signedData,
+// 		PublicKey:  privateNetwallet.PublicKey,
+// 	}
+// 	signatures := []TransactionSignature{signature}
+// 	scripts := s.GenerateInvocationAndVerificationScriptWithSignatures(signatures)
 
-	tx.Script = scripts
+// 	tx.Script = scripts
 
-	endPayload := []byte{}
-	endPayload = append(endPayload, tx.ToBytes()...)
-	endPayload = append(endPayload, scriptHash.ToBigEndian()...)
+// 	endPayload := []byte{}
+// 	endPayload = append(endPayload, tx.ToBytes()...)
+// 	endPayload = append(endPayload, scriptHash.ToBigEndian()...)
 
-	log.Printf("%x", endPayload)
-}
+// 	log.Printf("%x", endPayload)
+// }

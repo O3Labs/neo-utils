@@ -114,7 +114,7 @@ func TestGenerateTransactionAttributes(t *testing.T) {
 
 func TestGenerateTransactionInput(t *testing.T) {
 	s := NewScriptBuilder()
-	assetToSend := gas
+	assetToSend := GAS
 	amount := float64(5000)
 	unspent := UTXODataForSmartContract()
 	b, err := s.GenerateTransactionInput(unspent, assetToSend, amount)
@@ -133,7 +133,7 @@ func TestGenerateTransactionInput(t *testing.T) {
 
 func TestGenerateTransactionOutput(t *testing.T) {
 	s := NewScriptBuilder()
-	assetToSend := gas
+	assetToSend := GAS
 	amountToSend := float64(0.00000001)
 	unspent := UTXODataForSmartContract()
 	sender := ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")

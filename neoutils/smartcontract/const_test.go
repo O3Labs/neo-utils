@@ -6,5 +6,5 @@ import (
 )
 
 func TestNativeAsset(t *testing.T) {
-	log.Printf("%x", neo.ToLittleEndianBytes())
+	log.Printf("%x", NEO.ToLittleEndianBytes())
 }

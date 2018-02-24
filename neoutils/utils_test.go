@@ -19,7 +19,7 @@ func TestScriptHashToNEOAddress(t *testing.T) {
 }
 
 func TestNEOAddressToScriptHash(t *testing.T) {
-	hash := NEOAddressToScriptHash("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+	hash := NEOAddressToScriptHash("AM8pnu1yK7ViMt7Sw2nPpbtPQXTwjjkykn")
 	log.Printf("%v", hash)
 	b, _ := hex.DecodeString(hash)
 	log.Printf("%x", ReverseBytes(b))
@@ -55,4 +55,26 @@ func TestParseNEP9(t *testing.T) {
 		return
 	}
 	log.Printf("%+v", nep9)
+}
+
+func TestParseScriptFromTX(t *testing.T) {
+	target := "b7c1f850a025e34455e7e98c588c784385077fb1"
+	targetOperation := []byte("mintTokensTo") // 6d696e74546f6b656e73546f
+	// operationB, _ := hex.DecodeString(targetOperation)
+	log.Printf("operation %x", targetOperation)
+
+	//operation mintTokensTo
+	script := "51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c6d696e74546f6b656e73546f67b17f078543788c588ce9e75544e325a050f8c1b7"
+	b, _ := hex.DecodeString(script)
+	count := len(b)
+	scriptB := b[count-20:]
+	scripthash := ReverseBytes(scriptB)
+
+	log.Printf("%v %x", target, scripthash)
+
+	withoutscriptHash := b[:count-20]
+
+	log.Printf("%x", withoutscriptHash)
+	//51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c 6d696e74546f6b656e73546f67
+
 }
