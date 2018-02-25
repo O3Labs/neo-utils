@@ -194,8 +194,9 @@ func (p *Parser) Parse(methodSignature interface{}) error {
 	//read from hex
 	operationString := ReadHexString(bufioReaderFromBytes(operation))
 
-	numberOfArgsBytes := argsWithNumbers[len(argsWithNumbers)-1:] //after split, last byte if the number of args in an array
-	//This seems overkill because of the number of args should never be to large.
+	//after split, last byte is the number of args in an array
+	numberOfArgsBytes := argsWithNumbers[len(argsWithNumbers)-1:]
+	//This seems overkill because of the number of args should never be this large.
 	//maybe we can rewrite readInt again
 	numberOfArgs, err := ReadBigInt(bufioReaderFromBytes(numberOfArgsBytes))
 	if err != nil {
