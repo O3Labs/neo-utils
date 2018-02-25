@@ -40,8 +40,26 @@ func TestParserGetOperationName(t *testing.T) {
 	log.Printf("result = %v", result)
 }
 
+func TestGetScripthashFromScript(t *testing.T) {
+	expectedResult := "b7c1f850a025e34455e7e98c588c784385077fb1"
+	p := smartcontract.NewParserWithScript("51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c6d696e74546f6b656e73546f67b17f078543788c588ce9e75544e325a050f8c1b7")
+	result, err := p.GetScriptHash()
+	if err != nil {
+		log.Printf("Expected: %v but got error : %v", expectedResult, err)
+		t.Fail()
+		return
+	}
+	if result != expectedResult {
+		log.Printf("Expected: %v but got: %v", expectedResult, result)
+		t.Fail()
+		return
+	}
+	log.Printf("result = %v", result)
+}
+
 func TestParser(t *testing.T) {
-	//expectedToAddress := "AM8pnu1yK7ViMt7Sw2nPpbtPQXTwjjkykn"
+	// expectedToAddress := "AM8pnu1yK7ViMt7Sw2nPpbtPQXTwjjkykn"
+
 	p := smartcontract.NewParserWithScript("51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c6d696e74546f6b656e73546f67b17f078543788c588ce9e75544e325a050f8c1b7")
 
 	//the order of your method signature has the be exact to the one
