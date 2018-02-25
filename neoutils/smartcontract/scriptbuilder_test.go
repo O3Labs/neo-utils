@@ -12,7 +12,7 @@ func TestParseNEOAddress(t *testing.T) {
 }
 
 func TestNewScriptHash(t *testing.T) {
-	scriptHash, err := NewScriptHash("ce575ae1bb6153330d20c560acb434dc5755241b")
+	scriptHash, err := NewScriptHash("b7c1f850a025e34455e7e98c588c784385077fb1")
 	if err != nil {
 		log.Printf("err = %v", err)
 		t.Fail()
@@ -24,19 +24,19 @@ func TestNewScriptHash(t *testing.T) {
 
 func TestPushContractInvocationScript(t *testing.T) {
 	s := NewScriptBuilder()
-	scriptHash, err := NewScriptHash("ce575ae1bb6153330d20c560acb434dc5755241b")
+	scriptHash, err := NewScriptHash("b7c1f850a025e34455e7e98c588c784385077fb1")
 	if err != nil {
 		log.Printf("err = %v", err)
 		t.Fail()
 		return
 	}
-	to := ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+	to := ParseNEOAddress("AM8pnu1yK7ViMt7Sw2nPpbtPQXTwjjkykn")
 	if to == nil {
 		//invalid neo address
 		t.Fail()
 		return
 	}
-	args := []interface{}{to, 1000}
+	args := []interface{}{to, 715799899998}
 	b := s.GenerateContractInvocationData(scriptHash, "mintTokensTo", args)
 	log.Printf("%x", b)
 	//from swift
@@ -48,12 +48,13 @@ func TestPushContractInvocationScript(t *testing.T) {
 
 func TestPushInt(t *testing.T) {
 	s := NewScriptBuilder()
-	s.pushInt(715799899998)
+	v := int(1234567890)
+	s.pushInt(v)
 
-	log.Printf("%+v %x %x", s.ToBytes(), s.ToBytes(), uintToBytes(715799899998))
+	log.Printf("%+v %x %x", s.ToBytes(), s.ToBytes(), uintToBytes(uint(v)))
+
 	//from go    715799899998 = 5eafffa8a6
 	//from swift 715799899998 = 5eafffa8a6000
-
 }
 
 func TestPushDataWithInt(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/apisit/btckeygenie/btckey"
+	"github.com/o3labs/neo-utils/neoutils/btckey"
 )
 
 type ScriptHash []byte
@@ -23,6 +23,10 @@ func ParseNEOAddress(address string) NEOAddress {
 		return nil
 	}
 	return NEOAddress(b)
+}
+
+func (n NEOAddress) ToString() string {
+	return btckey.B58checkencodeNEO(0x17, n)
 }
 
 type ScriptBuilderInterface interface {
@@ -65,6 +69,11 @@ func (s ScriptBuilder) FullHexString() string {
 func (s *ScriptBuilder) pushOpCode(opcode OpCode) {
 	s.RawBytes = append(s.RawBytes, byte(opcode))
 }
+func (s *ScriptBuilder) pushInt8bytes(value int) error {
+	num := make([]byte, 8)
+	binary.LittleEndian.PutUint64(num, uint64(value))
+	return s.pushData(num)
+}
 
 func (s *ScriptBuilder) pushInt(value int) error {
 	switch {
@@ -76,15 +85,13 @@ func (s *ScriptBuilder) pushInt(value int) error {
 		return nil
 	case value >= 1 && value < 16:
 		rawValue := byte(PUSH1) + byte(value) - 1
-		log.Printf("raw pushInt %x %v", rawValue, rawValue)
 		s.RawBytes = append(s.RawBytes, rawValue)
 		return nil
 	case value >= 16:
 		num := make([]byte, 8)
-
 		binary.LittleEndian.PutUint64(num, uint64(value))
-		// s.pushData(bytes.Trim(num, "\x00"))
-		s.pushData(num)
+		//we push as []byte so then it prefixes with length
+		s.pushData(bytes.Trim(num, "\x00"))
 		return nil
 	}
 	return nil
@@ -99,18 +106,6 @@ func (s *ScriptBuilder) pushLength(count int) {
 	binary.LittleEndian.PutUint64(countBytes, uint64(count))
 	trimmedCountByte := bytes.Trim(countBytes, "\x00")
 	s.RawBytes = append(s.RawBytes, trimmedCountByte...)
-}
-
-func uintToBytes(value uint) []byte {
-	countBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(countBytes, uint64(value))
-	return bytes.TrimRight(countBytes, "\x00")
-}
-
-func uint16ToFixBytes(value uint16) []byte {
-	countBytes := make([]byte, 2)
-	binary.LittleEndian.PutUint16(countBytes, value)
-	return countBytes //bytes.TrimRight(countBytes, "\x00")
 }
 
 func (s *ScriptBuilder) pushHexString(hexString string) error {
@@ -186,6 +181,7 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		return nil
 	case NEOAddress:
 		//when pushing neo address as an arg. we need length so we need to push a hex string
+		log.Printf("push neo address %x (%v)", e, len(e))
 		return s.pushHexString(fmt.Sprintf("%x", e))
 	case ScriptHash:
 		s.RawBytes = append(s.RawBytes, e...)
@@ -212,7 +208,7 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		s.pushOpCode(PACK)
 		return nil
 	case int:
-		log.Printf("push int %v", int(e))
+		log.Printf("push int %v (0x%x)", e, e)
 		s.pushInt(e)
 		return nil
 	case int64:
@@ -240,11 +236,12 @@ func (s ScriptHash) ToBigEndian() []byte {
 // This is in a format of main(string operation, []object args) in c#
 func (s *ScriptBuilder) GenerateContractInvocationData(scriptHash ScriptHash, operation string, args []interface{}) []byte {
 	if args != nil {
+		log.Printf("%+v", args)
 		s.pushData(args)
 	}
 	s.pushData([]byte(operation))                                     //operation is in string we need to convert it to hex first
 	s.pushOpCode(APPCALL)                                             //use APPCALL only
-	s.pushData(scriptHash)                                            // script hash of the smart contract that we want to invoke
+	s.pushData(scriptHash)                                            //script hash of the smart contract that we want to invoke
 	s.RawBytes = append([]byte{byte(len(s.RawBytes))}, s.RawBytes...) //the length of the entire raw bytes
 	return s.ToBytes()
 }

@@ -69,6 +69,7 @@ func ValidateNEOAddress(address string) bool {
 }
 
 // Convert byte array to big int
+//TODO TEST MORE OF THIS
 func ConvertByteArrayToBigInt(hexString string) *big.Int {
 	b, err := hex.DecodeString(hexString)
 	if err != nil {

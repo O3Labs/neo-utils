@@ -7,7 +7,7 @@ import (
 )
 
 func TestScriptHashToNEOAddress(t *testing.T) {
-	hash := "3e19aa4d560976942e74849ce4cc4ffa8c1d9040"
+	hash := "5e4095c8c90a7b83f509d8e08a48ba0c11fbce3a"
 	address := ScriptHashToNEOAddress(hash)
 
 	scripthash := NEOAddressToScriptHash(address)
@@ -40,7 +40,8 @@ func TestValidateNEOAddressInvalidAddress(t *testing.T) {
 }
 
 func TestConverting(t *testing.T) {
-	hex := "e02e"
+	hex := "e1f505"
+
 	value := ConvertByteArrayToBigInt(hex)
 
 	log.Printf("%v", value)
@@ -57,24 +58,15 @@ func TestParseNEP9(t *testing.T) {
 	log.Printf("%+v", nep9)
 }
 
-func TestParseScriptFromTX(t *testing.T) {
-	target := "b7c1f850a025e34455e7e98c588c784385077fb1"
-	targetOperation := []byte("mintTokensTo") // 6d696e74546f6b656e73546f
-	// operationB, _ := hex.DecodeString(targetOperation)
-	log.Printf("operation %x", targetOperation)
+// func TestParseScriptFromTX(t *testing.T) {
+// 	// expectedScripthash := "b7c1f850a025e34455e7e98c588c784385077fb1"
+// 	// expectedOperation := []byte("mintTokensTo") // 6d696e74546f6b656e73546f
+// 	// expectedToAddress := "AM8pnu1yK7ViMt7Sw2nPpbtPQXTwjjkykn"
+// 	// expectedTokenAmount := 1
 
-	//operation mintTokensTo
-	script := "51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c6d696e74546f6b656e73546f67b17f078543788c588ce9e75544e325a050f8c1b7"
-	b, _ := hex.DecodeString(script)
-	count := len(b)
-	scriptB := b[count-20:]
-	scripthash := ReverseBytes(scriptB)
+// 	// log.Printf("operation %x", expectedOperation)
 
-	log.Printf("%v %x", target, scripthash)
+// 	//0x67 = APPCALL
+// 	// script := "51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c6d696e74546f6b656e73546f67b17f078543788c588ce9e75544e325a050f8c1b7"
 
-	withoutscriptHash := b[:count-20]
-
-	log.Printf("%x", withoutscriptHash)
-	//51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c 6d696e74546f6b656e73546f67
-
-}
+// }
