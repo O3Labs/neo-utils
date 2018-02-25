@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/apisit/btckeygenie/btckey"
+	"github.com/o3labs/neo-utils/neoutils/btckey"
 )
 
 type ScriptHash []byte
@@ -16,6 +16,7 @@ type NEOAddress []byte
 func (s ScriptHash) ToString() string {
 	return hex.EncodeToString(s)
 }
+
 func ParseNEOAddress(address string) NEOAddress {
 	v, b, _ := btckey.B58checkdecode(address)
 	if v != 0x17 {
@@ -24,17 +25,23 @@ func ParseNEOAddress(address string) NEOAddress {
 	return NEOAddress(b)
 }
 
-type ScriptBuilderInterface interface {
-	generateContractInvocationScript(scriptHash ScriptHash, operation string, args []interface{}) []byte
-	generateTransactionAttributes(attributes map[TransactionAttribute][]byte) ([]byte, error)
-	generateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
-	generateTransactionOutput() ([]byte, error)
+func (n NEOAddress) ToString() string {
+	return btckey.B58checkencodeNEO(0x17, n)
+}
 
+type ScriptBuilderInterface interface {
+	GenerateContractInvocationData(scriptHash ScriptHash, operation string, args []interface{}) []byte
+	GenerateTransactionAttributes(attributes map[TransactionAttribute][]byte) ([]byte, error)
+	GenerateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
+	GenerateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
+	GenerateInvocationAndVerificationScriptWithSignatures(signatures []TransactionSignature) []byte
+	EmptyTransactionAttributes() []byte
 	ToBytes() []byte
 	FullHexString() string
+	Clear()
+
 	pushInt(value int) error
 	pushData(data interface{}) error
-	Clear()
 	pushLength(count int)
 }
 
@@ -62,6 +69,11 @@ func (s ScriptBuilder) FullHexString() string {
 func (s *ScriptBuilder) pushOpCode(opcode OpCode) {
 	s.RawBytes = append(s.RawBytes, byte(opcode))
 }
+func (s *ScriptBuilder) pushInt8bytes(value int) error {
+	num := make([]byte, 8)
+	binary.LittleEndian.PutUint64(num, uint64(value))
+	return s.pushData(num)
+}
 
 func (s *ScriptBuilder) pushInt(value int) error {
 	switch {
@@ -78,16 +90,21 @@ func (s *ScriptBuilder) pushInt(value int) error {
 	case value >= 16:
 		num := make([]byte, 8)
 		binary.LittleEndian.PutUint64(num, uint64(value))
-		s.RawBytes = append(s.RawBytes, bytes.TrimRight(num, "\x00")...)
+		//we push as []byte so then it prefixes with length
+		s.pushData(bytes.Trim(num, "\x00"))
 		return nil
 	}
 	return nil
 }
 
 func (s *ScriptBuilder) pushLength(count int) {
+	if count == 0 {
+		s.RawBytes = append(s.RawBytes, 0x00)
+		return
+	}
 	countBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(countBytes, uint64(count))
-	trimmedCountByte := bytes.TrimRight(countBytes, "\x00")
+	trimmedCountByte := bytes.Trim(countBytes, "\x00")
 	s.RawBytes = append(s.RawBytes, trimmedCountByte...)
 }
 
@@ -122,9 +139,27 @@ func (s *ScriptBuilder) pushHexString(hexString string) error {
 
 func (s *ScriptBuilder) pushData(data interface{}) error {
 	switch e := data.(type) {
+	case TransactionSignature:
+		signatureLength := len(e.SignedData)
+		b := []byte{}
+		b = append(b, uintToBytes(uint(signatureLength))...)
+		b = append(b, e.SignedData...)
+		s.pushLength(len(b)) //this should be 0x41
+		s.RawBytes = append(s.RawBytes, b...)
+		s.RawBytes = append(s.RawBytes, 0x23) //0x23 = 35 this is the length of the next [publickey.length(2)]+[publickey(33)]]
+		//this part is for verification script
+		//push public key in there and call CHECKSIG or CHECKMULTISIG
+		s.pushData(e.PublicKey)
+		return nil
+	case TransactionOutput:
+		s.RawBytes = append(s.RawBytes, e.Asset.ToLittleEndianBytes()...) //32 bytes
+		amountToSendBytes := make([]byte, 8)
+		binary.LittleEndian.PutUint64(amountToSendBytes, uint64(e.Value))
+		s.RawBytes = append(s.RawBytes, amountToSendBytes...) //8 bytes
+		s.RawBytes = append(s.RawBytes, e.Address...)         //20 bytes
+		return nil
 	case UTXO:
 		//reverse txID to little endian
-		log.Printf("pusing %v %v\n", e.TXID, e.Index)
 		b, err := hex.DecodeString(e.TXID)
 		if err != nil {
 			return err
@@ -132,7 +167,8 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		littleEndianTXID := reverseBytes(b)
 		index := e.Index
 		s.RawBytes = append(s.RawBytes, littleEndianTXID...)
-		s.pushInt(index)
+		intBytes := uint16ToFixBytes(uint16(index))
+		s.RawBytes = append(s.RawBytes, intBytes...)
 		return nil
 	case TradingVersion:
 		s.RawBytes = append(s.RawBytes, byte(e))
@@ -145,6 +181,7 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		return nil
 	case NEOAddress:
 		//when pushing neo address as an arg. we need length so we need to push a hex string
+		log.Printf("push neo address %x (%v)", e, len(e))
 		return s.pushHexString(fmt.Sprintf("%x", e))
 	case ScriptHash:
 		s.RawBytes = append(s.RawBytes, e...)
@@ -167,11 +204,16 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		for i := len(e) - 1; i >= 0; i-- {
 			s.pushData(e[i])
 		}
-		s.pushData(count)
+		s.pushInt(count)
 		s.pushOpCode(PACK)
 		return nil
 	case int:
+		log.Printf("push int %v (0x%x)", e, e)
 		s.pushInt(e)
+		return nil
+	case int64:
+		log.Printf("push int64 %v", int(e))
+		s.pushInt(int(e))
 		return nil
 	}
 	return nil
@@ -187,19 +229,29 @@ func NewScriptHash(hexString string) (ScriptHash, error) {
 	return ScriptHash(reversed), nil
 }
 
+func (s ScriptHash) ToBigEndian() []byte {
+	return reverseBytes([]byte(s))
+}
+
 // This is in a format of main(string operation, []object args) in c#
-func (s *ScriptBuilder) generateContractInvocationScript(scriptHash ScriptHash, operation string, args []interface{}) []byte {
+func (s *ScriptBuilder) GenerateContractInvocationData(scriptHash ScriptHash, operation string, args []interface{}) []byte {
 	if args != nil {
+		log.Printf("%+v", args)
 		s.pushData(args)
 	}
 	s.pushData([]byte(operation))                                     //operation is in string we need to convert it to hex first
 	s.pushOpCode(APPCALL)                                             //use APPCALL only
-	s.pushData(scriptHash)                                            // script hash of the smart contract that we want to invoke
+	s.pushData(scriptHash)                                            //script hash of the smart contract that we want to invoke
 	s.RawBytes = append([]byte{byte(len(s.RawBytes))}, s.RawBytes...) //the length of the entire raw bytes
 	return s.ToBytes()
 }
 
-func (s *ScriptBuilder) generateTransactionAttributes(attributes map[TransactionAttribute][]byte) ([]byte, error) {
+func (s *ScriptBuilder) EmptyTransactionAttributes() []byte {
+	s.pushData(0x00)
+	return s.ToBytes()
+}
+
+func (s *ScriptBuilder) GenerateTransactionAttributes(attributes map[TransactionAttribute][]byte) ([]byte, error) {
 
 	count := len(attributes)
 	s.pushLength(count) //number of transaction attributes
@@ -213,7 +265,7 @@ func (s *ScriptBuilder) generateTransactionAttributes(attributes map[Transaction
 	return s.ToBytes(), nil
 }
 
-func (s *ScriptBuilder) generateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error) {
+func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error) {
 	//inputs = [input_count] + [[txID(32)] + [txIndex(2)]] = 34 x input_count bytes
 
 	sendingAsset := unspent.Assets[assetToSend]
@@ -222,7 +274,7 @@ func (s *ScriptBuilder) generateTransactionInput(unspent Unspent, assetToSend Na
 	}
 
 	if amountToSend > sendingAsset.TotalAmount() {
-		return nil, fmt.Errorf("Don't have enough balance. Sending %v but only have %v", amountToSend, sendingAsset.TotalAmount())
+		return nil, fmt.Errorf("input Don't have enough balance. Sending %v but only have %v", amountToSend, sendingAsset.TotalAmount())
 	}
 
 	//sort min first
@@ -238,6 +290,7 @@ func (s *ScriptBuilder) generateTransactionInput(unspent Unspent, assetToSend Na
 		runningAmount += addingUTXO.Value
 		index += 1
 		count += 1
+		log.Printf("runningAmount %.8f", runningAmount)
 	}
 
 	s.pushLength(count)
@@ -249,9 +302,94 @@ func (s *ScriptBuilder) generateTransactionInput(unspent Unspent, assetToSend Na
 	return s.ToBytes(), nil
 }
 
-func (s *ScriptBuilder) generateTransactionOutput(assetToSend NativeAsset, amountToSend float64) ([]byte, error) {
+func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error) {
 
 	//output = [output_count] + [assetID(32)] + [amount(8)] + [sender_scripthash(20)] = 60 x output_count bytes
-	//if the running
-	return nil, nil
+
+	sendingAsset := unspent.Assets[assetToSend]
+	if sendingAsset == nil {
+		return nil, fmt.Errorf("Asset %v not found in UTXO", assetToSend)
+	}
+
+	if amountToSend > sendingAsset.TotalAmount() {
+		return nil, fmt.Errorf("output Don't have enough balance. Sending %v but only have %v", amountToSend, sendingAsset.TotalAmount())
+	}
+	//sort min first
+	sendingAsset.SortMinFirst()
+
+	runningAmount := float64(0)
+	index := 0
+	count := 0
+	inputs := []UTXO{}
+	for runningAmount < amountToSend {
+		addingUTXO := sendingAsset.UTXOs[index]
+		inputs = append(inputs, addingUTXO)
+		runningAmount += addingUTXO.Value
+		index += 1
+		count += 1
+	}
+
+	//if the total amount of inputs is over amountToSend
+	//we need to send the rest back to the sending address
+	totalAmountInInputs := runningAmount
+
+	needTwoOutputTransaction := totalAmountInInputs != amountToSend
+
+	list := []TransactionOutput{}
+
+	if needTwoOutputTransaction {
+		sendingOutput := TransactionOutput{
+			Asset:   assetToSend,
+			Value:   int64(amountToSend * float64(100000000)),
+			Address: receiver,
+		}
+		list = append(list, sendingOutput)
+
+		returningAmount := totalAmountInInputs - amountToSend
+
+		//return the left over to sender
+		returningOutput := TransactionOutput{
+			Asset:   assetToSend,
+			Value:   int64(returningAmount * float64(100000000)),
+			Address: sender,
+		}
+		list = append(list, returningOutput)
+	} else {
+		out := TransactionOutput{
+			Asset:   assetToSend,
+			Value:   int64(amountToSend * float64(100000000)),
+			Address: receiver,
+		}
+		list = append(list, out)
+	}
+
+	//number of outputs
+	s.pushLength(len(list))
+	for _, v := range list {
+		s.pushData(v)
+	}
+
+	return s.ToBytes(), nil
+}
+
+func (s *ScriptBuilder) GenerateInvocationAndVerificationScriptWithSignatures(signatures []TransactionSignature) []byte {
+
+	numberOfSignatures := len(signatures)
+	if numberOfSignatures == 0 {
+		return nil
+	}
+
+	s.pushLength(numberOfSignatures)
+
+	for _, signature := range signatures {
+		s.pushData(signature)
+	}
+
+	//WARNING: CHECKMULTISIG is not tested
+	if numberOfSignatures >= 1 {
+		s.pushOpCode(CHECKSIG)
+	} else {
+		s.pushOpCode(CHECKMULTISIG)
+	}
+	return s.ToBytes()
 }

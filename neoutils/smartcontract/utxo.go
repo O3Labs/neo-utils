@@ -1,6 +1,8 @@
 package smartcontract
 
-import "sort"
+import (
+	"sort"
+)
 
 type UTXO struct {
 	Index int

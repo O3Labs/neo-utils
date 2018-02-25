@@ -1,6 +1,7 @@
 package smartcontract
 
 import (
+	"encoding/hex"
 	"log"
 	"testing"
 )
@@ -10,33 +11,50 @@ func TestParseNEOAddress(t *testing.T) {
 	log.Printf("%x", to)
 }
 
-func TestPushContractInvocationScript(t *testing.T) {
-	s := NewScriptBuilder()
-	scriptHash, err := NewScriptHash("84a392ce6cddcc5892b9368aed43227e09b26341")
+func TestNewScriptHash(t *testing.T) {
+	scriptHash, err := NewScriptHash("b7c1f850a025e34455e7e98c588c784385077fb1")
 	if err != nil {
 		log.Printf("err = %v", err)
 		t.Fail()
 		return
 	}
-	to := ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y1")
+	s := hex.EncodeToString(scriptHash.ToBigEndian())
+	log.Printf("%v", s)
+}
+
+func TestPushContractInvocationScript(t *testing.T) {
+	s := NewScriptBuilder()
+	scriptHash, err := NewScriptHash("b7c1f850a025e34455e7e98c588c784385077fb1")
+	if err != nil {
+		log.Printf("err = %v", err)
+		t.Fail()
+		return
+	}
+	to := ParseNEOAddress("AM8pnu1yK7ViMt7Sw2nPpbtPQXTwjjkykn")
 	if to == nil {
 		//invalid neo address
 		t.Fail()
 		return
 	}
-	args := []interface{}{to, 1}
-	b := s.generateContractInvocationScript(scriptHash, "mintTokensTo", args)
+	args := []interface{}{to, 715799899998}
+	b := s.GenerateContractInvocationData(scriptHash, "mintTokensTo", args)
 	log.Printf("%x", b)
 	//from swift
-	//3a51 14 23ba2703c53263e8d6e522dc32203339dcd8eee952c10c6d696e74546f6b656e73546f674163b2097e2243ed8a36b99258ccdd6cce92a384
+	//3a511423ba273c53263e8d6e522dc32203339dcd8eee952 c1 c6d696e74546f6b656e73546f67b798b0251a6a85d2699928911afbdaefaf8470
 	//from go
-	//3a51 14 23ba2703c53263e8d6e522dc32203339dcd8eee952c10c6d696e74546f6b656e73546f674163b2097e2243ed8a36b99258ccdd6cce92a384
+	// 8e830000001423ba273c53263e8d6e522dc32203339dcd8eee952c1c6d696e74546f6b656e73546f671b245557dc34b4ac60c520d335361bbe15a57ce
+	//3be8031423ba2703c53263e8d6e522dc32203339dcd8eee952c10c6d696e74546f6b656e73546f671b245557dc34b4ac60c5200d335361bbe15a57ce
 }
 
 func TestPushInt(t *testing.T) {
 	s := NewScriptBuilder()
-	s.pushInt(100000000)
-	log.Printf("%x", s.ToBytes())
+	v := int(1234567890)
+	s.pushInt(v)
+
+	log.Printf("%+v %x %x", s.ToBytes(), s.ToBytes(), uintToBytes(uint(v)))
+
+	//from go    715799899998 = 5eafffa8a6
+	//from swift 715799899998 = 5eafffa8a6000
 }
 
 func TestPushDataWithInt(t *testing.T) {
@@ -46,7 +64,8 @@ func TestPushDataWithInt(t *testing.T) {
 }
 
 func TestPushArray(t *testing.T) {
-	args := []interface{}{"e9eed8dc39332032dc22e5d6e86332c50327ba23", "e9eed8dc39332032dc22e5d6e86332c50327ba23", 1}
+	to := ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+	args := []interface{}{to, 1000}
 	s := NewScriptBuilder()
 	s.pushData(args)
 	log.Printf("%x", s.ToBytes())
@@ -76,7 +95,7 @@ func TestPushTransactionAttibute(t *testing.T) {
 
 func TestPushLength(t *testing.T) {
 	s := NewScriptBuilder()
-	s.pushLength(10)
+	s.pushLength(33)
 	log.Printf("%x", s.ToBytes())
 }
 
@@ -86,7 +105,7 @@ func TestGenerateTransactionAttributes(t *testing.T) {
 	attributes[Remark] = []byte("test")
 	attributes[Remark2] = []byte("test2")
 	attributes[Remark3] = []byte("test3")
-	b, err := s.generateTransactionAttributes(attributes)
+	b, err := s.GenerateTransactionAttributes(attributes)
 	if err != nil {
 		t.Fail()
 		return
@@ -94,48 +113,12 @@ func TestGenerateTransactionAttributes(t *testing.T) {
 	log.Printf("%v", b)
 }
 
-func UTXOData() Unspent {
-	gasTX2 := UTXO{
-		Index: 0,
-		TXID:  "ad8d65c22de1873dea36587a989a4563c7264c48ed20a6edbe957bbe428984c0",
-		Value: 40.0,
-	}
-	gasTX1 := UTXO{
-		Index: 1,
-		TXID:  "1b640fc70e127a74ab6785afe155f089e08a153b2effc7a4bed8b6690cfc65fe",
-		Value: 7608.0,
-	}
-
-	gasBalance := Balance{
-		Amount: 7648.0,
-		UTXOs:  []UTXO{gasTX1, gasTX2},
-	}
-
-	neoTX1 := UTXO{
-		Index: 0,
-		TXID:  "e8b8bf4f98490368fc1caa86f8646e7383bb52751ffc3a1a7e296d715c4382ed",
-		Value: 100000000,
-	}
-
-	neoBalance := Balance{
-		Amount: 100000000,
-		UTXOs:  []UTXO{neoTX1},
-	}
-
-	unspent := Unspent{
-		Assets: map[NativeAsset]*Balance{},
-	}
-	unspent.Assets[neo] = &neoBalance
-	unspent.Assets[gas] = &gasBalance
-	return unspent
-}
-
 func TestGenerateTransactionInput(t *testing.T) {
 	s := NewScriptBuilder()
-	assetToSend := gas
+	assetToSend := GAS
 	amount := float64(5000)
-	unspent := UTXOData()
-	b, err := s.generateTransactionInput(unspent, assetToSend, amount)
+	unspent := UTXODataForSmartContract()
+	b, err := s.GenerateTransactionInput(unspent, assetToSend, amount)
 	if err != nil {
 		log.Printf("err = %v", err)
 		t.Fail()
@@ -147,4 +130,21 @@ func TestGenerateTransactionInput(t *testing.T) {
 	//2c0848942be7b95beeda620ed484c26c763459a987a5836ea3d87e12dc2658dad00fe65fcc69b6d8bea4c7ff2e3b158ae089f055e1af8567ab747a12ec7f641b00
 	//go
 	//2c0848942be7b95beeda620ed484c26c763459a987a5836ea3d87e12dc2658dad00 fe65fc0c69b6d8bea4c7ff2e3b158ae089f055e1af8567ab747a120ec70f641b 00
+}
+
+func TestGenerateTransactionOutput(t *testing.T) {
+	s := NewScriptBuilder()
+	assetToSend := GAS
+	amountToSend := float64(0.00000001)
+	unspent := UTXODataForSmartContract()
+	sender := ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+	receiver := ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+
+	b, err := s.GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend)
+	if err != nil {
+		log.Printf("%v", err)
+		t.Fail()
+	}
+	log.Printf("%x", b)
+	//52e72d286979ee6cb1b7e65dfddfb2e384100b8d148e7758de42e4168b71792c600088526a741423ba2703c53263e8d6e522dc32203339dcd8eee9e72d286979ee6cb1b7e65dfddfb2e384100b8d148e7758de42e4168b71792c6000584fa73d1423ba2703c53263e8d6e522dc32203339dcd8eee9
 }

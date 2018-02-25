@@ -1,12 +1,13 @@
 package neoutils
 
 import (
+	"encoding/hex"
 	"log"
 	"testing"
 )
 
 func TestScriptHashToNEOAddress(t *testing.T) {
-	hash := "84a392ce6cddcc5892b9368aed43227e09b26341"
+	hash := "5e4095c8c90a7b83f509d8e08a48ba0c11fbce3a"
 	address := ScriptHashToNEOAddress(hash)
 
 	scripthash := NEOAddressToScriptHash(address)
@@ -18,8 +19,10 @@ func TestScriptHashToNEOAddress(t *testing.T) {
 }
 
 func TestNEOAddressToScriptHash(t *testing.T) {
-	hash := NEOAddressToScriptHash("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+	hash := NEOAddressToScriptHash("AM8pnu1yK7ViMt7Sw2nPpbtPQXTwjjkykn")
 	log.Printf("%v", hash)
+	b, _ := hex.DecodeString(hash)
+	log.Printf("%x", ReverseBytes(b))
 }
 
 func TestValidateNEOAddress(t *testing.T) {
@@ -37,7 +40,8 @@ func TestValidateNEOAddressInvalidAddress(t *testing.T) {
 }
 
 func TestConverting(t *testing.T) {
-	hex := "00e1f505"
+	hex := "e1f505"
+
 	value := ConvertByteArrayToBigInt(hex)
 
 	log.Printf("%v", value)
@@ -53,3 +57,16 @@ func TestParseNEP9(t *testing.T) {
 	}
 	log.Printf("%+v", nep9)
 }
+
+// func TestParseScriptFromTX(t *testing.T) {
+// 	// expectedScripthash := "b7c1f850a025e34455e7e98c588c784385077fb1"
+// 	// expectedOperation := []byte("mintTokensTo") // 6d696e74546f6b656e73546f
+// 	// expectedToAddress := "AM8pnu1yK7ViMt7Sw2nPpbtPQXTwjjkykn"
+// 	// expectedTokenAmount := 1
+
+// 	// log.Printf("operation %x", expectedOperation)
+
+// 	//0x67 = APPCALL
+// 	// script := "51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c6d696e74546f6b656e73546f67b17f078543788c588ce9e75544e325a050f8c1b7"
+
+// }

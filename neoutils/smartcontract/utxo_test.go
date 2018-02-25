@@ -40,8 +40,8 @@ func TestUTXOStruct(t *testing.T) {
 	unspent := Unspent{
 		Assets: map[NativeAsset]*Balance{},
 	}
-	unspent.Assets[neo] = &neoBalance
-	unspent.Assets[gas] = &gasBalance
+	unspent.Assets[NEO] = &neoBalance
+	unspent.Assets[GAS] = &gasBalance
 
 	log.Printf("%+v", unspent)
 }
