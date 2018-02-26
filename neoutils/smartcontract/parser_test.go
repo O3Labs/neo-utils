@@ -78,3 +78,25 @@ func TestParser(t *testing.T) {
 	log.Printf("%+v", m)
 	log.Printf("%+v %v", m.To.ToString(), m.Amount)
 }
+
+func TestParserNEP5Transfer(t *testing.T) {
+
+	p := smartcontract.NewParserWithScript("05006fe0d60114a20d664878bacc0114f8c594b5dc9065ce04f6eb14e484ee21fef450c92e9aed3968c6de1d58d8a9e853c1087472616e7366657267f91d6b7085db7c5aaf09f19eeec1ca3c0db2c6ec")
+
+	//the order of your method signature has the be exact to the one
+	//in your deployed smart contract
+	type methodSignature struct {
+		Operation smartcontract.Operation  //operation
+		From      smartcontract.NEOAddress //args[0]
+		To        smartcontract.NEOAddress //args[1]
+		Amount    int                      //args[2]
+	}
+	m := methodSignature{}
+	err := p.Parse(&m)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	// log.Printf("%+v", m)
+	log.Printf("%v from %v to %v amount =%v", m.Operation, m.From.ToString(), m.To.ToString(), m.Amount)
+}
