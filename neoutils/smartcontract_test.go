@@ -19,6 +19,15 @@ func TestInvalidSmartContractStruct(t *testing.T) {
 	log.Printf("%v", sc)
 }
 
+func TestUseSmartContractWithEmptyScripthash(t *testing.T) {
+	sc := neoutils.UseSmartContract("")
+	if sc != nil {
+		t.Fail()
+		return
+	}
+	log.Printf("%v", sc)
+}
+
 func TestSmartContractStruct(t *testing.T) {
 
 	sc := neoutils.UseSmartContract("ce575ae1bb6153330d20c560acb434dc5755241b")

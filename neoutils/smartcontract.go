@@ -2,6 +2,7 @@ package neoutils
 
 import (
 	"log"
+	"strings"
 
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
 	// "github.com/o3labs/neo-utils/neoutils/smartcontract"
@@ -16,6 +17,9 @@ type SmartContract struct {
 }
 
 func UseSmartContract(scriptHashHex string) SmartContractInterface {
+	if len(strings.TrimSpace(scriptHashHex)) == 0 {
+		return nil
+	}
 	scripthash, err := smartcontract.NewScriptHash(scriptHashHex)
 	if err != nil {
 		return nil
