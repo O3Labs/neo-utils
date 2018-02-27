@@ -29,7 +29,7 @@ func bytesToHex(b []byte) string {
 }
 
 // Generate a wallet from a private key
-func GeneratePublicKeyFromPrivateKey(privateKey string) (*Wallet, error) {
+func GenerateFromPrivateKey(privateKey string) (*Wallet, error) {
 	pb := hex2bytes(privateKey)
 	var priv btckey.PrivateKey
 	err := priv.FromBytes(pb)

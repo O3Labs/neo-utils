@@ -1,4 +1,4 @@
-package neoutils
+package neoutils_test
 
 import (
 	"encoding/hex"
@@ -6,11 +6,12 @@ import (
 	"log"
 	"testing"
 
+	"github.com/o3labs/neo-utils/neoutils"
 	"github.com/o3labs/neo-utils/neoutils/sss"
 )
 
 func TestNewWallet(t *testing.T) {
-	w, err := NewWallet()
+	w, err := neoutils.NewWallet()
 	if err != nil {
 		t.Fail()
 		return
@@ -21,14 +22,14 @@ func TestNewWallet(t *testing.T) {
 
 func TestGenKey(t *testing.T) {
 	privateKey := "0C28FCA386C7A227600B2FE50B7CAE11EC86D3BF1FBE471BE89827E19D72AA1D"
-	wallet, _ := GeneratePublicKeyFromPrivateKey(privateKey)
+	wallet, _ := neoutils.GenerateFromPrivateKey(privateKey)
 
 	log.Printf("%+v", wallet)
 }
 
 func TestGenFromWIF(t *testing.T) {
 	wif := "KzULqzStT2tseGnqogXnTLG5NCT1YXa3F9Wp1Kdv9xMxFhvV6H2A"
-	wallet, err := GenerateFromWIF(wif)
+	wallet, err := neoutils.GenerateFromWIF(wif)
 	if err != nil {
 		log.Printf("%+v", err)
 		t.Fail()
@@ -70,22 +71,22 @@ func TestSSS(t *testing.T) {
 }
 
 func TestGenerateSSS(t *testing.T) {
-	sharedSecret, err := GenerateShamirSharedSecret("0C28FCA386C7A227600B2FE50B7CAE11EC86D3BF1FBE471BE89827E19D72AA1D")
+	sharedSecret, err := neoutils.GenerateShamirSharedSecret("0C28FCA386C7A227600B2FE50B7CAE11EC86D3BF1FBE471BE89827E19D72AA1D")
 	if err != nil {
 		t.Fail()
 		return
 	}
-	recovered, err := RecoverFromSharedSecret(sharedSecret.First, sharedSecret.Second)
+	recovered, err := neoutils.RecoverFromSharedSecret(sharedSecret.First, sharedSecret.Second)
 
-	fmt.Printf("%v\n%v\n%v", bytesToHex(sharedSecret.First), bytesToHex(sharedSecret.Second), recovered)
+	fmt.Printf("%v\n%v\n%v", neoutils.BytesToHex(sharedSecret.First), neoutils.BytesToHex(sharedSecret.Second), recovered)
 }
 
 func TestRecoverFromString(t *testing.T) {
 
-	first := hex2bytes("b636f0821f65399cd0a2334ab6b229bfb8dce9fe569c795d14ec6177c7eba62be80668fdd6fe743286e6aec5b856ca9a15d7c9b0c82d06fa80f51a920d32ff90")
-	second := hex2bytes("27a9ad57f40fb176f305a3cdb429043c31f39921fae93de578059b2b5602040504c998bb7bb22eae441d815e37f5dce9e5fdc233dd03c3bc503d6d69d9a7b6f7")
+	first := neoutils.HexTobytes("b636f0821f65399cd0a2334ab6b229bfb8dce9fe569c795d14ec6177c7eba62be80668fdd6fe743286e6aec5b856ca9a15d7c9b0c82d06fa80f51a920d32ff90")
+	second := neoutils.HexTobytes("27a9ad57f40fb176f305a3cdb429043c31f39921fae93de578059b2b5602040504c998bb7bb22eae441d815e37f5dce9e5fdc233dd03c3bc503d6d69d9a7b6f7")
 
-	recovered, err := RecoverFromSharedSecret(first, second)
+	recovered, err := neoutils.RecoverFromSharedSecret(first, second)
 	if err != nil {
 		t.Fail()
 		return

@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
-	// "github.com/o3labs/neo-utils/neoutils/smartcontract"
 )
 
 type SmartContractInterface interface {
