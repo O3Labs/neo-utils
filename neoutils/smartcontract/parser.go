@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"math/big"
 	"reflect"
 
@@ -13,7 +12,9 @@ import (
 )
 
 type ParserInterface interface {
-	Parse(methodSignature interface{}) error
+	Parse(methodSignature interface{}) ([]interface{}, error)
+	GetListOfOperations() ([]string, error)
+	GetListOfScriptHashes() ([]string, error)
 }
 
 type Parser struct {
@@ -50,7 +51,6 @@ func ReadNEOAddress(reader *bufio.Reader) (*NEOAddress, error) {
 	reader.Read(buf)
 
 	address := btckey.B58checkencodeNEO(0x17, buf)
-	log.Printf("reading neo address %v", address)
 	neoAddress := ParseNEOAddress(address)
 	return &neoAddress, nil
 }
@@ -132,108 +132,178 @@ func bufioReaderFromBytes(b []byte) *bufio.Reader {
 	return bufio.NewReaderSize(bytes.NewReader(b), len(b))
 }
 
-func (p *Parser) splitScriptWithAPPCALL() (operationAndArgs []byte, scriptHash []byte, e error) {
+type appcall struct {
+	operationAndArgs []byte
+	scriptHash       []byte
+}
+
+func (p *Parser) splitScriptWithAPPCALL() ([]appcall, error) {
+
+	list := []appcall{}
 	b, err := hex.DecodeString(p.Script)
 	if err != nil {
-		return nil, nil, err
+		return list, err
 	}
+
 	//split the script by the APPCALL opcode(0x67) then we will get
 	//script hash on the right and args + operation on the left
 	splitted := bytes.Split(b, []byte{byte(APPCALL)})
-	if len(splitted) < 2 {
-		return nil, nil, fmt.Errorf("invalid script: Script doesn't have APPCALL opcode")
+	numberOfAPPCALLs := len(splitted) - 1
+	if numberOfAPPCALLs == 0 {
+		return list, fmt.Errorf("invalid script: Script doesn't have APPCALL opcode")
 	}
-	operationAndArgs = splitted[0]
-	scriptHash = splitted[1]
-	return
-}
 
-func (p *Parser) GetScriptHash() (string, error) {
-	_, scripthashBytes, err := p.splitScriptWithAPPCALL()
-	if err != nil {
-		return "", err
-	}
-	//this script hash from rawtransaction's script is reversed
+	//if we found more than 1 APPCALL. we need to split them properly
+
+	//the script hash from rawtransaction's script is reversed
 	//in order to return the proper one that you get when call "getcontractstate"
 	//we have to reverse the bytes
-	return fmt.Sprintf("%x", reverseBytes(scripthashBytes)), nil
-}
 
-func (p *Parser) GetOperationName() (string, error) {
-	operationAndArgs, _, err := p.splitScriptWithAPPCALL()
-	if err != nil {
-		return "", err
-	}
-	splittedPack := bytes.Split(operationAndArgs, []byte{byte(PACK)})
-	if len(splittedPack) < 2 {
-		return "", fmt.Errorf("invalid script: Script doesn't conform main(operation, args)")
-	}
-	operationString := ReadHexString(bufioReaderFromBytes(splittedPack[1]))
-	return operationString, nil
-}
-
-func (p *Parser) Parse(methodSignature interface{}) error {
-
-	operationAndArgs, bigEndianScripthash, err := p.splitScriptWithAPPCALL()
-	if err != nil {
-		return err
-	}
-
-	//We can split the operation and args by PACK opcode(0xc1)
-	//it's packing the array of arg and the next is the number of args
-	//e.g. 02c1 = pack 2 arguments
-	//this can be done by reading the last byte if it's a PACK opcode
-	//second last byte is the number of array that are packed in
-	splittedPack := bytes.Split(operationAndArgs, []byte{byte(PACK)})
-	if len(splittedPack) < 2 {
-		return fmt.Errorf("invalid script: Script doesn't conform main(operation, args)")
-	}
-
-	argsWithNumbers := splittedPack[0]
-	operation := splittedPack[1]
-	//read from hex
-	operationString := ReadHexString(bufioReaderFromBytes(operation))
-
-	//after split, last byte is the number of args in an array
-	numberOfArgsBytes := argsWithNumbers[len(argsWithNumbers)-1:]
-	//This seems overkill because of the number of args should never be this large.
-	//maybe we can rewrite readInt again
-	numberOfArgs, err := ReadBigInt(bufioReaderFromBytes(numberOfArgsBytes))
-	if err != nil {
-		return err
-	}
-	log.Printf("numberOfArgs = %v", numberOfArgs)
-
-	s := reflect.ValueOf(methodSignature).Elem()
-	typeOfT := s.Type()
-
-	//new bytes reader
-	bytesReader := bytes.NewReader(argsWithNumbers)
-	reader := bufio.NewReaderSize(bytesReader, len(argsWithNumbers))
-
-	//because the bytes of the script is reversed
-	//we will have to reverse the order of the fields in the struct too
-	for i := s.NumField() - 1; i >= 0; i-- {
-		field := s.Field(i)
-		t := typeOfT.Field(i)
-		switch t.Type {
-		case reflect.TypeOf(Operation("")):
-			field.SetString(operationString)
-		case reflect.TypeOf(NEOAddress{}):
-			neoAddress, err := ReadNEOAddress(reader)
-			if err != nil {
-				return err
+	if numberOfAPPCALLs > 1 {
+		for index := 0; index < len(splitted)-1; index++ {
+			tempOperationAndArgs := []byte{}
+			tempScriptHash := []byte{}
+			if index == 0 {
+				tempOperationAndArgs = splitted[index]
+				tempScriptHash = reverseBytes(splitted[index+1][:20])
+			} else {
+				//Multiple APPCALL contains THROWIFNOT to make sure that every APPCALL runs otherwise reject all
+				//THROWIFNOT is 0xf1.
+				//scripthash(20 bytes) + 0xf1 + [actual operation and args]
+				tempOperationAndArgs = splitted[index][21:]
+				tempScriptHash = reverseBytes(splitted[index+1][:20])
 			}
-			field.SetBytes(*neoAddress)
-		case reflect.TypeOf(int(0)):
-			v, err := ReadBigInt(reader)
-			if err != nil {
-				return err
+			a := appcall{
+				operationAndArgs: tempOperationAndArgs, //left side is the operation and args
+				scriptHash:       tempScriptHash,       //first 20 bytes of right side is the script hash
 			}
-			field.SetInt(v.Int64())
+			list = append(list, a)
 		}
+		return list, nil
+	}
+	//an easy one with 1 APPCALL in script
+	list = append(list, appcall{
+		operationAndArgs: splitted[0],
+		scriptHash:       reverseBytes(splitted[1]),
+	})
+	return list, nil
+}
+
+func (p *Parser) GetListOfScriptHashes() ([]string, error) {
+	list, err := p.splitScriptWithAPPCALL()
+	if err != nil {
+		return []string{}, err
+	}
+	listOfScriptHash := []string{}
+	for _, v := range list {
+		listOfScriptHash = append(listOfScriptHash, fmt.Sprintf("%x", v.scriptHash))
 	}
 
-	log.Printf("%x %x", operationAndArgs, reverseBytes(bigEndianScripthash))
-	return nil
+	return listOfScriptHash, nil
+}
+
+func (p *Parser) GetListOfOperations() ([]string, error) {
+	list, err := p.splitScriptWithAPPCALL()
+	if err != nil {
+		return []string{}, err
+	}
+	listOfOperations := []string{}
+	for _, v := range list {
+		splittedPack := bytes.Split(v.operationAndArgs, []byte{byte(PACK)})
+		if len(splittedPack) < 2 {
+			return []string{}, fmt.Errorf("invalid script: Script doesn't conform main(operation, args)")
+		}
+		operationString := ReadHexString(bufioReaderFromBytes(splittedPack[1]))
+		listOfOperations = append(listOfOperations, operationString)
+	}
+	return listOfOperations, nil
+}
+
+// This method return an array of given method signature
+// because sometimes script can contains multiple app calls
+func (p *Parser) Parse(methodSignature interface{}) ([]interface{}, error) {
+
+	list, err := p.splitScriptWithAPPCALL()
+	if err != nil {
+		return nil, err
+	}
+
+	results := []interface{}{}
+	for _, v := range list {
+		operationAndArgs := v.operationAndArgs
+		// scripthash := v.scriptHash
+
+		//We can split the operation and args by PACK opcode(0xc1)
+		//it's packing the array of arg and the next is the number of args
+		//e.g. 02c1 = pack 2 arguments, 53c1 (PUSH3 + PACK)
+		//this can be done by reading the last byte if it's a PACK opcode
+		//second last byte is the number of array that are packed in
+		splittedPack := bytes.Split(operationAndArgs, []byte{byte(PACK)})
+		if len(splittedPack) < 2 {
+			return nil, fmt.Errorf("invalid script: Script doesn't conform main(operation, args)")
+		}
+
+		//the operation should be on the farthest right
+		//so when we split with PACK. the last index should be operation
+		//this is here to make sure in case if there is 0x21 somewhere before the actual PACK
+		operation := splittedPack[len(splittedPack)-1]
+
+		//then the rest on the left should be args with the number of args
+		//so we get operationsAndArgs until operations
+		//operationAndArgs = [args] + [number of args]+ 0xc1 +[N bytes of operation] + [operation]
+		//args(N bytes) + number of args (1 byte)
+		//so we get from the first byte until (0xc1 +[N bytes of operation] + [operation]) bytes
+		argsWithNumbers := operationAndArgs[:len(operationAndArgs)-len(operation)-1]
+
+		//read from hex. first byte is the number of bytes to be read
+		operationString := ReadHexString(bufioReaderFromBytes(operation))
+
+		//after split, last byte is the number of args in an array
+		numberOfArgsBytes := argsWithNumbers[len(argsWithNumbers)-1:]
+
+		//This seems overkill because of the number of args should never be this large.
+		//maybe we can rewrite readInt again
+		numberOfArgs, err := ReadBigInt(bufioReaderFromBytes(numberOfArgsBytes))
+		if err != nil {
+			return nil, err
+		}
+		s := reflect.ValueOf(methodSignature).Elem()
+		typeOfT := s.Type()
+
+		//we check given method signature and parsed number of args
+		if int(numberOfArgs.Int64()) != s.NumField()-1 {
+			return nil, fmt.Errorf("The number of args is %v but given method signature has %v", numberOfArgs, s.NumField())
+		}
+
+		//new bytes reader
+		bytesReader := bytes.NewReader(argsWithNumbers)
+		reader := bufio.NewReaderSize(bytesReader, len(argsWithNumbers))
+
+		//because the bytes of the script is reversed
+		//we will have to reverse the order of the fields in the struct too
+		for i := s.NumField() - 1; i >= 0; i-- {
+			field := s.Field(i)
+			t := typeOfT.Field(i)
+			switch t.Type {
+			case reflect.TypeOf(Operation("")):
+				field.SetString(operationString)
+			case reflect.TypeOf(NEOAddress{}):
+				neoAddress, err := ReadNEOAddress(reader)
+				if err != nil {
+					return nil, err
+				}
+				field.SetBytes(*neoAddress)
+			case reflect.TypeOf(int(0)):
+				v, err := ReadBigInt(reader)
+				if err != nil {
+					return nil, err
+				}
+				field.SetInt(v.Int64())
+			}
+		}
+
+		results = append(results, methodSignature)
+	}
+
+	return results, nil
 }

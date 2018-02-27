@@ -11,53 +11,45 @@ import (
 )
 
 func TestReadBigInt(t *testing.T) {
-	expectedInt := 1234567890
-	b, _ := hex.DecodeString("04d2029649")
+	expectedInt := 9193970688
+	b, _ := hex.DecodeString("0500dc5c2402")
 
 	bytesReader := bytes.NewReader(b)
 
 	reader := bufio.NewReaderSize(bytesReader, len(b))
 
 	value, _ := smartcontract.ReadBigInt(reader)
-	log.Printf("expected %v got %v (%v)", expectedInt, value.Int64())
+	log.Printf("expected %v got %v (%v)", expectedInt, value.Int64(), value.BitLen())
 	// log.Printf("%v value = %v %v", n, value, err)
-
 }
-func TestParserGetOperationName(t *testing.T) {
+
+func TestParserGetListOfOperations(t *testing.T) {
 	expectedOperation := "mintTokensTo"
 	p := smartcontract.NewParserWithScript("51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c6d696e74546f6b656e73546f67b17f078543788c588ce9e75544e325a050f8c1b7")
-	result, err := p.GetOperationName()
+	result, err := p.GetListOfOperations()
 	if err != nil {
 		log.Printf("Expected: %v but got error : %v", expectedOperation, err)
 		t.Fail()
 		return
 	}
-	if result != expectedOperation {
-		log.Printf("Expected: %v but got: %v", expectedOperation, result)
-		t.Fail()
-		return
-	}
+
 	log.Printf("result = %v", result)
 }
 
 func TestGetScripthashFromScript(t *testing.T) {
 	expectedResult := "b7c1f850a025e34455e7e98c588c784385077fb1"
 	p := smartcontract.NewParserWithScript("51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c6d696e74546f6b656e73546f67b17f078543788c588ce9e75544e325a050f8c1b7")
-	result, err := p.GetScriptHash()
+	result, err := p.GetListOfScriptHashes()
 	if err != nil {
 		log.Printf("Expected: %v but got error : %v", expectedResult, err)
 		t.Fail()
 		return
 	}
-	if result != expectedResult {
-		log.Printf("Expected: %v but got: %v", expectedResult, result)
-		t.Fail()
-		return
-	}
+
 	log.Printf("result = %v", result)
 }
 
-func TestParser(t *testing.T) {
+func TestParserSingleAPPCALL(t *testing.T) {
 	// expectedToAddress := "AM8pnu1yK7ViMt7Sw2nPpbtPQXTwjjkykn"
 
 	p := smartcontract.NewParserWithScript("51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c6d696e74546f6b656e73546f67b17f078543788c588ce9e75544e325a050f8c1b7")
@@ -70,11 +62,35 @@ func TestParser(t *testing.T) {
 		Amount    int                      //args[1]
 	}
 	m := methodSignature{}
-	err := p.Parse(&m)
+	list, err := p.Parse(&m)
 	if err != nil {
 		t.Fail()
 		return
 	}
-	log.Printf("%+v", m)
-	log.Printf("%+v %v", m.To.ToString(), m.Amount)
+	for _, v := range list {
+		log.Printf("%+v", v.(*methodSignature))
+	}
+}
+
+func TestParseMultipleTransfers(t *testing.T) {
+	script := `0500bca06501145a936d7abbaae28579dd36609f910f9b50de972f147bee835ff211327677c453d5f19b693e70a361ab53c1087472616e7366657267b6155db85e53298f01e0280cc2f21a0f40c4e808f10400e1f505147e548ecd2a87dd58731e6171752b1aa11494c62f147bee835ff211327677c453d5f19b693e70a361ab53c1087472616e7366657267b6155db85e53298f01e0280cc2f21a0f40c4e808f10500dc5c240214c10704464fade3197739536450ec9531a1f24a37147bee835ff211327677c453d5f19b693e70a361ab53c1087472616e7366657267b6155db85e53298f01e0280cc2f21a0f40c4e808f166b2263911344b5b15`
+	//script := "0500dc5c240214c10704464fade3197739536450ec9531a1f24a37147bee835ff211327677c453d5f19b693e70a361ab53c1087472616e7366657267b6155db85e53298f01e0280cc2f21a0f40c4e808"
+
+	p := smartcontract.NewParserWithScript(script)
+	type methodSignature struct {
+		Operation smartcontract.Operation  //operation
+		From      smartcontract.NEOAddress //args[0]
+		To        smartcontract.NEOAddress //args[1]
+		Amount    int                      //args[2]
+	}
+	m := methodSignature{}
+	list, err := p.Parse(&m)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	for _, v := range list {
+		log.Printf("%+v", v.(*methodSignature))
+	}
 }

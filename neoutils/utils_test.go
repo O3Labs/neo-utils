@@ -6,8 +6,24 @@ import (
 	"testing"
 )
 
+func TestConvertScripthashFromParamToNEOAddress(t *testing.T) {
+	hash := "7bee835ff211327677c453d5f19b693e70a361ab"
+	b := hex2bytes(hash)
+	b = ReverseBytes(b)
+
+	address := ScriptHashToNEOAddress(bytesToHex(b))
+
+	scripthash := NEOAddressToScriptHash(address)
+	log.Printf("address = %v result = %s", address, scripthash)
+
+	if scripthash != hash {
+		t.Fail()
+	}
+}
+
 func TestScriptHashToNEOAddress(t *testing.T) {
 	hash := "5e4095c8c90a7b83f509d8e08a48ba0c11fbce3a"
+
 	address := ScriptHashToNEOAddress(hash)
 
 	scripthash := NEOAddressToScriptHash(address)
@@ -40,7 +56,7 @@ func TestValidateNEOAddressInvalidAddress(t *testing.T) {
 }
 
 func TestConverting(t *testing.T) {
-	hex := "e1f505"
+	hex := "00dc5c2402"
 
 	value := ConvertByteArrayToBigInt(hex)
 
