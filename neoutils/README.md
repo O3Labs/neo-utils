@@ -3,22 +3,79 @@
 This package contains useful functions that make your life easier when working with NEO blockchain.
 
 #### What you can use this package for
-##### Wallet
-- Create a new wallet address for NEO blockchain
-- Restore a wallet with WIF
-- Restore a wallet with raw private key
+#### Wallet
+
+##### Wallet struct
+```go
+type Wallet struct {
+	PublicKey       []byte
+	PrivateKey      []byte
+	Address         string
+	WIF             string
+	HashedSignature []byte
+}
+
+```
+
+##### Create a new wallet address for NEO blockchain
+```go
+neoutils.NewWallet() (*Wallet, error)
+```
+##### Restore a wallet from WIF
+```go
+neoutils.GenerateFromWIF(wif string) (*Wallet, error)
+```
+
+##### Restore a wallet from raw private key string
+```go
+neoutils.GenerateFromPrivateKey(privateKey string) (*Wallet, error)
+```
+---
+
 
 #### Encryption
-- Sign data using ECDSA
-- Encrypt data using AES
-- Decrypt AES encrypted data 
-- Public key encryption using ECDH
-- Create N-parts shared secret using [Shamir's Secret Sharing](https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing)
-- Restore data from shared secret using [Shamir's Secret Sharing](https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing)
+##### Sign data using ECDSA
+```go
+neoutils.Sign(data []byte, key string) ([]byte, error) 
+```
+##### Encrypt data using AES
+```go
+neoutils.Encrypt(key []byte, text string) string 
+```
+
+##### Decrypt AES encrypted data 
+```go
+neoutils.Decrypt(key []byte, encryptedText string) string
+```
+
+##### Public key encryption using ECDH
+```go
+(w *Wallet) ComputeSharedSecret(publicKey []byte) []byte
+```
+
+##### Create N-parts shared secret using [Shamir's Secret Sharing](https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing)
+```go
+neoutils.GenerateShamirSharedSecret(secret string) (*SharedSecret, error)
+```
+
+##### Restore data from shared secret using [Shamir's Secret Sharing](https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing)
+```go
+neoutils.RecoverFromSharedSecret(first []byte, second []byte) (string, error)
+```
 
 #### NEO Nodes utilities
-- Select NEO best node by measuring the latency between caller and the nodes concurrently (this is really fast!)
+##### Select best node
+Select NEO best node by measuring the latency between caller and the nodes concurrently.
+```go
+type SeedNodeResponse struct {
+	URL          string
+	BlockCount   int
+	ResponseTime int64 //milliseconds
+}
 
+neoutils.SelectBestSeedNode(commaSeparatedURLs string) *SeedNodeResponse 
+```
+--- 
 #### Utilities methods
 - Reverse bytes
 - Hex string to bytes
