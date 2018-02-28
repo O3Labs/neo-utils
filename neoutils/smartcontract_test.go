@@ -98,3 +98,39 @@ func TestInvokeFunctionRawTransaction(t *testing.T) {
 	}
 	log.Printf("%x", tx)
 }
+
+func TestGenerateInvokeTransferNEP5Token(t *testing.T) {
+	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
+	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
+	if err != nil {
+		log.Printf("%v", err)
+		t.Fail()
+	}
+
+	from := smartcontract.ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+	if from == nil {
+		//invalid neo address
+		t.Fail()
+		return
+	}
+
+	to := smartcontract.ParseNEOAddress("AM8pnu1yK7ViMt7Sw2nPpbtPQXTwjjkykn")
+	if to == nil {
+		//invalid neo address
+		t.Fail()
+		return
+	}
+	numberOfTokens := 1
+	args := []interface{}{from, to, numberOfTokens}
+	unspent := UTXODataForSmartContract()
+
+	remark := "this is a remark data in attribute"
+	attributes := map[smartcontract.TransactionAttribute][]byte{}
+	attributes[smartcontract.Remark1] = []byte(remark)
+	tx, err := validSmartContract.GenerateInvokeFunctionRawTransaction(*privateNetwallet, unspent, attributes, "transfer", args)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	log.Printf("%x", tx)
+}
