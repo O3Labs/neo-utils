@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"log"
+	"math"
 	"testing"
 
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
@@ -57,13 +58,15 @@ func TestParserSingleAPPCALL(t *testing.T) {
 	//the order of your method signature has the be exact to the one
 	//in your deployed smart contract
 	type methodSignature struct {
-		Operation smartcontract.Operation  //operation
-		To        smartcontract.NEOAddress //args[0]
-		Amount    int                      //args[1]
+		ScriptHash smartcontract.ScriptHash
+		Operation  smartcontract.Operation  //operation
+		To         smartcontract.NEOAddress //args[0]
+		Amount     int                      //args[1]
 	}
 	m := methodSignature{}
 	list, err := p.Parse(&m)
 	if err != nil {
+		log.Printf("%v", err)
 		t.Fail()
 		return
 	}
@@ -76,10 +79,11 @@ func TestParseMultipleTransfers(t *testing.T) {
 	script := `0500bca06501145a936d7abbaae28579dd36609f910f9b50de972f147bee835ff211327677c453d5f19b693e70a361ab53c1087472616e7366657267b6155db85e53298f01e0280cc2f21a0f40c4e808f10400e1f505147e548ecd2a87dd58731e6171752b1aa11494c62f147bee835ff211327677c453d5f19b693e70a361ab53c1087472616e7366657267b6155db85e53298f01e0280cc2f21a0f40c4e808f10500dc5c240214c10704464fade3197739536450ec9531a1f24a37147bee835ff211327677c453d5f19b693e70a361ab53c1087472616e7366657267b6155db85e53298f01e0280cc2f21a0f40c4e808f166b2263911344b5b15`
 	p := smartcontract.NewParserWithScript(script)
 	type methodSignature struct {
-		Operation smartcontract.Operation  //operation
-		From      smartcontract.NEOAddress //args[0]
-		To        smartcontract.NEOAddress //args[1]
-		Amount    int                      //args[2]
+		ScriptHash smartcontract.ScriptHash
+		Operation  smartcontract.Operation  //operation
+		From       smartcontract.NEOAddress //args[0]
+		To         smartcontract.NEOAddress //args[1]
+		Amount     int                      //args[2]
 	}
 	m := methodSignature{}
 	list, err := p.Parse(&m)
@@ -89,13 +93,26 @@ func TestParseMultipleTransfers(t *testing.T) {
 	}
 
 	for _, v := range list {
-		log.Printf("%+v", v.(*methodSignature))
+		sc, ok := v.(*methodSignature)
+		if ok == false {
+			continue
+		}
+		log.Printf("%x %v %v %v", sc.ScriptHash, sc.Operation, sc.From.ToString(), sc.To.ToString(), sc.Amount)
 	}
 }
 
 func TestContainsOperation(t *testing.T) {
 	p := smartcontract.NewParserWithScript("51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c6d696e74546f6b656e73546f67b17f078543788c588ce9e75544e325a050f8c1b7")
 	contains := p.ContainsOperation("mintTokensTo")
+	log.Printf("%v", contains)
+	if contains == false {
+		t.Fail()
+	}
+}
+
+func TestContainsTransfer(t *testing.T) {
+	p := smartcontract.NewParserWithScript("05007f3e3602146b55668bb616336a5c6d2da6a035e4eb856f88c41445fc40a091bd0de5e5408e3dbf6b023919a6f7d953c1087472616e7366657267c5cc1cb5392019e2cc4e6d6b5ea54c8d4b6d11acf166605efb0156b867db")
+	contains := p.ContainsOperation("transfer")
 	log.Printf("%v", contains)
 	if contains == false {
 		t.Fail()
@@ -114,23 +131,68 @@ func TestContainsOperationTransfer(t *testing.T) {
 
 func TestParserNEP5Transfer(t *testing.T) {
 
-	p := smartcontract.NewParserWithScript("05006fe0d60114a20d664878bacc0114f8c594b5dc9065ce04f6eb14e484ee21fef450c92e9aed3968c6de1d58d8a9e853c1087472616e7366657267f91d6b7085db7c5aaf09f19eeec1ca3c0db2c6ec")
+	p := smartcontract.NewParserWithScript("0800a82ee53301000014d6498f44bb627af6e1ee4181403336aebb84aa96141374c2b998bf902fb50d6a731bcc675c645f9b7f53c1087472616e7366657267d674d88177ad28080323be1e03a150170eaf1d89")
 
 	//the order of your method signature has the be exact to the one
 	//in your deployed smart contract
 	type methodSignature struct {
-		Operation smartcontract.Operation  //operation
-		From      smartcontract.NEOAddress //args[0]
-		To        smartcontract.NEOAddress //args[1]
-		Amount    int                      //args[2]
+		ScriptHash smartcontract.ScriptHash
+		Operation  smartcontract.Operation  //operation
+		From       smartcontract.NEOAddress //args[0]
+		To         smartcontract.NEOAddress //args[1]
+		Amount     int                      //args[2]
 	}
 	m := methodSignature{}
 	list, err := p.Parse(&m)
 	if err != nil {
+		log.Printf("%v", err)
 		t.Fail()
 		return
 	}
 	for _, v := range list {
-		log.Printf("%+v", v.(*methodSignature))
+		sc, ok := v.(*methodSignature)
+		if ok == false {
+			continue
+		}
+		log.Printf("%x %v %v %v %v", sc.ScriptHash, sc.Operation, sc.From.ToString(), sc.To.ToString(), sc.Amount)
 	}
+}
+
+func TestParserNEP5TransferAnother(t *testing.T) {
+
+	p := smartcontract.NewParserWithScript("0520d9575b441480310041a29744c8ed815806150f453870eeae8e146063795d3b9b3cd55aef026eae992b91063db0db53c1087472616e7366657267187fc13bec8ff0906c079e7f4cc8276709472913f16662846e03978d5c87")
+
+	//the order of your method signature has the be exact to the one
+	//in your deployed smart contract
+	type methodSignature struct {
+		ScriptHash smartcontract.ScriptHash
+		Operation  smartcontract.Operation  //operation
+		From       smartcontract.NEOAddress //args[0]
+		To         smartcontract.NEOAddress //args[1]
+		Amount     int                      //args[2]
+	}
+	m := methodSignature{}
+	list, err := p.Parse(&m)
+	if err != nil {
+		log.Printf("%v", err)
+		t.Fail()
+		return
+	}
+	for _, v := range list {
+		sc, ok := v.(*methodSignature)
+		if ok == false {
+			continue
+		}
+		log.Printf("%x %v %v %v %.4f", sc.ScriptHash, sc.Operation, sc.From.ToString(), sc.To.ToString(), float64(sc.Amount)/math.Pow(10, 8))
+	}
+}
+
+func TestGetByteWithIndex(t *testing.T) {
+	b, err := hex.DecodeString("08007856a33904000014eeea87dfa23bb57b80a5001d5da2fada7effa3b614442f3f603a57542373ead52d81440f95da71245a53c1087472616e7366657267187fc13bec8ff0906c079e7f4cc8276709472913")
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	log.Printf("%x", b[len(b)-21])
 }

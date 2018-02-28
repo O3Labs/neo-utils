@@ -122,6 +122,7 @@ func ReadBigInt(reader *bufio.Reader) (value big.Int, e error) {
 		reversed := reverseBytes(buf)
 		reversedHex := hex.EncodeToString(reversed)
 		v, _ := new(big.Int).SetString(reversedHex, 16)
+		// log.Printf("big int = %v", v.Int64())
 		value = *v
 	}
 
@@ -146,6 +147,39 @@ func (p *Parser) splitScriptWithAPPCALL() ([]appcall, error) {
 		return list, err
 	}
 
+	//perhaps a better way to do this is to check the 21st byte from the right side
+	//if it's the APPCALL
+	twentyFirstByte := b[len(b)-21]
+	if twentyFirstByte == byte(APPCALL) {
+		//if the 21st byte is the APPCALL. it's safe to grab the last 20 bytes. it's a scripthash
+		rightSide := b[len(b)-20:] //last 20 bytes is a script hash
+		leftSide := b[:len(b)-21]  //from start until the len(b) - 21
+
+		list = append(list, appcall{
+			operationAndArgs: leftSide,
+			scriptHash:       reverseBytes(rightSide),
+		})
+		return list, nil
+	}
+
+	//if the 21st byte is not the APPCALL. we can try it again to see if the 10th byte is THROWIFNOT
+
+	if twentyFirstByte != byte(APPCALL) {
+		tenthByte := b[len(b)-10]
+		//this could happen with single APPCALL or multiple APPCALL
+		//so we should try to split the left side with the APPCALL and see the number of APPCALL as well
+		testSplit := bytes.Split(b[:len(b)-(21+10)], []byte{byte(APPCALL)})
+		if tenthByte == byte(THROWIFNOT) && len(testSplit) == 1 {
+			rightSide := b[len(b)-(20+10):] //last 20 bytes is a script hash
+			leftSide := b[:len(b)-(21+10)]  //from start until the len(b) - (21 + 10)
+			list = append(list, appcall{
+				operationAndArgs: leftSide,
+				scriptHash:       reverseBytes(rightSide),
+			})
+			return list, nil
+		}
+	}
+
 	//split the script by the APPCALL opcode(0x67) then we will get
 	//script hash on the right and args + operation on the left
 	splitted := bytes.Split(b, []byte{byte(APPCALL)})
@@ -159,7 +193,6 @@ func (p *Parser) splitScriptWithAPPCALL() ([]appcall, error) {
 	//the script hash from rawtransaction's script is reversed
 	//in order to return the proper one that you get when call "getcontractstate"
 	//we have to reverse the bytes
-
 	if numberOfAPPCALLs > 1 {
 		for index := 0; index < len(splitted)-1; index++ {
 			tempOperationAndArgs := []byte{}
@@ -182,11 +215,7 @@ func (p *Parser) splitScriptWithAPPCALL() ([]appcall, error) {
 		}
 		return list, nil
 	}
-	//an easy one with 1 APPCALL in script
-	list = append(list, appcall{
-		operationAndArgs: splitted[0],
-		scriptHash:       reverseBytes(splitted[1]),
-	})
+
 	return list, nil
 }
 
@@ -225,6 +254,7 @@ func (p *Parser) GetListOfOperations() ([]string, error) {
 func (p *Parser) Parse(methodSignature interface{}) ([]interface{}, error) {
 
 	list, err := p.splitScriptWithAPPCALL()
+
 	if err != nil {
 		return nil, err
 	}
@@ -272,7 +302,7 @@ func (p *Parser) Parse(methodSignature interface{}) ([]interface{}, error) {
 		typeOfT := s.Type()
 
 		//we check given method signature and parsed number of args
-		if int(numberOfArgs.Int64()) != s.NumField()-1 {
+		if int(numberOfArgs.Int64()) != s.NumField()-2 {
 			return nil, fmt.Errorf("The number of args is %v but given method signature has %v", numberOfArgs, s.NumField())
 		}
 
@@ -286,6 +316,8 @@ func (p *Parser) Parse(methodSignature interface{}) ([]interface{}, error) {
 			field := s.Field(i)
 			t := typeOfT.Field(i)
 			switch t.Type {
+			case reflect.TypeOf(ScriptHash{}):
+				field.SetBytes(v.scriptHash[:20])
 			case reflect.TypeOf(Operation("")):
 				field.SetString(operationString)
 			case reflect.TypeOf(NEOAddress{}):
