@@ -15,6 +15,7 @@ type ParserInterface interface {
 	Parse(methodSignature interface{}) ([]interface{}, error)
 	GetListOfOperations() ([]string, error)
 	GetListOfScriptHashes() ([]string, error)
+	ContainsOperation(operation string) bool
 }
 
 type Parser struct {
@@ -306,4 +307,13 @@ func (p *Parser) Parse(methodSignature interface{}) ([]interface{}, error) {
 	}
 
 	return results, nil
+}
+
+func (p *Parser) ContainsOperation(operation string) bool {
+	operationBytes := []byte(operation)
+	scriptBytes, err := hex.DecodeString(p.Script)
+	if err != nil {
+		return false
+	}
+	return bytes.Contains(scriptBytes, operationBytes)
 }
