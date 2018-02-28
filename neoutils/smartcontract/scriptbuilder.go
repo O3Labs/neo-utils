@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"log"
 
 	"github.com/o3labs/neo-utils/neoutils/btckey"
 )
@@ -181,7 +180,6 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		return nil
 	case NEOAddress:
 		//when pushing neo address as an arg. we need length so we need to push a hex string
-		log.Printf("push neo address %x (%v)", e, len(e))
 		return s.pushHexString(fmt.Sprintf("%x", e))
 	case ScriptHash:
 		s.RawBytes = append(s.RawBytes, e...)
@@ -208,11 +206,9 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		s.pushOpCode(PACK)
 		return nil
 	case int:
-		log.Printf("push int %v (0x%x)", e, e)
 		s.pushInt(e)
 		return nil
 	case int64:
-		log.Printf("push int64 %v", int(e))
 		s.pushInt(int(e))
 		return nil
 	}
@@ -236,7 +232,6 @@ func (s ScriptHash) ToBigEndian() []byte {
 // This is in a format of main(string operation, []object args) in c#
 func (s *ScriptBuilder) GenerateContractInvocationData(scriptHash ScriptHash, operation string, args []interface{}) []byte {
 	if args != nil {
-		log.Printf("%+v", args)
 		s.pushData(args)
 	}
 	s.pushData([]byte(operation))                                     //operation is in string we need to convert it to hex first
@@ -290,7 +285,6 @@ func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend Na
 		runningAmount += addingUTXO.Value
 		index += 1
 		count += 1
-		log.Printf("runningAmount %.8f", runningAmount)
 	}
 
 	s.pushLength(count)
