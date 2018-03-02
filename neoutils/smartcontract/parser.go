@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"math/big"
 	"reflect"
 
@@ -201,6 +202,11 @@ func (p *Parser) splitScriptWithAPPCALL() ([]appcall, error) {
 				tempOperationAndArgs = splitted[index]
 				tempScriptHash = reverseBytes(splitted[index+1][:20])
 			} else {
+				//check the length here first
+				if len(splitted[index]) < 21 {
+					log.Printf("%x", splitted[index])
+					continue
+				}
 				//Multiple APPCALL contains THROWIFNOT to make sure that every APPCALL runs otherwise reject all
 				//THROWIFNOT is 0xf1.
 				//scripthash(20 bytes) + 0xf1 + [actual operation and args]
