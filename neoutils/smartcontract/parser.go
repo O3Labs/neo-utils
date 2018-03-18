@@ -232,7 +232,7 @@ func (p *Parser) GetListOfScriptHashes() ([]string, error) {
 	}
 	listOfScriptHash := []string{}
 	for _, v := range list {
-		listOfScriptHash = append(listOfScriptHash, fmt.Sprintf("%x", v.scriptHash))
+		listOfScriptHash = append(listOfScriptHash, fmt.Sprintf("%x", v.scriptHash[:20]))
 	}
 
 	return listOfScriptHash, nil
