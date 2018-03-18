@@ -39,7 +39,7 @@ func TestParserGetListOfOperations(t *testing.T) {
 
 func TestGetScripthashFromScript(t *testing.T) {
 	expectedResult := "b7c1f850a025e34455e7e98c588c784385077fb1"
-	p := smartcontract.NewParserWithScript("0480969800146063795d3b9b3cd55aef026eae992b91063db0db142c06a9124a089e43874d7a06a6532569df05d0ab53c1087472616e7366657267fb1c540417067c270dee32f21023aa8b9b71abcef1669ef64cb3c09aa3b3")
+	p := smartcontract.NewParserWithScript("0500b78b5b1b148e47621558c061b43d93ba407d81703edb8e36ec146063795d3b9b3cd55aef026eae992b91063db0db53c1087472616e7366657267b6155db85e53298f01e0280cc2f21a0f40c4e808f16640a6b70d4e2982f7")
 	result, err := p.GetListOfScriptHashes()
 	if err != nil {
 		log.Printf("Expected: %v but got error : %v", expectedResult, err)
@@ -160,7 +160,7 @@ func TestParserNEP5Transfer(t *testing.T) {
 
 func TestParserNEP5TransferAnother(t *testing.T) {
 
-	p := smartcontract.NewParserWithScript("0800e1f5050000000014f7eb6fc7827b6f56b92eae3610d041f93e3451521458218b796504d6bde39ba805f92dcda64eae2d8c53c1087472616e7366657267cf9472821400ceb06ca780c2a937fec5bbec51b9")
+	p := smartcontract.NewParserWithScript("0500b78b5b1b148e47621558c061b43d93ba407d81703edb8e36ec146063795d3b9b3cd55aef026eae992b91063db0db53c1087472616e7366657267b6155db85e53298f01e0280cc2f21a0f40c4e808f16640a6b70d4e2982f7")
 
 	//the order of your method signature has the be exact to the one
 	//in your deployed smart contract
