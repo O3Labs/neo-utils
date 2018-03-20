@@ -38,7 +38,10 @@ func (n *NEORPCClient) makeRequest(method string, params []interface{}, out inte
 		return err
 	}
 	req.Header.Add("content-type", "application/json")
-	res, _ := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
 	defer res.Body.Close()
 	err = json.NewDecoder(res.Body).Decode(&out)
 	if err != nil {
