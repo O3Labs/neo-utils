@@ -196,3 +196,20 @@ func TestGetByteWithIndex(t *testing.T) {
 
 	log.Printf("%x", b[len(b)-21])
 }
+
+func TestContainsTargetScriptHash(t *testing.T) {
+	//https://neotracker.io/tx/8f691ec7b9e9979964de9ce3f994588f31d6b6fea2588081d20010c14f32138d
+	p := smartcontract.NewParserWithScript("0600027264cd0414aaef53a5153128fcb268b0337e8e7eae5724c78f146063795d3b9b3cd55aef026eae992b91063db0db53c1087472616e7366657267cf9472821400ceb06ca780c2a937fec5bbec51b9f166f73405540036bc1d")
+	dbcScriptHash := "b951ecbbc5fe37a9c280a76cb0ce0014827294cf"
+	contains := p.ContainsScriptHash(dbcScriptHash)
+	log.Printf("%v", contains)
+}
+
+func TestContainsTargetScriptHashAndTransferOperation(t *testing.T) {
+	//https://neotracker.io/tx/8f691ec7b9e9979964de9ce3f994588f31d6b6fea2588081d20010c14f32138d
+	p := smartcontract.NewParserWithScript("0600027264cd0414aaef53a5153128fcb268b0337e8e7eae5724c78f146063795d3b9b3cd55aef026eae992b91063db0db53c1087472616e7366657267cf9472821400ceb06ca780c2a937fec5bbec51b9f166f73405540036bc1d")
+	dbcScriptHash := "b951ecbbc5fe37a9c280a76cb0ce0014827294cf"
+	targetOperation := "transfer"
+	contains := p.ContainsScriptHashAndOperation(dbcScriptHash, targetOperation)
+	log.Printf("%v", contains)
+}

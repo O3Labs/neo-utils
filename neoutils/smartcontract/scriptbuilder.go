@@ -39,6 +39,9 @@ type ScriptBuilderInterface interface {
 	FullHexString() string
 	Clear()
 
+	EmitPush(data interface{}) error
+	// ToScriptHash() []byte //UInt160
+
 	pushInt(value int) error
 	pushData(data interface{}) error
 	pushLength(count int)
@@ -134,6 +137,10 @@ func (s *ScriptBuilder) pushHexString(hexString string) error {
 		s.RawBytes = append(s.RawBytes, b...)
 	}
 	return nil
+}
+
+func (s *ScriptBuilder) EmitPush(data interface{}) error {
+	return s.pushData(data)
 }
 
 func (s *ScriptBuilder) pushData(data interface{}) error {

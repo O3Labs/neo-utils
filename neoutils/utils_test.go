@@ -56,7 +56,7 @@ func TestValidateNEOAddressInvalidAddress(t *testing.T) {
 }
 
 func TestConverting(t *testing.T) {
-	hex := "00dc5c2402"
+	hex := "009eaa3d775818"
 
 	value := ConvertByteArrayToBigInt(hex)
 
@@ -75,7 +75,7 @@ func TestParseNEP9(t *testing.T) {
 }
 
 func TestReverse(t *testing.T) {
-	b := HexTobytes("6063795d3b9b3cd55aef026eae992b91063db0db")
+	b := HexTobytes("f782294e0db7a64066f108e8c4400f1af2c20c28")
 	log.Printf("%x", ReverseBytes(b))
 }
 
@@ -91,3 +91,9 @@ func TestReverse(t *testing.T) {
 // 	// script := "51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c6d696e74546f6b656e73546f67b17f078543788c588ce9e75544e325a050f8c1b7"
 
 // }
+
+func TestHash160(t *testing.T) {
+	address := "AJShjraX4iMJjwVt8WYYzZyGvDMxw6Xfbe"
+	b := Hash160([]byte(address))
+	log.Printf("%x", b)
+}

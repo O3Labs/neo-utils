@@ -17,6 +17,8 @@ type ParserInterface interface {
 	GetListOfOperations() ([]string, error)
 	GetListOfScriptHashes() ([]string, error)
 	ContainsOperation(operation string) bool
+	ContainsScriptHash(scripthash string) bool
+	ContainsScriptHashAndOperation(scripthash string, operation string) bool
 }
 
 type Parser struct {
@@ -354,4 +356,31 @@ func (p *Parser) ContainsOperation(operation string) bool {
 		return false
 	}
 	return bytes.Contains(scriptBytes, operationBytes)
+}
+
+func (p *Parser) ContainsScriptHash(scripthash string) bool {
+	scripthashBytes, err := hex.DecodeString(scripthash)
+	if err != nil {
+		return false
+	}
+	target := reverseBytes(scripthashBytes)
+	scriptBytes, err := hex.DecodeString(p.Script)
+	if err != nil {
+		return false
+	}
+	log.Printf("%x", target)
+	return bytes.Contains(scriptBytes, target)
+}
+func (p *Parser) ContainsScriptHashAndOperation(scripthash string, operation string) bool {
+	scripthashBytes, err := hex.DecodeString(scripthash)
+	if err != nil {
+		return false
+	}
+	target := reverseBytes(scripthashBytes)
+	operationBytes := []byte(operation)
+	scriptBytes, err := hex.DecodeString(p.Script)
+	if err != nil {
+		return false
+	}
+	return bytes.Contains(scriptBytes, target) && bytes.Contains(scriptBytes, operationBytes)
 }

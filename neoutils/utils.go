@@ -99,3 +99,13 @@ func ParseNEP9URI(uri string) (*SimplifiedNEP9, error) {
 		Amount:  parsed.Amount,
 	}, nil
 }
+
+func Hash160(data []byte) []byte {
+	_, b, err := btckey.B58checkdecode(string(data))
+	if err != nil {
+		return nil
+	}
+	shortened := b[1 : len(b)-1]
+	hex := bytesToHex(shortened)
+	return ReverseBytes([]byte(hex))
+}
