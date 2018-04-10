@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/o3labs/neo-utils/neoutils"
+	"github.com/o3labs/neo-utils/neoutils/coz"
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
 )
 
@@ -133,4 +134,73 @@ func TestGenerateInvokeTransferNEP5Token(t *testing.T) {
 		return
 	}
 	log.Printf("%x", tx)
+}
+
+func TestMintTokens(t *testing.T) {
+	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
+	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
+	if err != nil {
+		log.Printf("%v", err)
+		t.Fail()
+	}
+	cozClient := coz.NewClient("http://localhost:5000/")
+
+	unspentCoz, err := cozClient.GetUnspentByAddress(privateNetwallet.Address)
+	if err != nil {
+		log.Printf("%v", err)
+		return
+	}
+
+	gasBalance := smartcontract.Balance{
+		Amount: float64(0) / float64(100000000),
+		UTXOs:  []smartcontract.UTXO{},
+	}
+
+	neoBalance := smartcontract.Balance{
+		Amount: float64(0) / float64(100000000),
+		UTXOs:  []smartcontract.UTXO{},
+	}
+
+	for _, v := range unspentCoz.GAS.Unspent {
+		gasTX1 := smartcontract.UTXO{
+			Index: v.Index,
+			TXID:  v.Txid,
+			Value: v.Value,
+		}
+		log.Printf("utxo value = %.8f", v.Value)
+		gasBalance.UTXOs = append(gasBalance.UTXOs, gasTX1)
+	}
+
+	for _, v := range unspentCoz.NEO.Unspent {
+		tx := smartcontract.UTXO{
+			Index: v.Index,
+			TXID:  v.Txid,
+			Value: v.Value,
+		}
+		log.Printf("utxo value = %.8f", v.Value)
+		neoBalance.UTXOs = append(neoBalance.UTXOs, tx)
+	}
+
+	unspent := smartcontract.Unspent{
+		Assets: map[smartcontract.NativeAsset]*smartcontract.Balance{},
+	}
+
+	unspent.Assets[smartcontract.GAS] = &gasBalance
+	unspent.Assets[smartcontract.NEO] = &neoBalance
+
+	sc := neoutils.UseSmartContract("5ceefdc4bb116fda85d305d1f3662b01e70aa2e9")
+	remark := "O3TX"
+	attributes := map[smartcontract.TransactionAttribute][]byte{}
+	attributes[smartcontract.Remark1] = []byte(remark)
+	method := "mintTokens"
+	asset := smartcontract.NEO
+	amount := float64(20)
+	args := []interface{}{}
+	tx, err := sc.GenerateInvokeFunctionRawTransactionWithAmountToSend(*privateNetwallet, asset, amount, unspent, attributes, method, args)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	log.Printf("%x", tx)
+
 }

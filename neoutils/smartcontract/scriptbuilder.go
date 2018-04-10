@@ -2,15 +2,21 @@ package smartcontract
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 
 	"github.com/o3labs/neo-utils/neoutils/btckey"
+	"golang.org/x/crypto/ripemd160"
 )
 
 type ScriptHash []byte
 type NEOAddress []byte
+
+const (
+	Uint160Length = 20
+)
 
 func (s ScriptHash) ToString() string {
 	return hex.EncodeToString(s)
@@ -23,6 +29,10 @@ func ParseNEOAddress(address string) NEOAddress {
 	}
 	return NEOAddress(b)
 }
+func NEOAddressFromScriptHash(scriptHashBytes []byte) NEOAddress {
+	address := btckey.B58checkencodeNEO(0x17, reverseBytes(scriptHashBytes))
+	return ParseNEOAddress(address)
+}
 
 func (n NEOAddress) ToString() string {
 	return btckey.B58checkencodeNEO(0x17, n)
@@ -32,6 +42,7 @@ type ScriptBuilderInterface interface {
 	GenerateContractInvocationData(scriptHash ScriptHash, operation string, args []interface{}) []byte
 	GenerateTransactionAttributes(attributes map[TransactionAttribute][]byte) ([]byte, error)
 	GenerateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
+	GenerateEmptyInput() []byte
 	GenerateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
 	GenerateInvocationAndVerificationScriptWithSignatures(signatures []TransactionSignature) []byte
 	EmptyTransactionAttributes() []byte
@@ -40,7 +51,7 @@ type ScriptBuilderInterface interface {
 	Clear()
 
 	EmitPush(data interface{}) error
-	// ToScriptHash() []byte //UInt160
+	ToScriptHash() []byte //UInt160
 
 	pushInt(value int) error
 	pushData(data interface{}) error
@@ -53,6 +64,16 @@ func NewScriptBuilder() ScriptBuilderInterface {
 
 type ScriptBuilder struct {
 	RawBytes []byte
+}
+
+func (s *ScriptBuilder) ToScriptHash() []byte {
+	sha := sha256.New()
+	sha.Write(s.ToBytes())
+	b := sha.Sum(nil)
+	ripemd := ripemd160.New()
+	ripemd.Write(b)
+	b = ripemd.Sum(nil)
+	return b[0:Uint160Length]
 }
 
 func (s ScriptBuilder) ToBytes() []byte {
@@ -265,6 +286,12 @@ func (s *ScriptBuilder) GenerateTransactionAttributes(attributes map[Transaction
 	}
 
 	return s.ToBytes(), nil
+}
+
+func (s *ScriptBuilder) GenerateEmptyInput() []byte {
+	//inputs = [input_count] + [[txID(32)] + [txIndex(2)]] = 34 x input_count bytes
+	s.pushLength(0)
+	return s.ToBytes()
 }
 
 func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error) {

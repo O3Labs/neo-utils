@@ -16,7 +16,7 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/apisit/rfc6979"
+	"github.com/o3labs/neo-utils/neoutils/rfc6979"
 	"golang.org/x/crypto/ripemd160"
 )
 

@@ -71,6 +71,13 @@ func TestPushArray(t *testing.T) {
 	log.Printf("%x", s.ToBytes())
 }
 
+func TestToScriptHash(t *testing.T) {
+	to := ParseNEOAddress("AJShjraX4iMJjwVt8WYYzZyGvDMxw6Xfbe")
+	s := NewScriptBuilder()
+	s.pushData(to)
+	log.Printf("%x", s.ToScriptHash())
+}
+
 func TestClear(t *testing.T) {
 	s := NewScriptBuilder()
 	s.pushData([]byte("test"))
