@@ -324,6 +324,7 @@ func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend Na
 	index := 0
 	count := 0
 	inputs := []UTXO{}
+	//loop until we get enough sum amount
 	for utxoSumAmount < amountToSend {
 		addingUTXO := sendingAsset.UTXOs[index]
 		inputs = append(inputs, addingUTXO)

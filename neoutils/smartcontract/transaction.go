@@ -36,3 +36,10 @@ func NewInvocationTransaction() Transaction {
 		Version: NEOTradingVersion,
 	}
 }
+
+func NewContractTransaction() Transaction {
+	return Transaction{
+		Type:    ContractTransaction,
+		Version: NEOTradingVersion,
+	}
+}
