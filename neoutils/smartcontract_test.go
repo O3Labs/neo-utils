@@ -188,15 +188,12 @@ func TestMintTokens(t *testing.T) {
 	unspent.Assets[smartcontract.GAS] = &gasBalance
 	unspent.Assets[smartcontract.NEO] = &neoBalance
 
-	sc := neoutils.UseSmartContract("5ceefdc4bb116fda85d305d1f3662b01e70aa2e9")
+	sc := "5ceefdc4bb116fda85d305d1f3662b01e70aa2e9"
 	remark := "O3TX"
-	attributes := map[smartcontract.TransactionAttribute][]byte{}
-	attributes[smartcontract.Remark1] = []byte(remark)
-	method := "mintTokens"
+
 	asset := smartcontract.NEO
-	amount := float64(20)
-	args := []interface{}{}
-	tx, err := sc.GenerateInvokeFunctionRawTransactionWithAmountToSend(*privateNetwallet, asset, amount, unspent, attributes, method, args)
+	amount := float64(10)
+	tx, err := neoutils.MintTokens(sc, *privateNetwallet, asset, amount, unspent, remark)
 	if err != nil {
 		t.Fail()
 		return

@@ -9,7 +9,6 @@ import (
 
 type SmartContractInterface interface {
 	GenerateInvokeFunctionRawTransaction(wallet Wallet, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte, operation string, args []interface{}) ([]byte, error)
-
 	GenerateInvokeFunctionRawTransactionWithAmountToSend(wallet Wallet, asset smartcontract.NativeAsset, amount float64, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte, operation string, args []interface{}) ([]byte, error)
 }
 
@@ -106,6 +105,7 @@ func (s *SmartContract) GenerateInvokeFunctionRawTransactionWithAmountToSend(wal
 	amountToSend := amount
 	assetToSend := asset
 
+	// fee := float64(0.00000001)
 	//generate transaction inputs
 	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend)
 	if err != nil {

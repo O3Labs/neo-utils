@@ -56,7 +56,7 @@ func TestValidateNEOAddressInvalidAddress(t *testing.T) {
 }
 
 func TestConverting(t *testing.T) {
-	hex := "008e6ea819"
+	hex := "00205fa012"
 
 	value := ConvertByteArrayToBigInt(hex)
 
