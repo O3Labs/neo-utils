@@ -42,9 +42,11 @@ func (n NEOAddress) ToString() string {
 type ScriptBuilderInterface interface {
 	GenerateContractInvocationData(scriptHash ScriptHash, operation string, args []interface{}) []byte
 	GenerateTransactionAttributes(attributes map[TransactionAttribute][]byte) ([]byte, error)
-	GenerateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
-	GenerateEmptyInput() []byte
-	GenerateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error)
+
+	//this is to send the UTXO of asset that will be used in TransactionOutput
+	GenerateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64, networkFeeAmount NetworkFeeAmount) ([]byte, error)
+	GenerateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64, networkFeeAmount NetworkFeeAmount) ([]byte, error)
+
 	GenerateInvocationAndVerificationScriptWithSignatures(signatures []TransactionSignature) []byte
 	EmptyTransactionAttributes() []byte
 	ToBytes() []byte
@@ -289,28 +291,21 @@ func (s *ScriptBuilder) GenerateTransactionAttributes(attributes map[Transaction
 	return s.ToBytes(), nil
 }
 
-func (s *ScriptBuilder) GenerateEmptyInput() []byte {
-	//inputs = [input_count] + [[txID(32)] + [txIndex(2)]] = 34 x input_count bytes
-	s.pushLength(0)
-	return s.ToBytes()
-}
-
-func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error) {
+func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64, networkFeeAmount NetworkFeeAmount) ([]byte, error) {
 	//inputs = [input_count] + [[txID(32)] + [txIndex(2)]] = 34 x input_count bytes
 
 	sendingAsset := unspent.Assets[assetToSend]
 	if sendingAsset == nil {
 		return nil, fmt.Errorf("Asset %v not found in UTXO", assetToSend)
 	}
-
-	//TEST predefined fee now
-	feeAmount := float64(0)
+	//network fee
+	feeAmount := networkFeeAmount
 
 	//if assetToSend is NEO and fee amount is more than zero
-	needAnotherAssetInputForFee := false
+	needAnotherAssetForFee := false
 	if assetToSend == NEO && feeAmount > 0 {
 		//we need another input because fee is in GAS
-		needAnotherAssetInputForFee = true
+		needAnotherAssetForFee = true
 	}
 
 	if amountToSend > sendingAsset.TotalAmount() {
@@ -331,18 +326,19 @@ func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend Na
 		utxoSumAmount += addingUTXO.Value
 		index += 1
 		count += 1
+		log.Printf("input = %v %v", addingUTXO.TXID, addingUTXO.Value)
 	}
 
 	//fee input part
-	if needAnotherAssetInputForFee == true {
+	if needAnotherAssetForFee == true {
 		gasBalanceForFee := unspent.Assets[GAS]
 		gasBalanceForFee.SortMinFirst()
-		if feeAmount > gasBalanceForFee.TotalAmount() {
+		if float64(feeAmount) > gasBalanceForFee.TotalAmount() {
 			return nil, fmt.Errorf("you don't have enough balance for network fee.")
 		}
 		utxoSumFeeAmount := float64(0)
 		feeIndex := 0
-		for utxoSumFeeAmount < feeAmount {
+		for utxoSumFeeAmount < float64(feeAmount) {
 			addingUTXO := gasBalanceForFee.UTXOs[feeIndex]
 			inputs = append(inputs, addingUTXO)
 			utxoSumFeeAmount += addingUTXO.Value
@@ -361,7 +357,7 @@ func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend Na
 	return s.ToBytes(), nil
 }
 
-func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64) ([]byte, error) {
+func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64, networkFeeAmount NetworkFeeAmount) ([]byte, error) {
 
 	//output = [output_count] + [assetID(32)] + [amount(8)] + [sender_scripthash(20)] = 60 x output_count bytes
 
@@ -370,15 +366,15 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 		return nil, fmt.Errorf("Asset %v not found in UTXO", assetToSend)
 	}
 
-	//TEST predefined fee now
-	feeAmount := float64(0)
+	//network fee
+	feeAmount := networkFeeAmount
 
 	//if assetToSend is NEO and fee amount is more than zero
-	needAnotherAssetInputForFee := false
+	needAnotherAssetForFee := false
 	if assetToSend == NEO && feeAmount > 0 {
-		needAnotherAssetInputForFee = true
+		needAnotherAssetForFee = true
 	}
-	log.Printf("needAnotherAssetInputForFee = %v", needAnotherAssetInputForFee)
+	log.Printf("needAnotherAssetForFee = %v", needAnotherAssetForFee)
 
 	if amountToSend > sendingAsset.TotalAmount() {
 		return nil, fmt.Errorf("you don't have enough balance. Sending %v but only have %v", amountToSend, sendingAsset.TotalAmount())
@@ -403,6 +399,7 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 	totalAmountInInputs := utxoSumAmount
 	needTwoOutputTransaction := totalAmountInInputs != amountToSend
 	list := []TransactionOutput{}
+	log.Printf("needTwoOutputTransaction=%v", needTwoOutputTransaction)
 
 	if needTwoOutputTransaction {
 		//first output is the amount to send to the receiver
@@ -418,9 +415,10 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 
 		//so if we don't need another asset input and fee is more than 0
 		//we then make returningAmount = returningAmount - fee
-		if needAnotherAssetInputForFee == false {
-			returningAmount -= feeAmount
+		if needAnotherAssetForFee == false && float64(feeAmount) > 0 {
+			returningAmount -= float64(feeAmount)
 		}
+		log.Printf("returningAmount = %v", returningAmount)
 		//return the left over to sender
 		returningOutput := TransactionOutput{
 			Asset:   assetToSend,
@@ -441,23 +439,22 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 
 	//if set network fee is more than 0
 	//add more output for fee
-	if needAnotherAssetInputForFee == true {
+	if needAnotherAssetForFee == true {
 
 		gasBalanceForFee := unspent.Assets[GAS]
 		gasBalanceForFee.SortMinFirst()
-		if feeAmount > gasBalanceForFee.TotalAmount() {
+		if float64(feeAmount) > gasBalanceForFee.TotalAmount() {
 			return nil, fmt.Errorf("you don't have enough balance for network fee.")
 		}
 		runningFeeAmount := float64(0)
 		feeIndex := 0
-		for runningFeeAmount < feeAmount {
+		for runningFeeAmount < float64(feeAmount) {
 			addingUTXO := gasBalanceForFee.UTXOs[feeIndex]
 			inputs = append(inputs, addingUTXO)
 			runningFeeAmount += addingUTXO.Value
 			feeIndex += 1
 			count += 1
 		}
-		//end fee input part
 
 		// To allow user to set network fee is to make send GAS back to yourself
 		// minus the amount of gas that you want it to be network fee
@@ -465,7 +462,7 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 		// GAS balance = 10
 		// sending back amount = 9
 		// this will make network fee = 1
-		returningAmount := runningFeeAmount - feeAmount
+		returningAmount := runningFeeAmount - float64(feeAmount)
 		returningOutput := TransactionOutput{
 			Asset:   GAS,
 			Value:   int64(returningAmount * float64(100000000)),

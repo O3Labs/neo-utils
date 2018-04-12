@@ -22,7 +22,7 @@ func TestConvertScripthashFromParamToNEOAddress(t *testing.T) {
 }
 
 func TestScriptHashToNEOAddress(t *testing.T) {
-	hash := "f0413f8d01a38a86a9c1236051a5ab6fb1beebc5"
+	hash := "b2eb148d3783f60e678e35f2c496de1a2a7ead93"
 
 	address := ScriptHashToNEOAddress(hash)
 
@@ -35,8 +35,7 @@ func TestScriptHashToNEOAddress(t *testing.T) {
 }
 
 func TestNEOAddressToScriptHash(t *testing.T) {
-	hash := NEOAddressToScriptHash("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
-	log.Printf("%v", hash)
+	hash := NEOAddressToScriptHash("Adm9ER3UwdJfimFtFhHq1L5MQ5gxLLTUes")
 	b, _ := hex.DecodeString(hash)
 	log.Printf("%x", ReverseBytes(b))
 }

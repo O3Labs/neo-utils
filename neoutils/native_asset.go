@@ -6,16 +6,32 @@ import (
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
 )
 
-func SendNativeAssetRawTransaction(wallet Wallet, asset smartcontract.NativeAsset, amount float64, to smartcontract.NEOAddress, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, error) {
+type NativeAssetInterface interface {
+	SendNativeAssetRawTransaction(wallet Wallet, asset smartcontract.NativeAsset, amount float64, to smartcontract.NEOAddress, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, error)
+}
+
+type NativeAsset struct {
+	NetworkFeeAmount smartcontract.NetworkFeeAmount //allow users to override the network fee here
+}
+
+func UseNativeAsset(networkFeeAmount smartcontract.NetworkFeeAmount) NativeAsset {
+	return NativeAsset{
+		NetworkFeeAmount: networkFeeAmount,
+	}
+}
+
+var _ NativeAssetInterface = (*NativeAsset)(nil)
+
+func (n *NativeAsset) SendNativeAssetRawTransaction(wallet Wallet, asset smartcontract.NativeAsset, amount float64, to smartcontract.NEOAddress, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, error) {
 	//New invocation transaction struct and fill with all necessary data
 	tx := smartcontract.NewContractTransaction()
 
 	amountToSend := amount
 	assetToSend := asset
 
-	// fee := float64(0.00000001)
+	//fee := float64(0.00000001)
 	//generate transaction inputs
-	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend)
+	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +49,7 @@ func SendNativeAssetRawTransaction(wallet Wallet, asset smartcontract.NativeAsse
 	//send GAS to the same account
 	sender := smartcontract.ParseNEOAddress(wallet.Address)
 	receiver := to
-	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend)
+	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
 	if err != nil {
 		log.Printf("%v", err)
 		return nil, err

@@ -8,12 +8,28 @@ import (
 )
 
 type SmartContractInterface interface {
+	//NOTE: these two methods are actually pretty similar in implementation.
+	//the only difference is GenerateInvokeFunctionRawTransactionWithAmountToSend is used to send NEO/GAS to SmartContract
+	//however, I want to keep them separated
 	GenerateInvokeFunctionRawTransaction(wallet Wallet, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte, operation string, args []interface{}) ([]byte, error)
 	GenerateInvokeFunctionRawTransactionWithAmountToSend(wallet Wallet, asset smartcontract.NativeAsset, amount float64, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte, operation string, args []interface{}) ([]byte, error)
 }
 
 type SmartContract struct {
-	ScriptHash smartcontract.ScriptHash
+	ScriptHash       smartcontract.ScriptHash
+	NetworkFeeAmount smartcontract.NetworkFeeAmount //allow users to override the network fee here
+}
+
+func UseSmartContractWithNetworkFee(scriptHashHex string, feeAmount smartcontract.NetworkFeeAmount) SmartContractInterface {
+	if len(strings.TrimSpace(scriptHashHex)) == 0 {
+		return nil
+	}
+	scripthash, err := smartcontract.NewScriptHash(scriptHashHex)
+	if err != nil {
+		return nil
+	}
+
+	return &SmartContract{ScriptHash: scripthash, NetworkFeeAmount: feeAmount}
 }
 
 func UseSmartContract(scriptHashHex string) SmartContractInterface {
@@ -41,7 +57,7 @@ func (s *SmartContract) GenerateInvokeFunctionRawTransaction(wallet Wallet, unsp
 	assetToSend := smartcontract.GAS
 
 	//generate transaction inputs
-	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend)
+	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend, s.NetworkFeeAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +75,7 @@ func (s *SmartContract) GenerateInvokeFunctionRawTransaction(wallet Wallet, unsp
 	//send GAS to the same account
 	sender := smartcontract.ParseNEOAddress(wallet.Address)
 	receiver := smartcontract.ParseNEOAddress(wallet.Address)
-	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend)
+	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, s.NetworkFeeAmount)
 	if err != nil {
 		log.Printf("%v", err)
 		return nil, err
@@ -107,7 +123,7 @@ func (s *SmartContract) GenerateInvokeFunctionRawTransactionWithAmountToSend(wal
 
 	// fee := float64(0.00000001)
 	//generate transaction inputs
-	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend)
+	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend, s.NetworkFeeAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +141,7 @@ func (s *SmartContract) GenerateInvokeFunctionRawTransactionWithAmountToSend(wal
 	//send GAS to the same account
 	sender := smartcontract.ParseNEOAddress(wallet.Address)
 	receiver := smartcontract.NEOAddressFromScriptHash(s.ScriptHash.ToBigEndian())
-	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend)
+	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, s.NetworkFeeAmount)
 	if err != nil {
 		log.Printf("%v", err)
 		return nil, err

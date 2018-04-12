@@ -188,7 +188,7 @@ func TestMintTokens(t *testing.T) {
 	unspent.Assets[smartcontract.GAS] = &gasBalance
 	unspent.Assets[smartcontract.NEO] = &neoBalance
 
-	sc := "5ceefdc4bb116fda85d305d1f3662b01e70aa2e9"
+	sc := "b2eb148d3783f60e678e35f2c496de1a2a7ead93"
 	remark := "O3TX"
 
 	asset := smartcontract.NEO
@@ -202,71 +202,89 @@ func TestMintTokens(t *testing.T) {
 
 }
 
-func TestSendNativeAsset(t *testing.T) {
-	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
-	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
-	if err != nil {
-		log.Printf("%v", err)
-		t.Fail()
-	}
-	cozClient := coz.NewClient("http://localhost:5000/")
+// func TestTransferSpotcoin(t *testing.T) {
 
-	unspentCoz, err := cozClient.GetUnspentByAddress(privateNetwallet.Address)
-	if err != nil {
-		log.Printf("%v", err)
-		return
-	}
+// 	spotcoin := "b2eb148d3783f60e678e35f2c496de1a2a7ead93"
+// 	fee := smartcontract.NetworkFeeAmount(0)
+// 	sc := neoutils.UseSmartContractWithNetworkFee(spotcoin, fee)
 
-	gasBalance := smartcontract.Balance{
-		Amount: float64(0) / float64(100000000),
-		UTXOs:  []smartcontract.UTXO{},
-	}
+// 	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
+// 	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
+// 	if err != nil {
+// 		log.Printf("%v", err)
+// 		t.Fail()
+// 	}
 
-	neoBalance := smartcontract.Balance{
-		Amount: float64(0) / float64(100000000),
-		UTXOs:  []smartcontract.UTXO{},
-	}
+// 	from := smartcontract.ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+// 	if from == nil {
+// 		//invalid neo address
+// 		t.Fail()
+// 		return
+// 	}
 
-	for _, v := range unspentCoz.GAS.Unspent {
-		gasTX1 := smartcontract.UTXO{
-			Index: v.Index,
-			TXID:  v.Txid,
-			Value: v.Value,
-		}
-		log.Printf("utxo value = %.8f", v.Value)
-		gasBalance.UTXOs = append(gasBalance.UTXOs, gasTX1)
-	}
+// 	to := smartcontract.ParseNEOAddress("Adm9ER3UwdJfimFtFhHq1L5MQ5gxLLTUes")
+// 	if to == nil {
+// 		//invalid neo address
+// 		t.Fail()
+// 		return
+// 	}
+// 	numberOfTokens := 1
+// 	args := []interface{}{from, to, numberOfTokens}
 
-	for _, v := range unspentCoz.NEO.Unspent {
-		tx := smartcontract.UTXO{
-			Index: v.Index,
-			TXID:  v.Txid,
-			Value: v.Value,
-		}
-		log.Printf("utxo value = %.8f", v.Value)
-		neoBalance.UTXOs = append(neoBalance.UTXOs, tx)
-	}
+// 	cozClient := coz.NewClient("http://localhost:5000/")
 
-	unspent := smartcontract.Unspent{
-		Assets: map[smartcontract.NativeAsset]*smartcontract.Balance{},
-	}
+// 	unspentCoz, err := cozClient.GetUnspentByAddress(privateNetwallet.Address)
+// 	if err != nil {
+// 		log.Printf("%v", err)
+// 		return
+// 	}
 
-	unspent.Assets[smartcontract.GAS] = &gasBalance
-	unspent.Assets[smartcontract.NEO] = &neoBalance
+// 	gasBalance := smartcontract.Balance{
+// 		Amount: float64(0) / float64(100000000),
+// 		UTXOs:  []smartcontract.UTXO{},
+// 	}
 
-	asset := smartcontract.NEO
-	amount := float64(10)
-	toAddress := "Adm9ER3UwdJfimFtFhHq1L5MQ5gxLLTUes"
-	to := smartcontract.ParseNEOAddress(toAddress)
-	remark := "O3TX"
-	attributes := map[smartcontract.TransactionAttribute][]byte{}
-	attributes[smartcontract.Remark1] = []byte(remark)
+// 	neoBalance := smartcontract.Balance{
+// 		Amount: float64(0) / float64(100000000),
+// 		UTXOs:  []smartcontract.UTXO{},
+// 	}
 
-	tx, err := neoutils.SendNativeAssetRawTransaction(*privateNetwallet, asset, amount, to, unspent, attributes)
-	if err != nil {
-		t.Fail()
-		return
-	}
-	log.Printf("%x", tx)
+// 	for _, v := range unspentCoz.GAS.Unspent {
+// 		gasTX1 := smartcontract.UTXO{
+// 			Index: v.Index,
+// 			TXID:  v.Txid,
+// 			Value: v.Value,
+// 		}
+// 		log.Printf("utxo value = %.8f", v.Value)
+// 		gasBalance.UTXOs = append(gasBalance.UTXOs, gasTX1)
+// 	}
 
-}
+// 	for _, v := range unspentCoz.NEO.Unspent {
+// 		tx := smartcontract.UTXO{
+// 			Index: v.Index,
+// 			TXID:  v.Txid,
+// 			Value: v.Value,
+// 		}
+// 		log.Printf("utxo value = %.8f", v.Value)
+// 		neoBalance.UTXOs = append(neoBalance.UTXOs, tx)
+// 	}
+
+// 	unspent := smartcontract.Unspent{
+// 		Assets: map[smartcontract.NativeAsset]*smartcontract.Balance{},
+// 	}
+
+// 	unspent.Assets[smartcontract.GAS] = &gasBalance
+// 	unspent.Assets[smartcontract.NEO] = &neoBalance
+
+// 	remark := "O3TX"
+// 	attributes := map[smartcontract.TransactionAttribute][]byte{}
+// 	attributes[smartcontract.Remark1] = []byte(remark)
+// 	tx, err := sc.GenerateInvokeFunctionRawTransaction(*privateNetwallet, unspent, attributes, "transfer", args)
+// 	if err != nil {
+// 		t.Fail()
+// 		return
+// 	}
+// 	log.Printf("%x", tx)
+
+// 	neoutils.Use
+// }

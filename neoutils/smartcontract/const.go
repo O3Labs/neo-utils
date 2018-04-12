@@ -5,6 +5,8 @@ import "encoding/hex"
 type NativeAsset string
 type TradingVersion byte //currently 0
 
+type NetworkFeeAmount float64
+
 type Operation string
 
 const (
