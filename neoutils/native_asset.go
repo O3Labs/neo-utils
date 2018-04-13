@@ -29,7 +29,6 @@ func (n *NativeAsset) SendNativeAssetRawTransaction(wallet Wallet, asset smartco
 	amountToSend := amount
 	assetToSend := asset
 
-	//fee := float64(0.00000001)
 	//generate transaction inputs
 	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
 	if err != nil {
@@ -46,7 +45,6 @@ func (n *NativeAsset) SendNativeAssetRawTransaction(wallet Wallet, asset smartco
 	//transaction attributes
 	tx.Attributes = txAttributes
 
-	//send GAS to the same account
 	sender := smartcontract.ParseNEOAddress(wallet.Address)
 	receiver := to
 	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, n.NetworkFeeAmount)

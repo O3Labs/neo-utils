@@ -9,28 +9,13 @@ import (
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
 )
 
-func TestTransferNEP5(t *testing.T) {
-
-	scripthash := "b2eb148d3783f60e678e35f2c496de1a2a7ead93"
-	fee := smartcontract.NetworkFeeAmount(1)
-	nep5 := neoutils.UseNEP5WithNetworkFee(scripthash, fee)
-
-	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
-	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
-	if err != nil {
-		log.Printf("%v", err)
-		t.Fail()
-		return
-	}
-	amount := float64(1)
-	to := smartcontract.ParseNEOAddress("Adm9ER3UwdJfimFtFhHq1L5MQ5gxLLTUes")
-
+func unspent(address string) (smartcontract.Unspent, error) {
 	cozClient := coz.NewClient("http://localhost:5000/")
 
-	unspentCoz, err := cozClient.GetUnspentByAddress(privateNetwallet.Address)
+	unspentCoz, err := cozClient.GetUnspentByAddress(address)
 	if err != nil {
 		log.Printf("%v", err)
-		return
+		return smartcontract.Unspent{}, err
 	}
 
 	gasBalance := smartcontract.Balance{
@@ -69,6 +54,31 @@ func TestTransferNEP5(t *testing.T) {
 
 	unspent.Assets[smartcontract.GAS] = &gasBalance
 	unspent.Assets[smartcontract.NEO] = &neoBalance
+	return unspent, nil
+}
+
+//TEST with fee. succeeded
+func TestTransferNEP5(t *testing.T) {
+
+	scripthash := "b2eb148d3783f60e678e35f2c496de1a2a7ead93"
+	fee := smartcontract.NetworkFeeAmount(1)
+	nep5 := neoutils.UseNEP5WithNetworkFee(scripthash, fee)
+
+	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
+	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
+	if err != nil {
+		log.Printf("%v", err)
+		t.Fail()
+		return
+	}
+	amount := float64(1)
+	to := smartcontract.ParseNEOAddress("Adm9ER3UwdJfimFtFhHq1L5MQ5gxLLTUes")
+
+	unspent, err := unspent(privateNetwallet.Address)
+	if err != nil {
+		t.Fail()
+		return
+	}
 
 	remark := "O3TX"
 	attributes := map[smartcontract.TransactionAttribute][]byte{}

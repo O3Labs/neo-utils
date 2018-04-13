@@ -9,6 +9,7 @@ import (
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
 )
 
+//TESTED with fee. succeeded
 func TestSendNativeAsset(t *testing.T) {
 	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
 	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
@@ -77,5 +78,4 @@ func TestSendNativeAsset(t *testing.T) {
 		return
 	}
 	log.Printf("%x", tx)
-
 }
