@@ -92,3 +92,34 @@ func TestTransferNEP5(t *testing.T) {
 	log.Printf("%x", tx)
 
 }
+
+func TestMintTokens(t *testing.T) {
+	scripthash := "b2eb148d3783f60e678e35f2c496de1a2a7ead93"
+	fee := smartcontract.NetworkFeeAmount(0.001)
+	nep5 := neoutils.UseNEP5WithNetworkFee(scripthash, fee)
+
+	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
+	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
+	if err != nil {
+		log.Printf("%v", err)
+		t.Fail()
+		return
+	}
+	unspent, err := unspent(privateNetwallet.Address)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	remark := "O3TX"
+
+	asset := smartcontract.NEO
+	amount := float64(10)
+
+	tx, err := nep5.MintTokensRawTransaction(*privateNetwallet, asset, amount, unspent, remark)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	log.Printf("%x", tx)
+}

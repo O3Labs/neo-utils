@@ -1,7 +1,6 @@
 package neoutils
 
 import (
-	"log"
 	"strings"
 
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
@@ -77,7 +76,6 @@ func (s *SmartContract) GenerateInvokeFunctionRawTransaction(wallet Wallet, unsp
 	receiver := smartcontract.ParseNEOAddress(wallet.Address)
 	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, s.NetworkFeeAmount)
 	if err != nil {
-		log.Printf("%v", err)
 		return nil, err
 	}
 
@@ -88,7 +86,6 @@ func (s *SmartContract) GenerateInvokeFunctionRawTransaction(wallet Wallet, unsp
 
 	signedData, err := Sign(tx.ToBytes(), privateKeyInHex)
 	if err != nil {
-		log.Printf("err signing %v", err)
 		return nil, err
 	}
 
@@ -121,7 +118,6 @@ func (s *SmartContract) GenerateInvokeFunctionRawTransactionWithAmountToSend(wal
 	amountToSend := amount
 	assetToSend := asset
 
-	// fee := float64(0.00000001)
 	//generate transaction inputs
 	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend, s.NetworkFeeAmount)
 	if err != nil {
@@ -143,7 +139,6 @@ func (s *SmartContract) GenerateInvokeFunctionRawTransactionWithAmountToSend(wal
 	receiver := smartcontract.NEOAddressFromScriptHash(s.ScriptHash.ToBigEndian())
 	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, s.NetworkFeeAmount)
 	if err != nil {
-		log.Printf("%v", err)
 		return nil, err
 	}
 
@@ -154,7 +149,6 @@ func (s *SmartContract) GenerateInvokeFunctionRawTransactionWithAmountToSend(wal
 
 	signedData, err := Sign(tx.ToBytes(), privateKeyInHex)
 	if err != nil {
-		log.Printf("err signing %v", err)
 		return nil, err
 	}
 

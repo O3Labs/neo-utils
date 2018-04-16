@@ -2,13 +2,13 @@ package neoutils
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
 )
 
 type NEP5Interface interface {
+	MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract.NativeAsset, amount float64, unspent smartcontract.Unspent, remark string) ([]byte, error)
 	TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract.NEOAddress, amount float64, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, error)
 }
 
@@ -76,7 +76,6 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 	receiver := smartcontract.ParseNEOAddress(wallet.Address)
 	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
 	if err != nil {
-		log.Printf("%v", err)
 		return nil, err
 	}
 
@@ -87,7 +86,6 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 
 	signedData, err := Sign(tx.ToBytes(), privateKeyInHex)
 	if err != nil {
-		log.Printf("err signing %v", err)
 		return nil, err
 	}
 
@@ -108,4 +106,21 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 	endPayload = append(endPayload, n.ScriptHash.ToBigEndian()...)
 
 	return endPayload, nil
+}
+
+func (n *NEP5) MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract.NativeAsset, amount float64, unspent smartcontract.Unspent, remark string) ([]byte, error) {
+
+	scString := fmt.Sprintf("%x", n.ScriptHash.ToBigEndian())
+	//this is because the script hash object is already in little endian
+	sc := UseSmartContractWithNetworkFee(scString, n.NetworkFeeAmount)
+	operation := "mintTokens"
+	args := []interface{}{}
+	attributes := map[smartcontract.TransactionAttribute][]byte{}
+	attributes[smartcontract.Remark1] = []byte(remark)
+
+	tx, err := sc.GenerateInvokeFunctionRawTransactionWithAmountToSend(wallet, assetToSend, amount, unspent, attributes, operation, args)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
 }
