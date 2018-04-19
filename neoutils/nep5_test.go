@@ -84,11 +84,12 @@ func TestTransferNEP5(t *testing.T) {
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
 	attributes[smartcontract.Remark1] = []byte(remark)
 
-	tx, err := nep5.TransferNEP5RawTransaction(*privateNetwallet, to, amount, unspent, attributes)
+	tx, txID, err := nep5.TransferNEP5RawTransaction(*privateNetwallet, to, amount, unspent, attributes)
 	if err != nil {
 		t.Fail()
 		return
 	}
+	log.Printf("txID %v ", txID)
 	log.Printf("%x", tx)
 
 }
@@ -116,10 +117,11 @@ func TestMintTokens(t *testing.T) {
 	asset := smartcontract.NEO
 	amount := float64(10)
 
-	tx, err := nep5.MintTokensRawTransaction(*privateNetwallet, asset, amount, unspent, remark)
+	tx, txID, err := nep5.MintTokensRawTransaction(*privateNetwallet, asset, amount, unspent, remark)
 	if err != nil {
 		t.Fail()
 		return
 	}
+	log.Printf("txID = %v", txID)
 	log.Printf("%x", tx)
 }

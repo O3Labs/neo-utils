@@ -1,6 +1,7 @@
 package neoutils
 
 import (
+	"log"
 	"strings"
 
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
@@ -147,6 +148,8 @@ func (s *SmartContract) GenerateInvokeFunctionRawTransactionWithAmountToSend(wal
 	//begin signing process and invocation script
 	privateKeyInHex := bytesToHex(wallet.PrivateKey)
 
+	//to get TXID we need only the raw transaction without the signature
+	log.Printf("tx.ToBytes() = %x", tx.ToHash256())
 	signedData, err := Sign(tx.ToBytes(), privateKeyInHex)
 	if err != nil {
 		return nil, err

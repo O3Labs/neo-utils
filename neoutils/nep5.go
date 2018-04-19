@@ -8,8 +8,8 @@ import (
 )
 
 type NEP5Interface interface {
-	MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract.NativeAsset, amount float64, unspent smartcontract.Unspent, remark string) ([]byte, error)
-	TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract.NEOAddress, amount float64, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, error)
+	MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract.NativeAsset, amount float64, unspent smartcontract.Unspent, remark string) ([]byte, string, error)
+	TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract.NEOAddress, amount float64, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, string, error)
 }
 
 type NEP5 struct {
@@ -31,16 +31,16 @@ func UseNEP5WithNetworkFee(scriptHashHex string, networkFeeAmount smartcontract.
 
 var _ NEP5Interface = (*NEP5)(nil)
 
-func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract.NEOAddress, amount float64, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, error) {
+func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract.NEOAddress, amount float64, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, string, error) {
 
 	from := smartcontract.ParseNEOAddress(wallet.Address)
 	if from == nil {
-		return nil, fmt.Errorf("Invalid from address")
+		return nil, "", fmt.Errorf("Invalid from address")
 	}
 
 	to := smartcontract.ParseNEOAddress(toAddress.ToString())
 	if to == nil {
-		return nil, fmt.Errorf("Invalid from address")
+		return nil, "", fmt.Errorf("Invalid from address")
 	}
 	numberOfTokens := amount
 	args := []interface{}{from, to, numberOfTokens}
@@ -58,7 +58,7 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 	//generate transaction inputs
 	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	//transaction inputs
 	tx.Inputs = txInputs
@@ -66,7 +66,7 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 	//generate transaction outputs
 	txAttributes, err := smartcontract.NewScriptBuilder().GenerateTransactionAttributes(attributes)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	//transaction attributes
 	tx.Attributes = txAttributes
@@ -76,7 +76,7 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 	receiver := smartcontract.ParseNEOAddress(wallet.Address)
 	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	tx.Outputs = txOutputs
@@ -86,7 +86,7 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 
 	signedData, err := Sign(tx.ToBytes(), privateKeyInHex)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	signature := smartcontract.TransactionSignature{
@@ -105,22 +105,79 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 	endPayload = append(endPayload, tx.ToBytes()...)
 	endPayload = append(endPayload, n.ScriptHash.ToBigEndian()...)
 
-	return endPayload, nil
+	//get tx id
+	txID := tx.ToTXID()
+	return endPayload, txID, nil
 }
 
-func (n *NEP5) MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract.NativeAsset, amount float64, unspent smartcontract.Unspent, remark string) ([]byte, error) {
+func (n *NEP5) MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract.NativeAsset, amount float64, unspent smartcontract.Unspent, remark string) ([]byte, string, error) {
 
-	scString := fmt.Sprintf("%x", n.ScriptHash.ToBigEndian())
-	//this is because the script hash object is already in little endian
-	sc := UseSmartContractWithNetworkFee(scString, n.NetworkFeeAmount)
 	operation := "mintTokens"
 	args := []interface{}{}
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
 	attributes[smartcontract.Remark1] = []byte(remark)
 
-	tx, err := sc.GenerateInvokeFunctionRawTransactionWithAmountToSend(wallet, assetToSend, amount, unspent, attributes, operation, args)
+	//New invocation transaction struct and fill with all necessary data
+	tx := smartcontract.NewInvocationTransaction()
+	txData := smartcontract.NewScriptBuilder().GenerateContractInvocationData(n.ScriptHash, operation, args)
+	tx.Data = txData
+
+	amountToSend := amount
+
+	//generate transaction inputs
+	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	return tx, nil
+	//transaction inputs
+	tx.Inputs = txInputs
+
+	//generate transaction outputs
+	txAttributes, err := smartcontract.NewScriptBuilder().GenerateTransactionAttributes(attributes)
+	if err != nil {
+		return nil, "", err
+	}
+	//transaction attributes
+	tx.Attributes = txAttributes
+
+	//send GAS to the same account
+	sender := smartcontract.ParseNEOAddress(wallet.Address)
+	//when invoke the smart contract with amount of asset to send
+	//we simple set the receiver to be the smart contract address
+	receiver := smartcontract.NEOAddressFromScriptHash(n.ScriptHash.ToBigEndian())
+	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
+	if err != nil {
+		return nil, "", err
+	}
+
+	tx.Outputs = txOutputs
+
+	//begin signing process and invocation script
+	privateKeyInHex := bytesToHex(wallet.PrivateKey)
+
+	signedData, err := Sign(tx.ToBytes(), privateKeyInHex)
+	if err != nil {
+		return nil, "", err
+	}
+
+	signature := smartcontract.TransactionSignature{
+		SignedData: signedData,
+		PublicKey:  wallet.PublicKey,
+	}
+
+	signatures := []smartcontract.TransactionSignature{signature}
+	txScripts := smartcontract.NewScriptBuilder().GenerateInvocationAndVerificationScriptWithSignatures(signatures)
+	//assign scripts to the tx
+	tx.Script = txScripts
+	//end signing process
+
+	//concat data
+	endPayload := []byte{}
+	endPayload = append(endPayload, tx.ToBytes()...)
+	endPayload = append(endPayload, n.ScriptHash.ToBigEndian()...)
+
+	//get tx id
+	txID := tx.ToTXID()
+
+	return endPayload, txID, nil
 }

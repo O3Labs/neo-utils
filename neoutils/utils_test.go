@@ -2,6 +2,7 @@ package neoutils
 
 import (
 	"encoding/hex"
+	"fmt"
 	"log"
 	"testing"
 )
@@ -79,21 +80,20 @@ func TestReverse(t *testing.T) {
 	log.Printf("%x", ReverseBytes(b))
 }
 
-// func TestParseScriptFromTX(t *testing.T) {
-// 	// expectedScripthash := "b7c1f850a025e34455e7e98c588c784385077fb1"
-// 	// expectedOperation := []byte("mintTokensTo") // 6d696e74546f6b656e73546f
-// 	// expectedToAddress := "AM8pnu1yK7ViMt7Sw2nPpbtPQXTwjjkykn"
-// 	// expectedTokenAmount := 1
-
-// 	// log.Printf("operation %x", expectedOperation)
-
-// 	//0x67 = APPCALL
-// 	// script := "51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c6d696e74546f6b656e73546f67b17f078543788c588ce9e75544e325a050f8c1b7"
-
-// }
-
 func TestHash160(t *testing.T) {
 	address := "AJShjraX4iMJjwVt8WYYzZyGvDMxw6Xfbe"
 	b := Hash160([]byte(address))
 	log.Printf("%x", b)
+}
+
+func TestHash256(t *testing.T) {
+	raw := "d1002200c10a6d696e74546f6b656e736793ad7e2a1ade96c4f2358e670ef683378d14ebb201f1036f337802967e38191d9c0f2039e4890294689b7bf4a7153937fada20aa2425fc196ada7f0100967e38191d9c0f2039e4890294689b7bf4a7153937fada20aa2425fc196ada7f0200039b7cffdaa674beae0f930ebe6085af9093e5fe56b34a5c220ccdcf6efc336fc500e1f5050000000093ad7e2a1ade96c4f2358e670ef683378d14ebb29b7cffdaa674beae0f930ebe6085af9093e5fe56b34a5c220ccdcf6efc336fc5004ad4642a84230023ba2703c53263e8d6e522dc32203339dcd8eee9e72d286979ee6cb1b7e65dfddfb2e384100b8d148e7758de42e4168b71792c605d3af17c0f00000023ba2703c53263e8d6e522dc32203339dcd8eee9"
+	expectedResult := "389470367287e9f99e561a66d6ab5875f8375506ec1a16d54e9c628f34b8efe8"
+	b, _ := hex.DecodeString(raw)
+
+	txid := ReverseBytes(Hash256(b))
+	result := fmt.Sprintf("%x", txid)
+	if result != expectedResult {
+		t.Fail()
+	}
 }

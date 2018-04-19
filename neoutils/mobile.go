@@ -56,32 +56,32 @@ func utxoFromNEONWalletDB(neonWalletDBEndpoint string, address string) (smartcon
 	return unspent, nil
 }
 
-func MintTokensRawTransactionMobile(utxoEndpoint string, scriptHash string, wif string, sendingAssetID string, amount float64, remark string, networkFeeAmountInGAS float64) ([]byte, error) {
+func MintTokensRawTransactionMobile(utxoEndpoint string, scriptHash string, wif string, sendingAssetID string, amount float64, remark string, networkFeeAmountInGAS float64) ([]byte, string, error) {
 	fee := smartcontract.NetworkFeeAmount(networkFeeAmountInGAS)
 	nep5 := UseNEP5WithNetworkFee(scriptHash, fee)
 	wallet, err := GenerateFromWIF(wif)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	unspent, err := utxoFromNEONWalletDB(utxoEndpoint, wallet.Address)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	nativeAsset := smartcontract.NativeAssets[sendingAssetID]
 	if nativeAsset == "" {
-		return nil, fmt.Errorf("invalid assetID")
+		return nil, "", fmt.Errorf("invalid assetID")
 	}
 
 	if amount <= 0 {
-		return nil, fmt.Errorf("Invalid amount. cannot be zero or less than zero")
+		return nil, "", fmt.Errorf("Invalid amount. cannot be zero or less than zero")
 	}
 
-	tx, err := nep5.MintTokensRawTransaction(*wallet, nativeAsset, amount, unspent, remark)
+	tx, txID, err := nep5.MintTokensRawTransaction(*wallet, nativeAsset, amount, unspent, remark)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return tx, nil
+	return tx, txID, nil
 }

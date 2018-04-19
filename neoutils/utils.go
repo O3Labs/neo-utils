@@ -1,6 +1,7 @@
 package neoutils
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -108,4 +109,10 @@ func Hash160(data []byte) []byte {
 	shortened := b[1 : len(b)-1]
 	hex := bytesToHex(shortened)
 	return ReverseBytes([]byte(hex))
+}
+
+func Hash256(b []byte) []byte {
+	hash := sha256.Sum256(b)
+	hash = sha256.Sum256(hash[:])
+	return hash[:]
 }
