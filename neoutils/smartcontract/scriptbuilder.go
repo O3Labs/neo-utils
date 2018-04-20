@@ -47,7 +47,7 @@ type ScriptBuilderInterface interface {
 	GenerateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64, networkFeeAmount NetworkFeeAmount) ([]byte, error)
 	GenerateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64, networkFeeAmount NetworkFeeAmount) ([]byte, error)
 
-	GenerateInvocationAndVerificationScriptWithSignatures(signatures []TransactionSignature) []byte
+	GenerateVerificationScripts(signatures []interface{}) []byte
 	EmptyTransactionAttributes() []byte
 	ToBytes() []byte
 	FullHexString() string
@@ -169,6 +169,14 @@ func (s *ScriptBuilder) EmitPush(data interface{}) error {
 
 func (s *ScriptBuilder) pushData(data interface{}) error {
 	switch e := data.(type) {
+	case TransactionValidationScript:
+		s.pushData(e.StackScript)
+		if e.RedeemScript == nil {
+			s.RawBytes = append(s.RawBytes, 0x00)
+		} else {
+			s.pushData(e.RedeemScript)
+		}
+		return nil
 	case TransactionSignature:
 		signatureLength := len(e.SignedData)
 		b := []byte{}
@@ -285,7 +293,12 @@ func (s *ScriptBuilder) GenerateTransactionAttributes(attributes map[Transaction
 	//transaction attribute =  TransactionAttribute + data.length + data
 	for k, v := range attributes {
 		s.pushData(k) //transaction attribute usage
-		s.pushData(v) //push byte data in already includes the length of the data
+		if k == Script {
+			//if it's a Script field, we just need to put it as is in a little endian bytes
+			s.pushData(ScriptHash(v))
+		} else {
+			s.pushData(v) //push byte data in already includes the length of the data
+		}
 	}
 
 	return s.ToBytes(), nil
@@ -480,24 +493,25 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 	return s.ToBytes(), nil
 }
 
-func (s *ScriptBuilder) GenerateInvocationAndVerificationScriptWithSignatures(signatures []TransactionSignature) []byte {
+func (s *ScriptBuilder) GenerateVerificationScripts(scripts []interface{}) []byte {
 
-	numberOfSignatures := len(signatures)
-	if numberOfSignatures == 0 {
+	numberOfScripts := len(scripts)
+	if numberOfScripts == 0 {
 		return nil
 	}
 
-	s.pushLength(numberOfSignatures)
+	s.pushLength(numberOfScripts)
+	for _, script := range scripts {
+		switch e := script.(type) {
+		case TransactionSignature:
+			s.pushData(e)
+			s.pushOpCode(CHECKSIG)
+			continue
+		case TransactionValidationScript:
+			s.pushData(e)
+		}
 
-	for _, signature := range signatures {
-		s.pushData(signature)
 	}
 
-	//WARNING: CHECKMULTISIG is not tested
-	if numberOfSignatures >= 1 {
-		s.pushOpCode(CHECKSIG)
-	} else {
-		s.pushOpCode(CHECKMULTISIG)
-	}
 	return s.ToBytes()
 }

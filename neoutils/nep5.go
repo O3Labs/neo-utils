@@ -94,8 +94,8 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 		PublicKey:  wallet.PublicKey,
 	}
 
-	signatures := []smartcontract.TransactionSignature{signature}
-	txScripts := smartcontract.NewScriptBuilder().GenerateInvocationAndVerificationScriptWithSignatures(signatures)
+	scripts := []interface{}{signature}
+	txScripts := smartcontract.NewScriptBuilder().GenerateVerificationScripts(scripts)
 	//assign scripts to the tx
 	tx.Script = txScripts
 	//end signing process
@@ -116,6 +116,8 @@ func (n *NEP5) MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract
 	args := []interface{}{}
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
 	attributes[smartcontract.Remark1] = []byte(remark)
+	//add this to make it run VerificationTrigger
+	attributes[smartcontract.Script] = n.ScriptHash
 
 	//New invocation transaction struct and fill with all necessary data
 	tx := smartcontract.NewInvocationTransaction()
@@ -164,12 +166,15 @@ func (n *NEP5) MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract
 		SignedData: signedData,
 		PublicKey:  wallet.PublicKey,
 	}
-
-	signatures := []smartcontract.TransactionSignature{signature}
-	txScripts := smartcontract.NewScriptBuilder().GenerateInvocationAndVerificationScriptWithSignatures(signatures)
+	//this empty verification script is needed in order to make it triggers Verification part
+	emptyVerificationScript := smartcontract.TransactionValidationScript{
+		StackScript:  []byte{0x00, 0x00},
+		RedeemScript: nil,
+	}
+	scripts := []interface{}{emptyVerificationScript, signature}
+	txScripts := smartcontract.NewScriptBuilder().GenerateVerificationScripts(scripts)
 	//assign scripts to the tx
 	tx.Script = txScripts
-	//end signing process
 
 	//concat data
 	endPayload := []byte{}

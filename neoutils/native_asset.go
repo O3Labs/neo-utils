@@ -69,8 +69,8 @@ func (n *NativeAsset) SendNativeAssetRawTransaction(wallet Wallet, asset smartco
 		PublicKey:  wallet.PublicKey,
 	}
 
-	signatures := []smartcontract.TransactionSignature{signature}
-	txScripts := smartcontract.NewScriptBuilder().GenerateInvocationAndVerificationScriptWithSignatures(signatures)
+	scripts := []interface{}{signature}
+	txScripts := smartcontract.NewScriptBuilder().GenerateVerificationScripts(scripts)
 	//assign scripts to the tx
 	tx.Script = txScripts
 	//end signing process

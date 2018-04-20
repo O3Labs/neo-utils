@@ -36,7 +36,7 @@ func TestScriptHashToNEOAddress(t *testing.T) {
 }
 
 func TestNEOAddressToScriptHash(t *testing.T) {
-	hash := NEOAddressToScriptHash("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+	hash := NEOAddressToScriptHash("AQaZPqcv9Kg2x1eSrF8UBYXLK4WQoTSLH5")
 	b, _ := hex.DecodeString(hash)
 	log.Printf("%x", ReverseBytes(b))
 }

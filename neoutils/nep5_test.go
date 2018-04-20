@@ -99,7 +99,7 @@ func TestMintTokens(t *testing.T) {
 	fee := smartcontract.NetworkFeeAmount(0.001)
 	nep5 := neoutils.UseNEP5WithNetworkFee(scripthash, fee)
 
-	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
+	wif := "L5h6cTh45egotcxFZ2rkF1gv7rLxx9rScfuja9kEVEE9mEj9Uwtv"
 	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
 	if err != nil {
 		log.Printf("%v", err)

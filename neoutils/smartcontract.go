@@ -1,7 +1,6 @@
 package neoutils
 
 import (
-	"log"
 	"strings"
 
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
@@ -95,8 +94,8 @@ func (s *SmartContract) GenerateInvokeFunctionRawTransaction(wallet Wallet, unsp
 		PublicKey:  wallet.PublicKey,
 	}
 
-	signatures := []smartcontract.TransactionSignature{signature}
-	txScripts := smartcontract.NewScriptBuilder().GenerateInvocationAndVerificationScriptWithSignatures(signatures)
+	scripts := []interface{}{signature}
+	txScripts := smartcontract.NewScriptBuilder().GenerateVerificationScripts(scripts)
 	//assign scripts to the tx
 	tx.Script = txScripts
 	//end signing process
@@ -148,8 +147,6 @@ func (s *SmartContract) GenerateInvokeFunctionRawTransactionWithAmountToSend(wal
 	//begin signing process and invocation script
 	privateKeyInHex := bytesToHex(wallet.PrivateKey)
 
-	//to get TXID we need only the raw transaction without the signature
-	log.Printf("tx.ToBytes() = %x", tx.ToHash256())
 	signedData, err := Sign(tx.ToBytes(), privateKeyInHex)
 	if err != nil {
 		return nil, err
@@ -160,8 +157,8 @@ func (s *SmartContract) GenerateInvokeFunctionRawTransactionWithAmountToSend(wal
 		PublicKey:  wallet.PublicKey,
 	}
 
-	signatures := []smartcontract.TransactionSignature{signature}
-	txScripts := smartcontract.NewScriptBuilder().GenerateInvocationAndVerificationScriptWithSignatures(signatures)
+	scripts := []interface{}{signature}
+	txScripts := smartcontract.NewScriptBuilder().GenerateVerificationScripts(scripts)
 	//assign scripts to the tx
 	tx.Script = txScripts
 	//end signing process
