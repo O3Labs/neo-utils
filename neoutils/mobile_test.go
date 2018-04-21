@@ -12,6 +12,7 @@ func TestMintTokensFromMobile(t *testing.T) {
 
 	//both of these are whitelisted
 
+	//ALL PRIVATE NET TEST ADDRESSES
 	// wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr" // contract owner AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y
 	// wif := "Kz3dZoCXU8SsmE67GLoGZKaghD1bG1kbePY72LVKpuchMqmRwKer" // Adm9ER3UwdJfimFtFhHq1L5MQ5gxLLTUes
 	wif := "L5h6cTh45egotcxFZ2rkF1gv7rLxx9rScfuja9kEVEE9mEj9Uwtv" //AQaZPqcv9Kg2x1eSrF8UBYXLK4WQoTSLH5
