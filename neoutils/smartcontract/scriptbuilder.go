@@ -447,7 +447,7 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 			Address: receiver,
 		}
 		list = append(list, out)
-		//if the uxid
+
 	}
 
 	//if set network fee is more than 0

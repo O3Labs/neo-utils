@@ -1,10 +1,13 @@
 package neoutils
 
 const (
-	VERSION = "1.0.2"
+	VERSION = "1.0.3"
 )
 
 //RELEASE NOTES
+//V. 1.0.3
+//mintTokens now triggers Verification
+
 //V. 1.0.2
 //- added txid in return
 //MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract.NativeAsset, amount float64, unspent smartcontract.Unspent, remark string) ([]byte, string, error)
