@@ -187,14 +187,11 @@ func (n *NEP5) MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract
 		//basically we need to sort in descending order for address and script hash
 		scriptHashInt := ConvertByteArrayToBigInt(fmt.Sprintf("%x", n.ScriptHash))
 		addressInt := ConvertByteArrayToBigInt(fmt.Sprintf("%x", wallet.HashedSignature))
-		log.Printf("scriptHashInt = %v addressInt = %v", scriptHashInt, addressInt)
 		//https://godoc.org/math/big#Int.Cmp
 		//if scripthash int is grether than address int
 		if scriptHashInt.Cmp(addressInt) == 1 {
-			log.Printf("append script")
 			scripts = append(scripts, emptyVerificationScript)
 		} else {
-			log.Printf("prepend script")
 			scripts = append([]interface{}{emptyVerificationScript}, scripts...)
 		}
 	}
