@@ -23,7 +23,7 @@ func TestConvertScripthashFromParamToNEOAddress(t *testing.T) {
 }
 
 func TestScriptHashToNEOAddress(t *testing.T) {
-	hash := "b2eb148d3783f60e678e35f2c496de1a2a7ead93"
+	hash := "cc1bf80ceb9db91792c84feb8353921d9df3b4e8"
 
 	address := ScriptHashToNEOAddress(hash)
 
@@ -56,7 +56,7 @@ func TestValidateNEOAddressInvalidAddress(t *testing.T) {
 }
 
 func TestConverting(t *testing.T) {
-	hex := "000274e760"
+	hex := "01a6f75f02"
 	//hex := "005c7c875e" = 405991873536
 
 	value := ConvertByteArrayToBigInt(hex)

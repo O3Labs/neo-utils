@@ -60,7 +60,7 @@ func unspent(address string) (smartcontract.Unspent, error) {
 //TEST with fee. succeeded
 func TestTransferNEP5(t *testing.T) {
 
-	scripthash := "b2eb148d3783f60e678e35f2c496de1a2a7ead93"
+	scripthash := "cc1bf80ceb9db91792c84feb8353921d9df3b4e8"
 	fee := smartcontract.NetworkFeeAmount(1)
 	nep5 := neoutils.UseNEP5WithNetworkFee(scripthash, fee)
 
@@ -95,7 +95,7 @@ func TestTransferNEP5(t *testing.T) {
 }
 
 func TestMintTokens(t *testing.T) {
-	scripthash := "b2eb148d3783f60e678e35f2c496de1a2a7ead93"
+	scripthash := "cc1bf80ceb9db91792c84feb8353921d9df3b4e8"
 	fee := smartcontract.NetworkFeeAmount(0.001)
 	nep5 := neoutils.UseNEP5WithNetworkFee(scripthash, fee)
 

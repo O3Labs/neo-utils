@@ -2,6 +2,7 @@ package neoutils
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
@@ -112,12 +113,16 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 
 func (n *NEP5) MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract.NativeAsset, amount float64, unspent smartcontract.Unspent, remark string) ([]byte, string, error) {
 
+	needVerification := true
+	log.Printf("needVerification = %v", needVerification)
 	operation := "mintTokens"
 	args := []interface{}{}
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
 	attributes[smartcontract.Remark1] = []byte(remark)
-	//add this to make it run VerificationTrigger
-	attributes[smartcontract.Script] = n.ScriptHash
+	if needVerification == true {
+		//add this to make it run VerificationTrigger
+		attributes[smartcontract.Script] = n.ScriptHash
+	}
 
 	//New invocation transaction struct and fill with all necessary data
 	tx := smartcontract.NewInvocationTransaction()
@@ -142,10 +147,10 @@ func (n *NEP5) MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract
 	//transaction attributes
 	tx.Attributes = txAttributes
 
-	//send GAS to the same account
+	//sender is a wallet address
 	sender := smartcontract.ParseNEOAddress(wallet.Address)
 	//when invoke the smart contract with amount of asset to send
-	//we simple set the receiver to be the smart contract address
+	//we simply set the receiver to be the smart contract address
 	receiver := smartcontract.NEOAddressFromScriptHash(n.ScriptHash.ToBigEndian())
 	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
 	if err != nil {
@@ -166,12 +171,33 @@ func (n *NEP5) MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract
 		SignedData: signedData,
 		PublicKey:  wallet.PublicKey,
 	}
-	//this empty verification script is needed in order to make it triggers Verification part
-	emptyVerificationScript := smartcontract.TransactionValidationScript{
-		StackScript:  []byte{0x00, 0x00},
-		RedeemScript: nil,
+
+	scripts := []interface{}{signature}
+	if needVerification == true {
+		//this empty verification script is needed in order to make it triggers Verification part
+		emptyVerificationScript := smartcontract.TransactionValidationScript{
+			StackScript:  []byte{0x00, 0x00},
+			RedeemScript: nil,
+		}
+
+		//this logic is still unknown to me
+		//I need to check with the one who figured it out
+		//https://github.com/CityOfZion/neon-js/blob/a9dfaefec870bfd05f3a8a0e5bc90a635fb6c5b9/src/api/core.js#L308
+
+		//basically we need to sort in descending order for address and script hash
+		scriptHashInt := ConvertByteArrayToBigInt(fmt.Sprintf("%x", n.ScriptHash))
+		addressInt := ConvertByteArrayToBigInt(fmt.Sprintf("%x", wallet.HashedSignature))
+		log.Printf("scriptHashInt = %v addressInt = %v", scriptHashInt, addressInt)
+		//https://godoc.org/math/big#Int.Cmp
+		//if scripthash int is grether than address int
+		if scriptHashInt.Cmp(addressInt) == 1 {
+			log.Printf("append script")
+			scripts = append(scripts, emptyVerificationScript)
+		} else {
+			log.Printf("prepend script")
+			scripts = append([]interface{}{emptyVerificationScript}, scripts...)
+		}
 	}
-	scripts := []interface{}{emptyVerificationScript, signature}
 	txScripts := smartcontract.NewScriptBuilder().GenerateVerificationScripts(scripts)
 	//assign scripts to the tx
 	tx.Script = txScripts

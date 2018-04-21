@@ -510,8 +510,6 @@ func (s *ScriptBuilder) GenerateVerificationScripts(scripts []interface{}) []byt
 		case TransactionValidationScript:
 			s.pushData(e)
 		}
-
 	}
-
 	return s.ToBytes()
 }

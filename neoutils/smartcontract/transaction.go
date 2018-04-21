@@ -56,6 +56,9 @@ func (t *Transaction) ToTXID() string {
 	return fmt.Sprintf("%x", reverseBytes(t.ToHash256()))
 }
 
+//version is 0 currently
+//it needs to change to 1 eventually to support pay gas to run smart contract
+//https://github.com/neo-project/neo/blob/11d8db11568d9eadeeb86c5b8c21a1d3937e0912/neo/Core/InvocationTransaction.cs#L23
 func NewInvocationTransaction() Transaction {
 	return Transaction{
 		Type:    InvocationTransaction,
