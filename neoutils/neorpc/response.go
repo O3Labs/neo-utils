@@ -78,3 +78,42 @@ type GetRawTransactionResult struct {
 	Confirmations int    `json:"confirmations"`
 	Blocktime     int    `json:"blocktime"`
 }
+
+type GetBlockResponse struct {
+	JSONRPCResponse
+	*ErrorResponse                //optional
+	Result         GetBlockResult `json:"result"`
+}
+
+type GetBlockResult struct {
+	Hash              string `json:"hash"`
+	Size              int    `json:"size"`
+	Version           int    `json:"version"`
+	Previousblockhash string `json:"previousblockhash"`
+	Merkleroot        string `json:"merkleroot"`
+	Time              int    `json:"time"`
+	Index             int    `json:"index"`
+	Nonce             string `json:"nonce"`
+	Nextconsensus     string `json:"nextconsensus"`
+	Script            struct {
+		Invocation   string `json:"invocation"`
+		Verification string `json:"verification"`
+	} `json:"script"`
+	Tx []struct {
+		Txid       string        `json:"txid"`
+		Size       int           `json:"size"`
+		Type       string        `json:"type"`
+		Version    int           `json:"version"`
+		Attributes []interface{} `json:"attributes"`
+		Vin        []interface{} `json:"vin"`
+		Vout       []interface{} `json:"vout"`
+		SysFee     string        `json:"sys_fee"`
+		NetFee     string        `json:"net_fee"`
+		Scripts    []interface{} `json:"scripts"`
+		Nonce      int64         `json:"nonce,omitempty"`
+		Script     string        `json:"script,omitempty"`
+		Gas        string        `json:"gas,omitempty"`
+	} `json:"tx"`
+	Confirmations int    `json:"confirmations"`
+	Nextblockhash string `json:"nextblockhash"`
+}
