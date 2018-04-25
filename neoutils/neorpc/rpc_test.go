@@ -65,3 +65,13 @@ func TestGetBlockByIndex(t *testing.T) {
 	result := client.GetBlockByIndex(index)
 	log.Printf("%+v", result)
 }
+
+func TestGetBlockCount(t *testing.T) {
+	client := neorpc.NewClient("http://seed2.o3node.org:10332")
+	if client == nil {
+		t.Fail()
+	}
+
+	result := client.GetBlockCount()
+	log.Printf("%+v", result.Result)
+}

@@ -79,6 +79,12 @@ type GetRawTransactionResult struct {
 	Blocktime     int    `json:"blocktime"`
 }
 
+type GetBlockCountResponse struct {
+	JSONRPCResponse
+	*ErrorResponse     //optional
+	Result         int `json:"result"`
+}
+
 type GetBlockResponse struct {
 	JSONRPCResponse
 	*ErrorResponse                //optional
