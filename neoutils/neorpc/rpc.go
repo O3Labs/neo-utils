@@ -12,6 +12,9 @@ type NEORPCInterface interface {
 	SendRawTransaction(rawTransactionInHex string) SendRawTransactionResponse
 	GetRawTransaction(txID string) GetRawTransactionResponse
 	makeRequest(method string, params []interface{}, out interface{}) error
+	GetBlockCount() GetBlockCountResponse
+	GetBlock(blockHash string) GetBlockResponse
+	GetBlockByIndex(index int) GetBlockResponse
 }
 
 type NEORPCClient struct {
@@ -75,6 +78,36 @@ func (n *NEORPCClient) GetRawTransaction(txID string) GetRawTransactionResponse 
 	response := GetRawTransactionResponse{}
 	params := []interface{}{txID, 1}
 	err := n.makeRequest("getrawtransaction", params, &response)
+	if err != nil {
+		return response
+	}
+	return response
+}
+
+func (n *NEORPCClient) GetBlock(blockHash string) GetBlockResponse {
+	response := GetBlockResponse{}
+	params := []interface{}{blockHash, 1}
+	err := n.makeRequest("getblock", params, &response)
+	if err != nil {
+		return response
+	}
+	return response
+}
+
+func (n *NEORPCClient) GetBlockByIndex(index int) GetBlockResponse {
+	response := GetBlockResponse{}
+	params := []interface{}{index, 1}
+	err := n.makeRequest("getblock", params, &response)
+	if err != nil {
+		return response
+	}
+	return response
+}
+
+func (n *NEORPCClient) GetBlockCount() GetBlockCountResponse {
+	response := GetBlockCountResponse{}
+	params := []interface{}{}
+	err := n.makeRequest("getblockcount", params, &response)
 	if err != nil {
 		return response
 	}

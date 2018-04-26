@@ -17,6 +17,8 @@ type ParserInterface interface {
 	GetListOfOperations() ([]string, error)
 	GetListOfScriptHashes() ([]string, error)
 	ContainsOperation(operation string) bool
+	ContainsScriptHash(scripthash string) bool
+	ContainsScriptHashAndOperation(scripthash string, operation string) bool
 }
 
 type Parser struct {
@@ -170,7 +172,7 @@ func (p *Parser) splitScriptWithAPPCALL() ([]appcall, error) {
 		//this could happen with single APPCALL or multiple APPCALL
 		//so we should try to split the left side with the APPCALL and see the number of APPCALL as well
 		testSplit := bytes.Split(b[:len(b)-(21+10)], []byte{byte(APPCALL)})
-		if tenthByte == byte(THROWIFNOT) && len(testSplit) == 1 {
+		if tenthByte == byte(THROWIFNOT) && len(testSplit) >= 1 {
 			rightSide := b[len(b)-(20+10):] //last 20 bytes is a script hash
 			leftSide := b[:len(b)-(21+10)]  //from start until the len(b) - (21 + 10)
 			list = append(list, appcall{
@@ -231,8 +233,15 @@ func (p *Parser) GetListOfScriptHashes() ([]string, error) {
 		return []string{}, err
 	}
 	listOfScriptHash := []string{}
+	temp := map[string]bool{}
 	for _, v := range list {
-		listOfScriptHash = append(listOfScriptHash, fmt.Sprintf("%x", v.scriptHash[len(v.scriptHash)-20:]))
+		scriptHash := fmt.Sprintf("%x", v.scriptHash[len(v.scriptHash)-20:])
+		exist := temp[scriptHash]
+		if exist == true {
+			continue
+		}
+		listOfScriptHash = append(listOfScriptHash, scriptHash)
+		temp[scriptHash] = true
 	}
 
 	return listOfScriptHash, nil
@@ -354,4 +363,31 @@ func (p *Parser) ContainsOperation(operation string) bool {
 		return false
 	}
 	return bytes.Contains(scriptBytes, operationBytes)
+}
+
+func (p *Parser) ContainsScriptHash(scripthash string) bool {
+	scripthashBytes, err := hex.DecodeString(scripthash)
+	if err != nil {
+		return false
+	}
+	target := reverseBytes(scripthashBytes)
+	scriptBytes, err := hex.DecodeString(p.Script)
+	if err != nil {
+		return false
+	}
+	log.Printf("%x", target)
+	return bytes.Contains(scriptBytes, target)
+}
+func (p *Parser) ContainsScriptHashAndOperation(scripthash string, operation string) bool {
+	scripthashBytes, err := hex.DecodeString(scripthash)
+	if err != nil {
+		return false
+	}
+	target := reverseBytes(scripthashBytes)
+	operationBytes := []byte(operation)
+	scriptBytes, err := hex.DecodeString(p.Script)
+	if err != nil {
+		return false
+	}
+	return bytes.Contains(scriptBytes, target) && bytes.Contains(scriptBytes, operationBytes)
 }

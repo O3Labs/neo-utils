@@ -2,6 +2,7 @@ package neoutils
 
 import (
 	"encoding/hex"
+	"fmt"
 	"log"
 	"testing"
 )
@@ -22,7 +23,7 @@ func TestConvertScripthashFromParamToNEOAddress(t *testing.T) {
 }
 
 func TestScriptHashToNEOAddress(t *testing.T) {
-	hash := "6063795d3b9b3cd55aef026eae992b91063db0db"
+	hash := "cc1bf80ceb9db91792c84feb8353921d9df3b4e8"
 
 	address := ScriptHashToNEOAddress(hash)
 
@@ -35,10 +36,9 @@ func TestScriptHashToNEOAddress(t *testing.T) {
 }
 
 func TestNEOAddressToScriptHash(t *testing.T) {
-	hash := NEOAddressToScriptHash("AM8pnu1yK7ViMt7Sw2nPpbtPQXTwjjkykn")
-	log.Printf("%v", hash)
+	hash := NEOAddressToScriptHash("ASH41gtWftHvhuYhZz1jj7ee7z9vp9D9wk")
 	b, _ := hex.DecodeString(hash)
-	log.Printf("%x", ReverseBytes(b))
+	log.Printf("%x %x", ReverseBytes(b), b)
 }
 
 func TestValidateNEOAddress(t *testing.T) {
@@ -56,7 +56,8 @@ func TestValidateNEOAddressInvalidAddress(t *testing.T) {
 }
 
 func TestConverting(t *testing.T) {
-	hex := "00dc5c2402"
+	hex := "001175f11e"
+	//hex := "005c7c875e" = 405991873536
 
 	value := ConvertByteArrayToBigInt(hex)
 
@@ -75,19 +76,24 @@ func TestParseNEP9(t *testing.T) {
 }
 
 func TestReverse(t *testing.T) {
-	b := HexTobytes("6063795d3b9b3cd55aef026eae992b91063db0db")
+	b := HexTobytes("f782294e0db7a64066f108e8c4400f1af2c20c28")
 	log.Printf("%x", ReverseBytes(b))
 }
 
-// func TestParseScriptFromTX(t *testing.T) {
-// 	// expectedScripthash := "b7c1f850a025e34455e7e98c588c784385077fb1"
-// 	// expectedOperation := []byte("mintTokensTo") // 6d696e74546f6b656e73546f
-// 	// expectedToAddress := "AM8pnu1yK7ViMt7Sw2nPpbtPQXTwjjkykn"
-// 	// expectedTokenAmount := 1
+func TestHash160(t *testing.T) {
+	address := "AJShjraX4iMJjwVt8WYYzZyGvDMxw6Xfbe"
+	b := Hash160([]byte(address))
+	log.Printf("%x", b)
+}
 
-// 	// log.Printf("operation %x", expectedOperation)
+func TestHash256(t *testing.T) {
+	raw := "d1002200c10a6d696e74546f6b656e736793ad7e2a1ade96c4f2358e670ef683378d14ebb201f1036f337802967e38191d9c0f2039e4890294689b7bf4a7153937fada20aa2425fc196ada7f0100967e38191d9c0f2039e4890294689b7bf4a7153937fada20aa2425fc196ada7f0200039b7cffdaa674beae0f930ebe6085af9093e5fe56b34a5c220ccdcf6efc336fc500e1f5050000000093ad7e2a1ade96c4f2358e670ef683378d14ebb29b7cffdaa674beae0f930ebe6085af9093e5fe56b34a5c220ccdcf6efc336fc5004ad4642a84230023ba2703c53263e8d6e522dc32203339dcd8eee9e72d286979ee6cb1b7e65dfddfb2e384100b8d148e7758de42e4168b71792c605d3af17c0f00000023ba2703c53263e8d6e522dc32203339dcd8eee9"
+	expectedResult := "389470367287e9f99e561a66d6ab5875f8375506ec1a16d54e9c628f34b8efe8"
+	b, _ := hex.DecodeString(raw)
 
-// 	//0x67 = APPCALL
-// 	// script := "51143acefb110cba488ae0d809f5837b0ac9c895405e52c10c6d696e74546f6b656e73546f67b17f078543788c588ce9e75544e325a050f8c1b7"
-
-// }
+	txid := ReverseBytes(Hash256(b))
+	result := fmt.Sprintf("%x", txid)
+	if result != expectedResult {
+		t.Fail()
+	}
+}

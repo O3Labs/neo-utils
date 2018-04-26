@@ -1,6 +1,7 @@
 package neoutils
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -98,4 +99,20 @@ func ParseNEP9URI(uri string) (*SimplifiedNEP9, error) {
 		AssetID: parsed.AssetID,
 		Amount:  parsed.Amount,
 	}, nil
+}
+
+func Hash160(data []byte) []byte {
+	_, b, err := btckey.B58checkdecode(string(data))
+	if err != nil {
+		return nil
+	}
+	shortened := b[1 : len(b)-1]
+	hex := bytesToHex(shortened)
+	return ReverseBytes([]byte(hex))
+}
+
+func Hash256(b []byte) []byte {
+	hash := sha256.Sum256(b)
+	hash = sha256.Sum256(hash[:])
+	return hash[:]
 }

@@ -205,7 +205,7 @@ smartcontract.GenerateTransactionAttributes(attributes map[TransactionAttribute]
 ```
 ##### Generate invocation and verification script with signatures
 ```go
-smartcontract.GenerateInvocationAndVerificationScriptWithSignatures(signatures []TransactionSignature) []byte
+smartcontract.GenerateVerificationScripts(signatures []TransactionSignature) []byte
 ```
 ##### Parse raw transaction's script to operation name and args
 ```go

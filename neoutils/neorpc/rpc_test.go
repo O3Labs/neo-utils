@@ -45,3 +45,33 @@ func TestGetRawTransaction(t *testing.T) {
 	result := client.GetRawTransaction(txID)
 	log.Printf("%+v", result)
 }
+
+func TestGetBlock(t *testing.T) {
+	client := neorpc.NewClient("http://seed2.o3node.org:10332")
+	if client == nil {
+		t.Fail()
+	}
+	txID := "5ba40a700fbdd72344d2903629fac10b55e7a957d17d38e475a20ab18766fa7b"
+	result := client.GetBlock(txID)
+	log.Printf("%+v", len(result.Result.Tx))
+}
+
+func TestGetBlockByIndex(t *testing.T) {
+	client := neorpc.NewClient("http://seed2.o3node.org:10332")
+	if client == nil {
+		t.Fail()
+	}
+	index := 2188171
+	result := client.GetBlockByIndex(index)
+	log.Printf("%+v", result)
+}
+
+func TestGetBlockCount(t *testing.T) {
+	client := neorpc.NewClient("http://seed2.o3node.org:10332")
+	if client == nil {
+		t.Fail()
+	}
+
+	result := client.GetBlockCount()
+	log.Printf("%+v", result.Result)
+}
