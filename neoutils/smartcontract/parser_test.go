@@ -39,7 +39,7 @@ func TestParserGetListOfOperations(t *testing.T) {
 
 func TestGetScripthashFromScript(t *testing.T) {
 	expectedResult := "b7c1f850a025e34455e7e98c588c784385077fb1"
-	p := smartcontract.NewParserWithScript("0500f523273314afd02829516381a4d70a705e6713728618a3157f14b16f79f47f85b6e271acb7c1e9b59290b8bce51d53c1087472616e7366657267fb1c540417067c270dee32f21023aa8b9b71abcef1667d9f988f5611670f")
+	p := smartcontract.NewParserWithScript("0830f4e2644b020000140c17e908b4014177e01d1a7fc3e6b5ed1ea83905141ffb723601fe7bf5e78b9ec6f6c79d69e317b9c753c1087472616e7366657267cf9472821400ceb06ca780c2a937fec5bbec51b9661a50b4e3696743e8")
 	result, err := p.GetListOfScriptHashes()
 	if err != nil {
 		log.Printf("Expected: %v but got error : %v", expectedResult, err)

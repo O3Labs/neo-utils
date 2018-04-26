@@ -212,6 +212,10 @@ func (p *Parser) splitScriptWithAPPCALL() ([]appcall, error) {
 				//Multiple APPCALL contains THROWIFNOT to make sure that every APPCALL runs otherwise reject all
 				//THROWIFNOT is 0xf1.
 				//scripthash(20 bytes) + 0xf1 + [actual operation and args]
+				//check the length first
+				if len(splitted[index+1]) < 20 {
+					continue
+				}
 				tempOperationAndArgs = splitted[index][21:]
 				tempScriptHash = reverseBytes(splitted[index+1][:20])
 			}
