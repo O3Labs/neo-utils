@@ -23,13 +23,10 @@ func TestConvertScripthashFromParamToNEOAddress(t *testing.T) {
 }
 
 func TestScriptHashToNEOAddress(t *testing.T) {
-	hash := "cc1bf80ceb9db91792c84feb8353921d9df3b4e8"
-
+	hash := "ceab719b8baa2310f232ee0d277c061704541cfb"
 	address := ScriptHashToNEOAddress(hash)
-
 	scripthash := NEOAddressToScriptHash(address)
 	log.Printf("address = %v result = %s", address, scripthash)
-
 	if scripthash != hash {
 		t.Fail()
 	}

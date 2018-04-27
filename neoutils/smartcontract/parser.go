@@ -142,6 +142,26 @@ type appcall struct {
 	scriptHash       []byte
 }
 
+func (p *Parser) FindScriptHashes() ([]string, error) {
+	list := []string{}
+	b, err := hex.DecodeString(p.Script)
+	if err != nil {
+		return list, err
+	}
+	reversed := reverseBytes(b)
+	splittedByAppCall := bytes.Split(reversed, []byte{byte(APPCALL)})
+	for _, v := range splittedByAppCall {
+		if len(v) >= 20 {
+			startIndex := len(v) - scripthashLength
+			endIndex := len(v)
+			s := reversed[startIndex:endIndex]
+			hashString := fmt.Sprintf("%x", s)
+			list = append(list, hashString)
+		}
+	}
+	return list, nil
+}
+
 func (p *Parser) splitScriptWithAPPCALL() ([]appcall, error) {
 
 	list := []appcall{}
@@ -201,6 +221,9 @@ func (p *Parser) splitScriptWithAPPCALL() ([]appcall, error) {
 			tempOperationAndArgs := []byte{}
 			tempScriptHash := []byte{}
 			if index == 0 {
+				// if len(splitted[index+1]) < 20 {
+				// 	continue
+				// }
 				tempOperationAndArgs = splitted[index]
 				tempScriptHash = reverseBytes(splitted[index+1][:20])
 			} else {

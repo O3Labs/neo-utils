@@ -39,7 +39,7 @@ func TestParserGetListOfOperations(t *testing.T) {
 
 func TestGetScripthashFromScript(t *testing.T) {
 	expectedResult := "b7c1f850a025e34455e7e98c588c784385077fb1"
-	p := smartcontract.NewParserWithScript("0830f4e2644b020000140c17e908b4014177e01d1a7fc3e6b5ed1ea83905141ffb723601fe7bf5e78b9ec6f6c79d69e317b9c753c1087472616e7366657267cf9472821400ceb06ca780c2a937fec5bbec51b9661a50b4e3696743e8")
+	p := smartcontract.NewParserWithScript("0800b90eef16000000141ffb723601fe7bf5e78b9ec6f6c79d69e317b9c71456f2328b6ecb7e42e7875eed2f6f8d674dab383b53c1087472616e7366657267fb1c540417067c270dee32f21023aa8b9b71abce66c4485313df54e64f")
 	result, err := p.GetListOfScriptHashes()
 	if err != nil {
 		log.Printf("Expected: %v but got error : %v", expectedResult, err)
@@ -48,6 +48,18 @@ func TestGetScripthashFromScript(t *testing.T) {
 	}
 
 	log.Printf("result = %v", result)
+}
+
+func TestFindScriptHash(t *testing.T) {
+	s := "0800b90eef16000000141ffb723601fe7bf5e78b9ec6f6c79d69e317b9c71456f2328b6ecb7e42e7875eed2f6f8d674dab383b53c1087472616e7366657267fb1c540417067c270dee32f21023aa8b9b71abce66c4485313df54e64f"
+
+	p := smartcontract.NewParserWithScript(s)
+	list, err := p.FindScriptHashes()
+	if err != nil {
+		t.Fail()
+		return
+	}
+	log.Printf("%+v", list)
 }
 
 func TestParserSingleAPPCALL(t *testing.T) {
