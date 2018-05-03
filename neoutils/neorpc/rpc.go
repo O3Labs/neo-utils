@@ -3,8 +3,11 @@ package neorpc
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/apisit/btckeygenie/btckey"
 )
 
 type NEORPCInterface interface {
@@ -15,6 +18,9 @@ type NEORPCInterface interface {
 	GetBlockCount() GetBlockCountResponse
 	GetBlock(blockHash string) GetBlockResponse
 	GetBlockByIndex(index int) GetBlockResponse
+	GetAccountState(address string) GetAccountStateResponse
+
+	GetTokenBalance(tokenHash string, adddress string) TokenBalanceResponse
 }
 
 type NEORPCClient struct {
@@ -108,6 +114,36 @@ func (n *NEORPCClient) GetBlockCount() GetBlockCountResponse {
 	response := GetBlockCountResponse{}
 	params := []interface{}{}
 	err := n.makeRequest("getblockcount", params, &response)
+	if err != nil {
+		return response
+	}
+	return response
+}
+
+func (n *NEORPCClient) GetAccountState(address string) GetAccountStateResponse {
+	response := GetAccountStateResponse{}
+	params := []interface{}{address, 1}
+	err := n.makeRequest("getaccountstate", params, &response)
+	if err != nil {
+		return response
+	}
+	return response
+}
+
+func (n *NEORPCClient) GetTokenBalance(tokenHash string, neoAddress string) TokenBalanceResponse {
+	response := TokenBalanceResponse{}
+	args := []interface{}{}
+
+	v, b, _ := btckey.B58checkdecode(neoAddress)
+	if v != 0x17 {
+		return TokenBalanceResponse{}
+	}
+	adddressScriptHash := fmt.Sprintf("%x", b)
+	input := NewInvokeFunctionStackByteArray(adddressScriptHash)
+	args = append(args, input)
+
+	params := []interface{}{tokenHash, "balanceOf", args}
+	err := n.makeRequest("invokefunction", params, &response)
 	if err != nil {
 		return response
 	}

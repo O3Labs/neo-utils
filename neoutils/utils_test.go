@@ -33,7 +33,7 @@ func TestScriptHashToNEOAddress(t *testing.T) {
 }
 
 func TestNEOAddressToScriptHash(t *testing.T) {
-	hash := NEOAddressToScriptHash("ASH41gtWftHvhuYhZz1jj7ee7z9vp9D9wk")
+	hash := NEOAddressToScriptHash("AQmq2yU7DupE4VddmEoweKiJFyGhAAEZeH")
 	b, _ := hex.DecodeString(hash)
 	log.Printf("%x %x", ReverseBytes(b), b)
 }
@@ -53,7 +53,7 @@ func TestValidateNEOAddressInvalidAddress(t *testing.T) {
 }
 
 func TestConverting(t *testing.T) {
-	hex := "001175f11e"
+	hex := "00e8764817"
 	//hex := "005c7c875e" = 405991873536
 
 	value := ConvertByteArrayToBigInt(hex)

@@ -254,8 +254,18 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 	return nil
 }
 
+func has0xPrefix(input string) bool {
+	return len(input) >= 2 && input[0] == '0' && (input[1] == 'x' || input[1] == 'X')
+}
+
 func NewScriptHash(hexString string) (ScriptHash, error) {
-	b, err := hex.DecodeString(hexString)
+	//check if the scripthash is prefixed with 0x. if so, trim it out.
+	trimmed0x := hexString
+	if has0xPrefix(hexString) == true {
+		trimmed0x = hexString[2:]
+	}
+	log.Printf("script hash = %v", trimmed0x)
+	b, err := hex.DecodeString(trimmed0x)
 	if err != nil {
 		return nil, err
 	}

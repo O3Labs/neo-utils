@@ -123,3 +123,41 @@ type GetBlockResult struct {
 	Confirmations int    `json:"confirmations"`
 	Nextblockhash string `json:"nextblockhash"`
 }
+
+type GetAccountStateResponse struct {
+	JSONRPCResponse
+	*ErrorResponse                       //optional
+	Result         GetAccountStateResult `json:"result"`
+}
+
+type GetAccountStateResult struct {
+	Version    int                      `json:"version"`
+	ScriptHash string                   `json:"script_hash"`
+	Frozen     bool                     `json:"frozen"`
+	Votes      []interface{}            `json:"votes"`
+	Balances   []GetAccountStateBalance `json:"balances"`
+}
+
+type GetAccountStateBalance struct {
+	Asset string `json:"asset"`
+	Value string `json:"value"`
+}
+
+type TokenBalanceResponse struct {
+	JSONRPCResponse
+	*ErrorResponse                    //optional
+	Result         TokenBalanceResult `json:"result"`
+}
+
+type InvokeFunctionStackResult struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type TokenBalanceResult struct {
+	Script      string                      `json:"script"`
+	State       string                      `json:"state"`
+	GasConsumed string                      `json:"gas_consumed"`
+	Stack       []InvokeFunctionStackResult `json:"stack"`
+	Tx          string                      `json:"tx"`
+}

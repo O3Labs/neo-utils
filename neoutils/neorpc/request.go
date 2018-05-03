@@ -15,3 +15,12 @@ func NewRequest(method string, params []interface{}) JSONRPCRequest {
 		ID:      1,
 	}
 }
+
+type InvokeFunctionStackArg struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+func NewInvokeFunctionStackByteArray(value string) InvokeFunctionStackArg {
+	return InvokeFunctionStackArg{Type: "ByteArray", Value: value}
+}

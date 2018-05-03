@@ -28,7 +28,7 @@ func TestGenKey(t *testing.T) {
 }
 
 func TestGenFromWIF(t *testing.T) {
-	wif := "KzULqzStT2tseGnqogXnTLG5NCT1YXa3F9Wp1Kdv9xMxFhvV6H2A"
+	wif := ""
 	wallet, err := neoutils.GenerateFromWIF(wif)
 	if err != nil {
 		log.Printf("%+v", err)

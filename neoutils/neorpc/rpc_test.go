@@ -75,3 +75,23 @@ func TestGetBlockCount(t *testing.T) {
 	result := client.GetBlockCount()
 	log.Printf("%+v", result.Result)
 }
+
+func TestGetAccountState(t *testing.T) {
+	client := neorpc.NewClient("http://seed2.o3node.org:10332")
+	if client == nil {
+		t.Fail()
+	}
+
+	result := client.GetAccountState("AdSBfV9kMmN2Q3xMYSbU33HWQA1dCc9CV3")
+	log.Printf("%+v", result.Result)
+}
+
+func TestGetTokenBalance(t *testing.T) {
+	client := neorpc.NewClient("http://localhost:30333")
+	if client == nil {
+		t.Fail()
+	}
+
+	result := client.GetTokenBalance("0xf820184470f1a5f38fa4ecc8db746336b371bda5", "AQmq2yU7DupE4VddmEoweKiJFyGhAAEZeH")
+	log.Printf("%+v", result.Result)
+}

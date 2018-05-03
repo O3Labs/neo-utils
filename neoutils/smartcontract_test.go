@@ -8,8 +8,6 @@ import (
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
 )
 
-var validSmartContract = neoutils.UseSmartContract("b7c1f850a025e34455e7e98c588c784385077fb1")
-
 func TestInvalidSmartContractStruct(t *testing.T) {
 	sc := neoutils.UseSmartContract("ce575ae1bb6153330d2")
 	if sc != nil {
@@ -71,6 +69,7 @@ func UTXODataForSmartContract() smartcontract.Unspent {
 }
 
 func TestInvokeFunctionRawTransaction(t *testing.T) {
+	var validSmartContract = neoutils.UseSmartContract("b7c1f850a025e34455e7e98c588c784385077fb1")
 
 	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
 	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
@@ -100,6 +99,8 @@ func TestInvokeFunctionRawTransaction(t *testing.T) {
 }
 
 func TestGenerateInvokeTransferNEP5Token(t *testing.T) {
+	var validSmartContract = neoutils.UseSmartContract("b7c1f850a025e34455e7e98c588c784385077fb1")
+
 	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
 	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
 	if err != nil {

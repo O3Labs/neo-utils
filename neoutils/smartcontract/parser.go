@@ -150,8 +150,16 @@ func (p *Parser) FindScriptHashes() ([]string, error) {
 	}
 	reversed := reverseBytes(b)
 	splittedByAppCall := bytes.Split(reversed, []byte{byte(APPCALL)})
-	for _, v := range splittedByAppCall {
-		if len(v) >= 20 {
+	//when splitted, the left side is the one that has the proper script hash
+	for index, v := range splittedByAppCall {
+		//even index is the left side
+
+		//we skip the odd index
+		if index%2 != 0 {
+			continue
+		}
+
+		if len(v) >= scripthashLength {
 			startIndex := len(v) - scripthashLength
 			endIndex := len(v)
 			s := reversed[startIndex:endIndex]
