@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/apisit/btckeygenie/btckey"
+	"github.com/o3labs/neo-utils/neoutils/btckey"
 )
 
 type NEORPCInterface interface {
