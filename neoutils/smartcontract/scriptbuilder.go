@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"log"
 
 	"github.com/o3labs/neo-utils/neoutils/btckey"
 	"golang.org/x/crypto/ripemd160"
@@ -197,8 +196,14 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		s.RawBytes = append(s.RawBytes, e.Address...)         //20 bytes
 		return nil
 	case UTXO:
+		//remove prefix 0x here
+		//check if the scripthash is prefixed with 0x. if so, trim it out.
+		trimmed0x := e.TXID
+		if has0xPrefix(e.TXID) == true {
+			trimmed0x = e.TXID[2:]
+		}
 		//reverse txID to little endian
-		b, err := hex.DecodeString(e.TXID)
+		b, err := hex.DecodeString(trimmed0x)
 		if err != nil {
 			return err
 		}
@@ -264,7 +269,6 @@ func NewScriptHash(hexString string) (ScriptHash, error) {
 	if has0xPrefix(hexString) == true {
 		trimmed0x = hexString[2:]
 	}
-	log.Printf("script hash = %v", trimmed0x)
 	b, err := hex.DecodeString(trimmed0x)
 	if err != nil {
 		return nil, err
@@ -349,7 +353,6 @@ func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend Na
 		utxoSumAmount += addingUTXO.Value
 		index += 1
 		count += 1
-		log.Printf("input = %v %v", addingUTXO.TXID, addingUTXO.Value)
 	}
 
 	//fee input part
@@ -397,7 +400,6 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 	if assetToSend == NEO && feeAmount > 0 {
 		needAnotherAssetForFee = true
 	}
-	log.Printf("needAnotherAssetForFee = %v", needAnotherAssetForFee)
 
 	if amountToSend > sendingAsset.TotalAmount() {
 		return nil, fmt.Errorf("you don't have enough balance. Sending %v but only have %v", amountToSend, sendingAsset.TotalAmount())
@@ -422,7 +424,6 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 	totalAmountInInputs := utxoSumAmount
 	needTwoOutputTransaction := totalAmountInInputs != amountToSend
 	list := []TransactionOutput{}
-	log.Printf("needTwoOutputTransaction=%v", needTwoOutputTransaction)
 
 	if needTwoOutputTransaction {
 		//first output is the amount to send to the receiver
@@ -441,7 +442,6 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 		if needAnotherAssetForFee == false && float64(feeAmount) > 0 {
 			returningAmount -= float64(feeAmount)
 		}
-		log.Printf("returningAmount = %v", returningAmount)
 		//return the left over to sender
 		returningOutput := TransactionOutput{
 			Asset:   assetToSend,

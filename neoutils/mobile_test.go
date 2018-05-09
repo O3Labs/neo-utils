@@ -26,11 +26,10 @@ func TestMintTokensFromMobile(t *testing.T) {
 	// gas := string(smartcontract.GAS)
 	amount := float64(2)
 	remark := "o3x"
-	// utxoEndpoint := "http://localhost:5000/"
-	utxoEndpoint := "http://testnet-api.wallet.cityofzion.io/"
+	network := "test"
 	networkFeeAmountInGAS := float64(0.0011)
 
-	tx, err := neoutils.MintTokensRawTransactionMobile(utxoEndpoint, scriptHash, wif, neo, amount, remark, networkFeeAmountInGAS)
+	tx, err := neoutils.MintTokensRawTransactionMobile(network, scriptHash, wif, neo, amount, remark, networkFeeAmountInGAS)
 	if err != nil {
 		log.Printf("%v", err)
 		t.Fail()

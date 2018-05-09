@@ -2,7 +2,6 @@ package neoutils
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
@@ -114,7 +113,6 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 func (n *NEP5) MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract.NativeAsset, amount float64, unspent smartcontract.Unspent, remark string) ([]byte, string, error) {
 
 	needVerification := true
-	log.Printf("needVerification = %v", needVerification)
 	operation := "mintTokens"
 	args := []interface{}{}
 	attributes := map[smartcontract.TransactionAttribute][]byte{}

@@ -2,21 +2,30 @@ package neoutils
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
-	"github.com/o3labs/neo-utils/neoutils/coz"
+	"github.com/o3labs/neo-utils/neoutils/o3"
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
 )
 
 // This class contains simplified method designed specifically for gomobile bind
 // gomobile bind doesn't support slice argument or return
 
-func utxoFromNEONWalletDB(neonWalletDBEndpoint string, address string) (smartcontract.Unspent, error) {
-	//"http://localhost:5000/"
-	cozClient := coz.NewClient(neonWalletDBEndpoint)
+func utxoFromO3Platform(network string, address string) (smartcontract.Unspent, error) {
 
-	unspentCoz, err := cozClient.GetUnspentByAddress(address)
-	if err != nil {
-		return smartcontract.Unspent{}, err
+	unspent := smartcontract.Unspent{
+		Assets: map[smartcontract.NativeAsset]*smartcontract.Balance{},
+	}
+
+	client := o3.DefaultO3APIClient()
+	if network == "test" {
+		client = o3.APIClientWithNEOTestnet()
+	}
+
+	response := client.GetNEOUTXO(address)
+	if response.Code != 200 {
+		return unspent, fmt.Errorf("Error cannot get utxo")
 	}
 
 	gasBalance := smartcontract.Balance{
@@ -29,26 +38,32 @@ func utxoFromNEONWalletDB(neonWalletDBEndpoint string, address string) (smartcon
 		UTXOs:  []smartcontract.UTXO{},
 	}
 
-	for _, v := range unspentCoz.GAS.Unspent {
-		gasTX1 := smartcontract.UTXO{
-			Index: v.Index,
-			TXID:  v.Txid,
-			Value: v.Value,
+	for _, v := range response.Result.Data {
+		if strings.Contains(v.Asset, string(smartcontract.GAS)) {
+			value, err := strconv.ParseFloat(v.Value, 64)
+			if err != nil {
+				continue
+			}
+			gasTX1 := smartcontract.UTXO{
+				Index: v.Index,
+				TXID:  v.Txid,
+				Value: value,
+			}
+			gasBalance.UTXOs = append(gasBalance.UTXOs, gasTX1)
 		}
-		gasBalance.UTXOs = append(gasBalance.UTXOs, gasTX1)
-	}
 
-	for _, v := range unspentCoz.NEO.Unspent {
-		tx := smartcontract.UTXO{
-			Index: v.Index,
-			TXID:  v.Txid,
-			Value: v.Value,
+		if strings.Contains(v.Asset, string(smartcontract.NEO)) {
+			value, err := strconv.ParseFloat(v.Value, 64)
+			if err != nil {
+				continue
+			}
+			tx := smartcontract.UTXO{
+				Index: v.Index,
+				TXID:  v.Txid,
+				Value: value,
+			}
+			neoBalance.UTXOs = append(neoBalance.UTXOs, tx)
 		}
-		neoBalance.UTXOs = append(neoBalance.UTXOs, tx)
-	}
-
-	unspent := smartcontract.Unspent{
-		Assets: map[smartcontract.NativeAsset]*smartcontract.Balance{},
 	}
 
 	unspent.Assets[smartcontract.GAS] = &gasBalance
@@ -61,7 +76,7 @@ type RawTransaction struct {
 	Data []byte
 }
 
-func MintTokensRawTransactionMobile(utxoEndpoint string, scriptHash string, wif string, sendingAssetID string, amount float64, remark string, networkFeeAmountInGAS float64) (*RawTransaction, error) {
+func MintTokensRawTransactionMobile(network string, scriptHash string, wif string, sendingAssetID string, amount float64, remark string, networkFeeAmountInGAS float64) (*RawTransaction, error) {
 	rawTransaction := &RawTransaction{}
 	fee := smartcontract.NetworkFeeAmount(networkFeeAmountInGAS)
 	nep5 := UseNEP5WithNetworkFee(scriptHash, fee)
@@ -70,7 +85,7 @@ func MintTokensRawTransactionMobile(utxoEndpoint string, scriptHash string, wif 
 		return nil, err
 	}
 
-	unspent, err := utxoFromNEONWalletDB(utxoEndpoint, wallet.Address)
+	unspent, err := utxoFromO3Platform(network, wallet.Address)
 	if err != nil {
 		return nil, err
 	}

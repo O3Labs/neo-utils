@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -112,6 +113,7 @@ func SelectBestSeedNode(commaSeparatedURLs string) *SeedNodeResponse {
 	urls := strings.Split(commaSeparatedURLs, ",")
 	ch := make(chan *FetchSeedRequest, len(urls))
 	fetchedList := []string{}
+	wg := sync.WaitGroup{}
 	listHighestNodes := []SeedNodeResponse{}
 	for _, url := range urls {
 		go func(url string) {
@@ -119,7 +121,9 @@ func SelectBestSeedNode(commaSeparatedURLs string) *SeedNodeResponse {
 			ch <- &FetchSeedRequest{res, url}
 		}(url)
 	}
+	wg.Add(1)
 
+loop:
 	for {
 		select {
 		case request := <-ch:
@@ -134,21 +138,24 @@ func SelectBestSeedNode(commaSeparatedURLs string) *SeedNodeResponse {
 			fetchedList = append(fetchedList, request.URL)
 			if len(fetchedList) == len(urls) {
 
-				if len(listHighestNodes) == 0 {
-					return nil
-				}
-				//using sort.SliceStable to sort min response time first
-				sort.SliceStable(listHighestNodes, func(i, j int) bool {
-					return listHighestNodes[i].ResponseTime < listHighestNodes[j].ResponseTime
-				})
-				//using sort.SliceStable to sort block count and preserve the sorted position
-				sort.SliceStable(listHighestNodes, func(i, j int) bool {
-					return listHighestNodes[i].BlockCount > listHighestNodes[j].BlockCount
-				})
-
-				return &listHighestNodes[0]
+				// if len(listHighestNodes) == 0 {
+				// 	continue
+				// }
+				wg.Done()
+				break loop
 			}
 		}
 	}
-	return nil
+	//wait for the operation
+	wg.Wait()
+	//using sort.SliceStable to sort min response time first
+	sort.SliceStable(listHighestNodes, func(i, j int) bool {
+		return listHighestNodes[i].ResponseTime < listHighestNodes[j].ResponseTime
+	})
+	//using sort.SliceStable to sort block count and preserve the sorted position
+	sort.SliceStable(listHighestNodes, func(i, j int) bool {
+		return listHighestNodes[i].BlockCount > listHighestNodes[j].BlockCount
+	})
+
+	return &listHighestNodes[0]
 }
