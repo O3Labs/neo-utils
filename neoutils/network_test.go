@@ -38,5 +38,17 @@ func TestBestNode(t *testing.T) {
 	if best != nil {
 		log.Printf("best node %+v %v %vms", best.URL, best.BlockCount, best.ResponseTime)
 	}
+}
 
+func TestGetBestO3Node(t *testing.T) {
+	urls := []string{
+		"http://seed1.o3node.org:10332",
+		"http://seed2.o3node.org:10332",
+		"http://seed3.o3node.org:10332",
+	}
+	commaSeparated := strings.Join(urls, ",")
+	best := SelectBestSeedNode(commaSeparated)
+	if best != nil {
+		log.Printf("best node %+v %v %vms", best.URL, best.BlockCount, best.ResponseTime)
+	}
 }
