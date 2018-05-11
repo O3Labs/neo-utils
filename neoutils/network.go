@@ -156,6 +156,8 @@ loop:
 	sort.SliceStable(listHighestNodes, func(i, j int) bool {
 		return listHighestNodes[i].BlockCount > listHighestNodes[j].BlockCount
 	})
-
+	if len(listHighestNodes) == 0 {
+		return nil
+	}
 	return &listHighestNodes[0]
 }
