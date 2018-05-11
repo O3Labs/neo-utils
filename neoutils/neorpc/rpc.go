@@ -61,6 +61,8 @@ func (n *NEORPCClient) makeRequest(method string, params []interface{}, out inte
 		return err
 	}
 	req.Header.Add("content-type", "application/json")
+	req.Header.Set("Connection", "close")
+	req.Close = true
 	res, err := n.httpClient.Do(req)
 	if err != nil {
 		return err
