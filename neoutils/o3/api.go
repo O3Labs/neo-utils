@@ -63,6 +63,8 @@ func (n *O3Client) makeGETRequest(endpoint string, out interface{}) error {
 		return err
 	}
 	req.Header.Add("content-type", "application/json")
+	req.Header.Set("Connection", "close")
+	req.Close = true
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err

@@ -56,7 +56,8 @@ func (c *CozClient) GetUnspentByAddress(address string) (*UnspentBalance, error)
 
 func (c *CozClient) GetClaims(address string) (*ClaimResponse, error) {
 	req, _ := http.NewRequest("GET", c.Endpoint.String()+"/v2/address/claims/"+address, nil)
-
+	req.Header.Set("Connection", "close")
+	req.Close = true
 	res, _ := http.DefaultClient.Do(req)
 
 	response := ClaimResponse{}
