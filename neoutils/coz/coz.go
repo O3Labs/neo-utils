@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 type CozClientInterface interface {
@@ -12,7 +13,8 @@ type CozClientInterface interface {
 }
 
 type CozClient struct {
-	Endpoint url.URL
+	Endpoint   url.URL
+	httpClient *http.Client
 }
 
 //make sure all method interface is implemented
@@ -23,13 +25,25 @@ func NewClient(endpoint string) *CozClient {
 	if err != nil {
 		return nil
 	}
-	return &CozClient{Endpoint: *u}
+	// var netTransport = &http.Transport{
+	// 	Dial: (&net.Dialer{
+	// 		Timeout: 8 * time.Second,
+	// 	}).Dial,
+	// 	TLSHandshakeTimeout: 8 * time.Second,
+	// }
+
+	var netClient = &http.Client{
+		Timeout: time.Second * 60,
+		// Transport: netTransport,
+	}
+
+	return &CozClient{Endpoint: *u, httpClient: netClient}
 }
 
 func (c *CozClient) GetUnspentByAddress(address string) (*UnspentBalance, error) {
 	req, _ := http.NewRequest("GET", c.Endpoint.String()+"/v2/address/balance/"+address, nil)
 
-	res, _ := http.DefaultClient.Do(req)
+	res, _ := c.httpClient.Do(req)
 
 	unspent := UnspentBalance{}
 	defer res.Body.Close()
