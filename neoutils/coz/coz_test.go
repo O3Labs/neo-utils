@@ -20,3 +20,14 @@ func TestGetUnspent(t *testing.T) {
 		log.Printf("%.8f", v.Value)
 	}
 }
+
+func TestGetClaims(t *testing.T) {
+	client := coz.NewClient("http://api.wallet.cityofzion.io/")
+	response, err := client.GetClaims("AJaohf6jmPyPcSF1JQLjC1RspT7F74mhBP")
+	if err != nil {
+		log.Printf("%v", err)
+		t.Fail()
+		return
+	}
+	log.Printf("%+v", response)
+}

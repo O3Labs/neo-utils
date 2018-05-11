@@ -8,6 +8,7 @@ import (
 
 type CozClientInterface interface {
 	GetUnspentByAddress(address string) (*UnspentBalance, error)
+	GetClaims(address string) (*ClaimResponse, error)
 }
 
 type CozClient struct {
@@ -37,4 +38,18 @@ func (c *CozClient) GetUnspentByAddress(address string) (*UnspentBalance, error)
 		return nil, err
 	}
 	return &unspent, nil
+}
+
+func (c *CozClient) GetClaims(address string) (*ClaimResponse, error) {
+	req, _ := http.NewRequest("GET", c.Endpoint.String()+"/v2/address/claims/"+address, nil)
+
+	res, _ := http.DefaultClient.Do(req)
+
+	response := ClaimResponse{}
+	defer res.Body.Close()
+	err := json.NewDecoder(res.Body).Decode(&response)
+	if err != nil {
+		return nil, err
+	}
+	return &response, nil
 }
