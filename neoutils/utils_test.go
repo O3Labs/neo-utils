@@ -53,11 +53,10 @@ func TestValidateNEOAddressInvalidAddress(t *testing.T) {
 }
 
 func TestConverting(t *testing.T) {
-	hex := "842c720000000000"
+	hex := "00b864d945"
 	//hex := "005c7c875e" = 405991873536
 
 	value := ConvertByteArrayToBigInt(hex)
-
 	log.Printf("%v", value)
 }
 

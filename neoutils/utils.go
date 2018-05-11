@@ -77,8 +77,8 @@ func ConvertByteArrayToBigInt(hexString string) *big.Int {
 		return nil
 	}
 	reversed := ReverseBytes(b)
-	reversedHex := hex.EncodeToString(reversed)
-	v, _ := new(big.Int).SetString(reversedHex, 16)
+	v := new(big.Int).SetBytes(reversed)
+
 	return v
 }
 
