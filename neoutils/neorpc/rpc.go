@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/o3labs/neo-utils/neoutils/btckey"
 )
@@ -24,7 +25,8 @@ type NEORPCInterface interface {
 }
 
 type NEORPCClient struct {
-	Endpoint url.URL
+	Endpoint   url.URL
+	httpClient *http.Client
 }
 
 //make sure all method interface is implemented
@@ -35,7 +37,19 @@ func NewClient(endpoint string) *NEORPCClient {
 	if err != nil {
 		return nil
 	}
-	return &NEORPCClient{Endpoint: *u}
+	// var netTransport = &http.Transport{
+	// 	Dial: (&net.Dialer{
+	// 		Timeout: 8 * time.Second,
+	// 	}).Dial,
+	// 	TLSHandshakeTimeout: 8 * time.Second,
+	// }
+
+	var netClient = &http.Client{
+		Timeout: time.Second * 60,
+		// Transport: netTransport,
+	}
+
+	return &NEORPCClient{Endpoint: *u, httpClient: netClient}
 }
 
 func (n *NEORPCClient) makeRequest(method string, params []interface{}, out interface{}) error {
@@ -47,7 +61,7 @@ func (n *NEORPCClient) makeRequest(method string, params []interface{}, out inte
 		return err
 	}
 	req.Header.Add("content-type", "application/json")
-	res, err := http.DefaultClient.Do(req)
+	res, err := n.httpClient.Do(req)
 	if err != nil {
 		return err
 	}
