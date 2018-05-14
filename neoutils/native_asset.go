@@ -7,7 +7,7 @@ import (
 )
 
 type NativeAssetInterface interface {
-	SendNativeAssetRawTransaction(wallet Wallet, asset smartcontract.NativeAsset, amount float64, to smartcontract.NEOAddress, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, error)
+	SendNativeAssetRawTransaction(wallet Wallet, asset smartcontract.NativeAsset, amount float64, to smartcontract.NEOAddress, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, string, error)
 }
 
 type NativeAsset struct {
@@ -22,7 +22,7 @@ func UseNativeAsset(networkFeeAmount smartcontract.NetworkFeeAmount) NativeAsset
 
 var _ NativeAssetInterface = (*NativeAsset)(nil)
 
-func (n *NativeAsset) SendNativeAssetRawTransaction(wallet Wallet, asset smartcontract.NativeAsset, amount float64, to smartcontract.NEOAddress, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, error) {
+func (n *NativeAsset) SendNativeAssetRawTransaction(wallet Wallet, asset smartcontract.NativeAsset, amount float64, to smartcontract.NEOAddress, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, string, error) {
 	//New invocation transaction struct and fill with all necessary data
 	tx := smartcontract.NewContractTransaction()
 
@@ -32,7 +32,7 @@ func (n *NativeAsset) SendNativeAssetRawTransaction(wallet Wallet, asset smartco
 	//generate transaction inputs
 	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	//transaction inputs
 	tx.Inputs = txInputs
@@ -40,7 +40,7 @@ func (n *NativeAsset) SendNativeAssetRawTransaction(wallet Wallet, asset smartco
 	//generate transaction outputs
 	txAttributes, err := smartcontract.NewScriptBuilder().GenerateTransactionAttributes(attributes)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	//transaction attributes
 	tx.Attributes = txAttributes
@@ -50,7 +50,7 @@ func (n *NativeAsset) SendNativeAssetRawTransaction(wallet Wallet, asset smartco
 	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
 	if err != nil {
 		log.Printf("%v", err)
-		return nil, err
+		return nil, "", err
 	}
 
 	tx.Outputs = txOutputs
@@ -61,7 +61,7 @@ func (n *NativeAsset) SendNativeAssetRawTransaction(wallet Wallet, asset smartco
 	signedData, err := Sign(tx.ToBytes(), privateKeyInHex)
 	if err != nil {
 		log.Printf("err signing %v", err)
-		return nil, err
+		return nil, "", err
 	}
 
 	signature := smartcontract.TransactionSignature{
@@ -79,5 +79,6 @@ func (n *NativeAsset) SendNativeAssetRawTransaction(wallet Wallet, asset smartco
 	endPayload := []byte{}
 	endPayload = append(endPayload, tx.ToBytes()...)
 
-	return endPayload, nil
+	txID := tx.ToTXID()
+	return endPayload, txID, nil
 }
