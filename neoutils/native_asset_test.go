@@ -73,7 +73,7 @@ func utxoFromO3Platform(network string, address string) (smartcontract.Unspent, 
 
 func TestSendingGAS(t *testing.T) {
 	//TEST WIF on testnet
-	wif := "L4Ns4Uh4WegsHxgDG49hohAYxuhj41hhxG6owjjTWg95GSrRRbLL"
+	wif := ""
 	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
 	if err != nil {
 		log.Printf("%v", err)

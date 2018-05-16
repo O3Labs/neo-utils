@@ -2,6 +2,7 @@ package neoutils
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -11,17 +12,11 @@ import (
 )
 
 func ReverseBytes(b []byte) []byte {
-	// Protect from big.Ints that have 1 len bytes.
-	if len(b) < 2 {
-		return b
+	for i := 0; i < len(b)/2; i++ {
+		j := len(b) - i - 1
+		b[i], b[j] = b[j], b[i]
 	}
-
-	dest := make([]byte, len(b))
-	for i, j := 0, len(b)-1; i < j; i, j = i+1, j-1 {
-		dest[i], dest[j] = b[j], b[i]
-	}
-
-	return dest
+	return b
 }
 
 // Simple hex string to bytes
@@ -55,6 +50,20 @@ func NEOAddressToScriptHash(neoAddress string) string {
 	return fmt.Sprintf("%x", ReverseBytes(b))
 }
 
+// Convert NEO address to script hash
+func NEOAddressToScriptHashWithEndian(neoAddress string, endian binary.ByteOrder) string {
+	v, b, _ := btckey.B58checkdecode(neoAddress)
+	if v != 0x17 {
+		return ""
+	}
+	if endian == binary.LittleEndian {
+		return fmt.Sprintf("%x", b)
+	} else {
+		//reverse from little endian to big endian
+		return fmt.Sprintf("%x", ReverseBytes(b))
+	}
+}
+
 // Validate NEO address
 func ValidateNEOAddress(address string) bool {
 	//NEO address version is 23
@@ -70,7 +79,6 @@ func ValidateNEOAddress(address string) bool {
 }
 
 // Convert byte array to big int
-//TODO TEST MORE OF THIS
 func ConvertByteArrayToBigInt(hexString string) *big.Int {
 	b, err := hex.DecodeString(hexString)
 	if err != nil {
@@ -78,7 +86,6 @@ func ConvertByteArrayToBigInt(hexString string) *big.Int {
 	}
 	reversed := ReverseBytes(b)
 	v := new(big.Int).SetBytes(reversed)
-
 	return v
 }
 

@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"log"
 
 	"github.com/o3labs/neo-utils/neoutils/btckey"
 	"golang.org/x/crypto/ripemd160"
@@ -321,6 +322,12 @@ func (s *ScriptBuilder) GenerateTransactionAttributes(attributes map[Transaction
 func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64, networkFeeAmount NetworkFeeAmount) ([]byte, error) {
 	//inputs = [input_count] + [[txID(32)] + [txIndex(2)]] = 34 x input_count bytes
 
+	log.Printf("%v", len(unspent.Assets))
+	//empty unspent
+	if len(unspent.Assets) == 0 || amountToSend == 0 {
+		s.pushLength(0)
+		return s.ToBytes(), nil
+	}
 	sendingAsset := unspent.Assets[assetToSend]
 	if sendingAsset == nil {
 		return nil, fmt.Errorf("Asset %v not found in UTXO", assetToSend)
@@ -386,6 +393,11 @@ func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend Na
 func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64, networkFeeAmount NetworkFeeAmount) ([]byte, error) {
 
 	//output = [output_count] + [assetID(32)] + [amount(8)] + [sender_scripthash(20)] = 60 x output_count bytes
+	//empty unspent
+	if len(unspent.Assets) == 0 || amountToSend == 0 {
+		s.pushLength(0)
+		return s.ToBytes(), nil
+	}
 
 	sendingAsset := unspent.Assets[assetToSend]
 	if sendingAsset == nil {
