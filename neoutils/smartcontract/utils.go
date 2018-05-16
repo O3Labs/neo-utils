@@ -6,6 +6,17 @@ import (
 )
 
 func reverseBytes(b []byte) []byte {
+	// if len(b) < 2 {
+	// 	return b
+	// }
+
+	// dest := make([]byte, len(b))
+	// for i, j := 0, len(b)-1; i < j; i, j = i+1, j-1 {
+	// 	dest[i], dest[j] = b[j], b[i]
+	// }
+
+	// return dest
+
 	for i := 0; i < len(b)/2; i++ {
 		j := len(b) - i - 1
 		b[i], b[j] = b[j], b[i]
