@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"math"
 	"testing"
 )
 
@@ -53,11 +54,11 @@ func TestValidateNEOAddressInvalidAddress(t *testing.T) {
 }
 
 func TestConverting(t *testing.T) {
-	hex := "00b864d945"
+	hexByteArray := "bc34697305"
 	//hex := "005c7c875e" = 405991873536
-
-	value := ConvertByteArrayToBigInt(hex)
-	log.Printf("%v", value)
+	value := ConvertByteArrayToBigInt(hexByteArray)
+	vvv := float64(value.Int64()) / float64(math.Pow10(8))
+	log.Printf("%v %v", value, vvv)
 }
 
 func TestParseNEP9(t *testing.T) {
