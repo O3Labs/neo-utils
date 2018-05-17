@@ -22,5 +22,5 @@ func uintToBytes(value uint) []byte {
 func uint16ToFixBytes(value uint16) []byte {
 	countBytes := make([]byte, 2)
 	binary.LittleEndian.PutUint16(countBytes, value)
-	return countBytes //bytes.TrimRight(countBytes, "\x00")
+	return countBytes
 }

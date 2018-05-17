@@ -15,6 +15,8 @@ import (
 type ScriptHash []byte
 type NEOAddress []byte
 
+type TokenAmount uint
+
 const (
 	Uint160Length = 20
 )
@@ -256,7 +258,11 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 	case int64:
 		s.pushInt(int(e))
 		return nil
+	case TokenAmount:
+		s.pushInt8bytes(int(e))
+		return nil
 	}
+	log.Printf("unknown type %v", data)
 	return nil
 }
 
@@ -322,7 +328,6 @@ func (s *ScriptBuilder) GenerateTransactionAttributes(attributes map[Transaction
 func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend NativeAsset, amountToSend float64, networkFeeAmount NetworkFeeAmount) ([]byte, error) {
 	//inputs = [input_count] + [[txID(32)] + [txIndex(2)]] = 34 x input_count bytes
 
-	log.Printf("%v", len(unspent.Assets))
 	//empty unspent
 	if len(unspent.Assets) == 0 || amountToSend == 0 {
 		s.pushLength(0)
@@ -356,6 +361,7 @@ func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend Na
 	//loop until we get enough sum amount
 	for utxoSumAmount < amountToSend {
 		addingUTXO := sendingAsset.UTXOs[index]
+		log.Printf("%+v", addingUTXO)
 		inputs = append(inputs, addingUTXO)
 		utxoSumAmount += addingUTXO.Value
 		index += 1
@@ -395,6 +401,7 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 	//output = [output_count] + [assetID(32)] + [amount(8)] + [sender_scripthash(20)] = 60 x output_count bytes
 	//empty unspent
 	if len(unspent.Assets) == 0 || amountToSend == 0 {
+		log.Printf("unspent is empty")
 		s.pushLength(0)
 		return s.ToBytes(), nil
 	}

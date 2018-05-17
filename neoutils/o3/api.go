@@ -10,6 +10,8 @@ import (
 
 const apiEndpoint = "https://platform.o3.network/api"
 
+// const apiEndpoint = "http://localhost:8080/api"
+
 type NEONetWork string
 
 var NEOMainNet = "main"
