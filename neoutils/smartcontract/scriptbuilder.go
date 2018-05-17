@@ -247,21 +247,18 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		count := len(e)
 		//reverse the array first
 		for i := len(e) - 1; i >= 0; i-- {
-			log.Printf("case []interface{}: %x", e[i])
 			s.pushData(e[i])
 		}
 		s.pushInt(count)
 		s.pushOpCode(PACK)
 		return nil
 	case int:
-		log.Printf("push int %v", e)
 		s.pushInt(e)
 		return nil
 	case int64:
 		s.pushInt(int(e))
 		return nil
 	case TokenAmount:
-		log.Printf("token amount =%v", e)
 		s.pushInt8bytes(int(e))
 		return nil
 	}
