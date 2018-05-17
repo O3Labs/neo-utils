@@ -2,6 +2,7 @@ package neoutils_test
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"testing"
@@ -139,7 +140,7 @@ func TestMintTokens(t *testing.T) {
 }
 
 //TEST with fee. succeeded
-func TestTransferNEP5(t *testing.T) {
+func TestTransferNEP5PrivateNet(t *testing.T) {
 
 	//this is APT token
 	scripthash := "55d8d97603701a34f1bda8c30777c8c04deefe55"
@@ -157,8 +158,8 @@ func TestTransferNEP5(t *testing.T) {
 	hash := neoutils.NEOAddressToScriptHashWithEndian(privateNetwallet.Address, binary.LittleEndian)
 	log.Printf("wallet hash %v", hash)
 
-	amount := float64(1000)
-	to := smartcontract.ParseNEOAddress("AQaZPqcv9Kg2x1eSrF8UBYXLK4WQoTSLH5")
+	amount := float64(1.1)
+	to := smartcontract.ParseNEOAddress("Adm9ER3UwdJfimFtFhHq1L5MQ5gxLLTUes")
 
 	// unspent, err := utxoFromO3Platform("test", privateNetwallet.Address)
 	// if err != nil {
@@ -166,18 +167,15 @@ func TestTransferNEP5(t *testing.T) {
 	// 	return
 	// }
 
-	// unspent := smartcontract.Unspent{}
+	// unspent, _ := unspent(privateNetwallet.Address)
+	unspent := smartcontract.Unspent{}
 
-	unspent, _ := unspent(privateNetwallet.Address)
-
-	remark := fmt.Sprintf("O3TXAPT%v", time.Now().Unix())
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
-
 	//address hash is a hex string
-	// addressScriptHash := neoutils.NEOAddressToScriptHashWithEndian(privateNetwallet.Address, binary.LittleEndian)
-	// b, _ := hex.DecodeString(addressScriptHash)
-	// attributes[smartcontract.Script] = []byte(b)
-	attributes[smartcontract.Remark1] = []byte(remark)
+	addressScriptHash := neoutils.NEOAddressToScriptHashWithEndian(privateNetwallet.Address, binary.LittleEndian)
+	b, _ := hex.DecodeString(addressScriptHash)
+	attributes[smartcontract.Script] = []byte(b)
+	attributes[smartcontract.Remark1] = []byte(fmt.Sprintf("O3TXAPT%v", time.Now().Unix()))
 
 	tx, txID, err := nep5.TransferNEP5RawTransaction(*privateNetwallet, to, amount, unspent, attributes)
 	if err != nil {

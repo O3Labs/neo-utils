@@ -2,7 +2,7 @@ package neoutils
 
 import (
 	"fmt"
-	"log"
+	"math"
 	"strings"
 
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
@@ -44,17 +44,21 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 		return nil, "", fmt.Errorf("Invalid from address")
 	}
 
-	log.Printf("transfer from %v", from.ToString())
-	log.Printf("transfer to %v", to.ToString())
-	numberOfTokens := amount
-	args := []interface{}{from, to, numberOfTokens}
+	if amount <= 0 {
+		return nil, "", fmt.Errorf("Amount must be greater than zero")
+	}
+
+	//the token amount is always in uint
+	numberOfTokens := uint(amount * float64(math.Pow10(8)))
+
+	args := []interface{}{from, to, smartcontract.TokenAmount(numberOfTokens)}
 
 	//New invocation transaction struct and fill with all necessary data
 	tx := smartcontract.NewInvocationTransaction()
 	txData := smartcontract.NewScriptBuilder().GenerateContractInvocationData(n.ScriptHash, "transfer", args)
 
 	tx.Data = txData
-	log.Printf("tx data = %x", txData)
+
 	//for smart contract invocation we send the minimum amount of gas to it
 	//0.00000001 gas
 	amountToSend := float64(0.00000001)
@@ -95,39 +99,12 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 		return nil, "", err
 	}
 
-	// needVerification := false
-	// if amountToSend == 0 {
-	// 	needVerification = true
-	// }
-
 	signature := smartcontract.TransactionSignature{
 		SignedData: signedData,
 		PublicKey:  wallet.PublicKey,
 	}
 
 	scripts := []interface{}{signature}
-	// if needVerification == true {
-	// 	//this empty verification script is needed in order to make it triggers Verification part
-	// 	emptyVerificationScript := smartcontract.TransactionValidationScript{
-	// 		StackScript:  []byte{0x00, 0x00},
-	// 		RedeemScript: nil,
-	// 	}
-
-	// 	//this logic is still unknown to me
-	// 	//I need to check with the one who figured it out
-	// 	//https://github.com/CityOfZion/neon-js/blob/a9dfaefec870bfd05f3a8a0e5bc90a635fb6c5b9/src/api/core.js#L308
-
-	// 	//basically we need to sort in descending order for address and script hash
-	// 	scriptHashInt := ConvertByteArrayToBigInt(fmt.Sprintf("%x", n.ScriptHash))
-	// 	addressInt := ConvertByteArrayToBigInt(fmt.Sprintf("%x", wallet.HashedSignature))
-	// 	//https://godoc.org/math/big#Int.Cmp
-	// 	//if scripthash int is grether than address int
-	// 	if scriptHashInt.Cmp(addressInt) == 1 {
-	// 		scripts = append(scripts, emptyVerificationScript)
-	// 	} else {
-	// 		scripts = append([]interface{}{emptyVerificationScript}, scripts...)
-	// 	}
-	// }
 	txScripts := smartcontract.NewScriptBuilder().GenerateVerificationScripts(scripts)
 	//assign scripts to the tx
 	tx.Script = txScripts
