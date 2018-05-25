@@ -1,26 +1,43 @@
-package smartcontract
+package smartcontract_test
 
-// import (
-// 	"encoding/hex"
-// 	"log"
-// 	"testing"
-// )
+import (
+	"encoding/hex"
+	"log"
+	"testing"
 
-// func TestParseNEOAddress(t *testing.T) {
-// 	to := ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
-// 	log.Printf("%x", to)
-// }
+	"github.com/o3labs/neo-utils/neoutils/smartcontract"
+)
 
-// func TestNewScriptHash(t *testing.T) {
-// 	scriptHash, err := NewScriptHash("b7c1f850a025e34455e7e98c588c784385077fb1")
-// 	if err != nil {
-// 		log.Printf("err = %v", err)
-// 		t.Fail()
-// 		return
-// 	}
-// 	s := hex.EncodeToString(scriptHash.ToBigEndian())
-// 	log.Printf("%v", s)
-// }
+func TestParseNEOAddress(t *testing.T) {
+	to := smartcontract.ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+	log.Printf("%x", to)
+}
+
+func TestNewScriptHash(t *testing.T) {
+	scriptHash, err := smartcontract.NewScriptHash("b7c1f850a025e34455e7e98c588c784385077fb1")
+	if err != nil {
+		log.Printf("err = %v", err)
+		t.Fail()
+		return
+	}
+	s := hex.EncodeToString(scriptHash.ToBigEndian())
+	log.Printf("%v", s)
+}
+
+func TestGenerateInvokeScript(t *testing.T) {
+	scriptHash, err := smartcontract.NewScriptHash("0x7cd338644833db2fd8824c410e364890d179e6f8")
+	if err != nil {
+		log.Printf("err = %v", err)
+		t.Fail()
+		return
+	}
+	args := []interface{}{}
+	s := smartcontract.NewScriptBuilder()
+	s.GenerateContractInvocationScript(scriptHash, "name", args)
+	s.GenerateContractInvocationScript(scriptHash, "symbol", args)
+	s.GenerateContractInvocationScript(scriptHash, "totalSupply", args)
+	log.Printf("%x", s.ToBytes())
+}
 
 // func TestPushContractInvocationScript(t *testing.T) {
 // 	s := NewScriptBuilder()

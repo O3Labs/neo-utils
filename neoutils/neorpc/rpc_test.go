@@ -92,6 +92,6 @@ func TestGetTokenBalance(t *testing.T) {
 		t.Fail()
 	}
 
-	result := client.GetTokenBalance("0xf820184470f1a5f38fa4ecc8db746336b371bda5", "AQmq2yU7DupE4VddmEoweKiJFyGhAAEZeH")
+	result := client.GetTokenBalance("0xc2b0fed82b8fa28c358f99849136f45f057bb6fe", "APLNwfJTHp1MBHYNeMAxkeqNCquLpBVjcD")
 	log.Printf("%+v", result.Result)
 }

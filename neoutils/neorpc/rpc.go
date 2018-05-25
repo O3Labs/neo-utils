@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -155,6 +156,7 @@ func (n *NEORPCClient) GetTokenBalance(tokenHash string, neoAddress string) Toke
 		return TokenBalanceResponse{}
 	}
 	adddressScriptHash := fmt.Sprintf("%x", b)
+	log.Printf("adddressScriptHash %v", adddressScriptHash)
 	input := NewInvokeFunctionStackByteArray(adddressScriptHash)
 	args = append(args, input)
 

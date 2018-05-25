@@ -21,6 +21,8 @@ func utxoFromO3Platform(network string, address string) (smartcontract.Unspent, 
 	client := o3.DefaultO3APIClient()
 	if network == "test" {
 		client = o3.APIClientWithNEOTestnet()
+	} else if network == "private" {
+		client = o3.APIClientWithNEOPrivateNet()
 	}
 
 	response := client.GetNEOUTXO(address)
@@ -72,27 +74,61 @@ func utxoFromO3Platform(network string, address string) (smartcontract.Unspent, 
 }
 
 func TestSendingGAS(t *testing.T) {
-	//TEST WIF on testnet
-	wif := "L4Ns4Uh4WegsHxgDG49hohAYxuhj41hhxG6owjjTWg95GSrRRbLL"
+	//TEST WIF on privatenet
+	wif := ""
 	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
 	if err != nil {
 		log.Printf("%v", err)
 		t.Fail()
 	}
 
-	unspent, err := utxoFromO3Platform("test", privateNetwallet.Address)
+	unspent, err := utxoFromO3Platform("private", privateNetwallet.Address)
 	if err != nil {
 		log.Printf("error %v", err)
 		t.Fail()
 		return
 	}
 	asset := smartcontract.GAS
-	amount := float64(20)
-	toAddress := "Adm9ER3UwdJfimFtFhHq1L5MQ5gxLLTUes"
+	amount := float64(10)
+	toAddress := "AMpupnF6QweQXLfCtF4dR45FDdKbTXkLsr"
 	to := smartcontract.ParseNEOAddress(toAddress)
 	remark := "O3TX"
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
 	attributes[smartcontract.Remark1] = []byte(remark)
+
+	fee := smartcontract.NetworkFeeAmount(0.0)
+	nativeAsset := neoutils.UseNativeAsset(fee)
+	rawtx, txid, err := nativeAsset.SendNativeAssetRawTransaction(*privateNetwallet, asset, amount, to, unspent, attributes)
+	if err != nil {
+		log.Printf("error sending natie %v", err)
+		t.Fail()
+		return
+	}
+	log.Printf("%v\n%x", txid, rawtx)
+}
+
+func TestSendingNEO(t *testing.T) {
+	//TEST WIF on privatenet
+	wif := ""
+	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
+	if err != nil {
+		log.Printf("%v", err)
+		t.Fail()
+	}
+
+	unspent, err := utxoFromO3Platform("private", privateNetwallet.Address)
+	if err != nil {
+		log.Printf("error %v", err)
+		t.Fail()
+		return
+	}
+	asset := smartcontract.NEO
+	amount := float64(100)
+	toAddress := "AFzkPLzXoN8UthJrizRrqUQCUxzoV5G8oY"
+	to := smartcontract.ParseNEOAddress(toAddress)
+	// remark := "O3TX"
+	attributes := map[smartcontract.TransactionAttribute][]byte{}
+	// attributes[smartcontract.Remark1] = []byte(remark)
 
 	fee := smartcontract.NetworkFeeAmount(0.0)
 	nativeAsset := neoutils.UseNativeAsset(fee)

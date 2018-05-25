@@ -42,6 +42,7 @@ func (n NEOAddress) ToString() string {
 }
 
 type ScriptBuilderInterface interface {
+	GenerateContractInvocationScript(scriptHash ScriptHash, operation string, args []interface{}) []byte
 	GenerateContractInvocationData(scriptHash ScriptHash, operation string, args []interface{}) []byte
 	GenerateTransactionAttributes(attributes map[TransactionAttribute][]byte) ([]byte, error)
 
@@ -298,6 +299,17 @@ func (s *ScriptBuilder) GenerateContractInvocationData(scriptHash ScriptHash, op
 	s.pushOpCode(APPCALL)                                             //use APPCALL only
 	s.pushData(scriptHash)                                            //script hash of the smart contract that we want to invoke
 	s.RawBytes = append([]byte{byte(len(s.RawBytes))}, s.RawBytes...) //the length of the entire raw bytes
+	return s.ToBytes()
+}
+
+// when generate the invokescript we don't need the length of the whole script
+func (s *ScriptBuilder) GenerateContractInvocationScript(scriptHash ScriptHash, operation string, args []interface{}) []byte {
+	if args != nil {
+		s.pushData(args)
+	}
+	s.pushData([]byte(operation)) //operation is in string we need to convert it to hex first
+	s.pushOpCode(APPCALL)         //use APPCALL only
+	s.pushData(scriptHash)        //script hash of the smart contract that we want to invoke
 	return s.ToBytes()
 }
 
