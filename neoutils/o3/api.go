@@ -10,8 +10,6 @@ import (
 
 const apiEndpoint = "https://platform.o3.network/api"
 
-// const apiEndpoint = "http://localhost:8080/api"
-
 type NEONetWork string
 
 var NEOMainNet = "main"
@@ -43,6 +41,14 @@ func APIClientWithNEOTestnet() *O3Client {
 	return &O3Client{APIBaseEndpoint: *u, neoNetwork: "test"}
 }
 
+func APIClientWithNEOPrivateNet() *O3Client {
+	u, err := url.Parse(apiEndpoint)
+	if err != nil {
+		return nil
+	}
+	return &O3Client{APIBaseEndpoint: *u, neoNetwork: "private"}
+}
+
 //make sure all method interface is implemented
 var _ O3APIInterface = (*O3Client)(nil)
 
@@ -51,8 +57,7 @@ func (n *O3Client) makeGETRequest(endpoint string, out interface{}) error {
 	fullEndpointString := fmt.Sprintf("%v%v", n.APIBaseEndpoint.String(), endpoint)
 	fullEndpoint, _ := url.Parse(fullEndpointString)
 
-	if n.neoNetwork == "test" {
-		log.Printf("network = test")
+	if n.neoNetwork == "test" || n.neoNetwork == "private" {
 		q := fullEndpoint.Query()
 		q.Set("network", n.neoNetwork)
 		fullEndpoint.RawQuery = q.Encode()

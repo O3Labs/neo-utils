@@ -1,8 +1,12 @@
 package neoutils_test
 
 import (
+	"encoding/binary"
+	"encoding/hex"
+	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/o3labs/neo-utils/neoutils"
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
@@ -129,6 +133,32 @@ func TestGenerateInvokeTransferNEP5Token(t *testing.T) {
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
 	attributes[smartcontract.Remark1] = []byte(remark)
 	tx, err := validSmartContract.GenerateInvokeFunctionRawTransaction(*privateNetwallet, unspent, attributes, "transfer", args)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	log.Printf("%x", tx)
+}
+
+func TestCallDeployFunction(t *testing.T) {
+	wif := ""
+	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
+	if err != nil {
+		log.Printf("%v", err)
+		t.Fail()
+	}
+
+	unspent := smartcontract.Unspent{}
+
+	sc := neoutils.UseSmartContract("0xc2b0fed82b8fa28c358f99849136f45f057bb6fe")
+	args := []interface{}{}
+	attributes := map[smartcontract.TransactionAttribute][]byte{}
+	addressScriptHash := neoutils.NEOAddressToScriptHashWithEndian(privateNetwallet.Address, binary.LittleEndian)
+	b, _ := hex.DecodeString(addressScriptHash)
+	attributes[smartcontract.Script] = []byte(b)
+	attributes[smartcontract.Remark1] = []byte(fmt.Sprintf("O3TXAPT%v", time.Now().Unix()))
+
+	tx, err := sc.GenerateInvokeFunctionRawTransaction(*privateNetwallet, unspent, attributes, "deploy", args)
 	if err != nil {
 		t.Fail()
 		return

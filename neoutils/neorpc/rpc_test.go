@@ -92,6 +92,17 @@ func TestGetTokenBalance(t *testing.T) {
 		t.Fail()
 	}
 
-	result := client.GetTokenBalance("0xf820184470f1a5f38fa4ecc8db746336b371bda5", "AQmq2yU7DupE4VddmEoweKiJFyGhAAEZeH")
+	result := client.GetTokenBalance("0xc2b0fed82b8fa28c358f99849136f45f057bb6fe", "APLNwfJTHp1MBHYNeMAxkeqNCquLpBVjcD")
+	log.Printf("%+v", result.Result)
+}
+
+func TestInvokeScript(t *testing.T) {
+	client := neorpc.NewClient("http://seed2.neo.org:20332")
+	script := "00c1046e616d6567f8e679d19048360e414c82d82fdb33486438d37c00c10673796d626f6c67f8e679d19048360e414c82d82fdb33486438d37c00c10b746f74616c537570706c7967f8e679d19048360e414c82d82fdb33486438d37c"
+	if client == nil {
+		t.Fail()
+	}
+
+	result := client.InvokeScript(script)
 	log.Printf("%+v", result.Result)
 }

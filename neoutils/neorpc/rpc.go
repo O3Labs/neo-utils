@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -20,7 +21,7 @@ type NEORPCInterface interface {
 	GetBlock(blockHash string) GetBlockResponse
 	GetBlockByIndex(index int) GetBlockResponse
 	GetAccountState(address string) GetAccountStateResponse
-
+	InvokeScript(scriptInHex string) InvokeScriptResponse
 	GetTokenBalance(tokenHash string, adddress string) TokenBalanceResponse
 }
 
@@ -155,11 +156,22 @@ func (n *NEORPCClient) GetTokenBalance(tokenHash string, neoAddress string) Toke
 		return TokenBalanceResponse{}
 	}
 	adddressScriptHash := fmt.Sprintf("%x", b)
+	log.Printf("adddressScriptHash %v", adddressScriptHash)
 	input := NewInvokeFunctionStackByteArray(adddressScriptHash)
 	args = append(args, input)
 
 	params := []interface{}{tokenHash, "balanceOf", args}
 	err := n.makeRequest("invokefunction", params, &response)
+	if err != nil {
+		return response
+	}
+	return response
+}
+
+func (n *NEORPCClient) InvokeScript(scriptInHex string) InvokeScriptResponse {
+	response := InvokeScriptResponse{}
+	params := []interface{}{scriptInHex, 1}
+	err := n.makeRequest("invokescript", params, &response)
 	if err != nil {
 		return response
 	}

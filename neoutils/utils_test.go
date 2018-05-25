@@ -1,6 +1,7 @@
 package neoutils
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -8,35 +9,24 @@ import (
 	"testing"
 )
 
-func TestConvertScripthashFromParamToNEOAddress(t *testing.T) {
-	hash := "7bee835ff211327677c453d5f19b693e70a361ab"
-	b := hex2bytes(hash)
-	b = ReverseBytes(b)
-
-	address := ScriptHashToNEOAddress(bytesToHex(b))
-
-	scripthash := NEOAddressToScriptHash(address)
-	log.Printf("address = %v result = %s", address, scripthash)
-
-	if scripthash != hash {
-		t.Fail()
-	}
-}
-
 func TestScriptHashToNEOAddress(t *testing.T) {
-	hash := "ceab719b8baa2310f232ee0d277c061704541cfb"
-	address := ScriptHashToNEOAddress(hash)
-	scripthash := NEOAddressToScriptHash(address)
+	hashLittleEndian := "2b41aea9d405fef2e809e3c8085221ce944527a7"
+	expectedAddress := "AKibPRzkoZpHnPkF6qvuW2Q4hG9gKBwGpR"
+	bigEndian := ReverseBytes(hex2bytes(hashLittleEndian))
+
+	//ScriptHashToNEOAddress always takes big endian hash
+	address := ScriptHashToNEOAddress(fmt.Sprintf("%x", bigEndian))
+	scripthash := NEOAddressToScriptHashWithEndian(address, binary.LittleEndian)
 	log.Printf("address = %v result = %s", address, scripthash)
-	if scripthash != hash {
+	if address != expectedAddress {
 		t.Fail()
 	}
 }
 
 func TestNEOAddressToScriptHash(t *testing.T) {
-	hash := NEOAddressToScriptHash("Adm9ER3UwdJfimFtFhHq1L5MQ5gxLLTUes")
+	hash := NEOAddressToScriptHashWithEndian("ATLoURz25z4PpsrzZmnowRT3dya44LGEpS", binary.LittleEndian)
 	b, _ := hex.DecodeString(hash)
-	log.Printf("%x %x", ReverseBytes(b), b)
+	log.Printf("\nlittle endian %v %v\nbig endian %x", hash, ReverseBytes(b))
 }
 
 func TestValidateNEOAddress(t *testing.T) {
@@ -54,11 +44,11 @@ func TestValidateNEOAddressInvalidAddress(t *testing.T) {
 }
 
 func TestConverting(t *testing.T) {
-	hexByteArray := "4c528a0c"
+	hexByteArray := "0000b2d3595bf006" //500000000000000000
 	//hex := "005c7c875e" = 405991873536
 	value := ConvertByteArrayToBigInt(hexByteArray)
 	vvv := float64(value.Int64()) / float64(math.Pow10(8))
-	log.Printf("%v %v", value, vvv)
+	log.Printf("%v %.8f", value, vvv)
 }
 
 func TestParseNEP9(t *testing.T) {
@@ -73,7 +63,7 @@ func TestParseNEP9(t *testing.T) {
 }
 
 func TestReverse(t *testing.T) {
-	b := HexTobytes("f782294e0db7a64066f108e8c4400f1af2c20c28")
+	b := HexTobytes("50591a2f81a506786a39d9aeb4d7ee935a284f95")
 	log.Printf("%x", ReverseBytes(b))
 }
 

@@ -31,6 +31,7 @@ func BytesToHex(b []byte) string {
 }
 
 // Convert script hash to NEO address
+// This method takes Big Endian Script hash
 func ScriptHashToNEOAddress(scriptHash string) string {
 	b := HexTobytes(scriptHash)
 	//script hash from rpc or anything is always in big endian
@@ -40,15 +41,15 @@ func ScriptHashToNEOAddress(scriptHash string) string {
 	return address
 }
 
-// Convert NEO address to script hash
-func NEOAddressToScriptHash(neoAddress string) string {
-	v, b, _ := btckey.B58checkdecode(neoAddress)
-	if v != 0x17 {
-		return ""
-	}
-	//reverse from little endian to big endian
-	return fmt.Sprintf("%x", ReverseBytes(b))
-}
+// // Convert NEO address to script hash
+// func NEOAddressToScriptHash(neoAddress string) string {
+// 	v, b, _ := btckey.B58checkdecode(neoAddress)
+// 	if v != 0x17 {
+// 		return ""
+// 	}
+// 	//reverse from little endian to big endian
+// 	return fmt.Sprintf("%x", ReverseBytes(b))
+// }
 
 // Convert NEO address to script hash
 func NEOAddressToScriptHashWithEndian(neoAddress string, endian binary.ByteOrder) string {
@@ -90,9 +91,9 @@ func ConvertByteArrayToBigInt(hexString string) *big.Int {
 }
 
 type SimplifiedNEP9 struct {
-	To      string  `json:"to"`
-	AssetID string  `json:"assetID"`
-	Amount  float64 `json:"amount"`
+	To     string  `json:"to"`
+	Asset  string  `json:"assetID"`
+	Amount float64 `json:"amount"`
 }
 
 func ParseNEP9URI(uri string) (*SimplifiedNEP9, error) {
@@ -102,9 +103,9 @@ func ParseNEP9URI(uri string) (*SimplifiedNEP9, error) {
 		return nil, err
 	}
 	return &SimplifiedNEP9{
-		To:      parsed.Address,
-		AssetID: parsed.AssetID,
-		Amount:  parsed.Amount,
+		To:     parsed.Address,
+		Asset:  parsed.Asset,
+		Amount: parsed.Amount,
 	}, nil
 }
 
