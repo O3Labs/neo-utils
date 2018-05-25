@@ -161,3 +161,17 @@ type TokenBalanceResult struct {
 	Stack       []InvokeFunctionStackResult `json:"stack"`
 	Tx          string                      `json:"tx"`
 }
+
+type InvokeScriptResponse struct {
+	JSONRPCResponse
+	*ErrorResponse
+	Result struct {
+		Script      string `json:"script"`
+		State       string `json:"state"`
+		GasConsumed string `json:"gas_consumed"`
+		Stack       []struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		} `json:"stack"`
+	} `json:"result"`
+}
