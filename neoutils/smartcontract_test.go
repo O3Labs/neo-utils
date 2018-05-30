@@ -75,7 +75,7 @@ func UTXODataForSmartContract() smartcontract.Unspent {
 func TestInvokeFunctionRawTransaction(t *testing.T) {
 	var validSmartContract = neoutils.UseSmartContract("b7c1f850a025e34455e7e98c588c784385077fb1")
 
-	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
+	wif := ""
 	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
 	if err != nil {
 		log.Printf("%v", err)
@@ -105,7 +105,7 @@ func TestInvokeFunctionRawTransaction(t *testing.T) {
 func TestGenerateInvokeTransferNEP5Token(t *testing.T) {
 	var validSmartContract = neoutils.UseSmartContract("b7c1f850a025e34455e7e98c588c784385077fb1")
 
-	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
+	wif := ""
 	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
 	if err != nil {
 		log.Printf("%v", err)
@@ -150,7 +150,7 @@ func TestCallDeployFunction(t *testing.T) {
 
 	unspent := smartcontract.Unspent{}
 
-	sc := neoutils.UseSmartContract("0xc2b0fed82b8fa28c358f99849136f45f057bb6fe")
+	sc := neoutils.UseSmartContract("0x7cd338644833db2fd8824c410e364890d179e6f8")
 	args := []interface{}{}
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
 	addressScriptHash := neoutils.NEOAddressToScriptHashWithEndian(privateNetwallet.Address, binary.LittleEndian)

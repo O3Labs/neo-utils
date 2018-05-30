@@ -24,11 +24,7 @@ func TestMintTokens(t *testing.T) {
 		t.Fail()
 		return
 	}
-	unspent, err := unspent(privateNetwallet.Address)
-	if err != nil {
-		t.Fail()
-		return
-	}
+	unspent := smartcontract.Unspent{}
 
 	remark := "O3TX"
 

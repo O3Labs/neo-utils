@@ -44,21 +44,21 @@ func newScryptParams() scryptParams {
 
 // NEP2Encrypt encrypts a the PrivateKey using a given passphrase
 // under the NEP-2 standard.
-func NEP2Encrypt(wif string, passphrase string) (s string, err error) {
+func NEP2Encrypt(wif string, passphrase string) (s string, address string, err error) {
 	var privateKey btckey.PrivateKey
 	errFromWIF := privateKey.FromWIF(wif)
 	if err != nil {
-		return "", errFromWIF
+		return "", "", errFromWIF
 	}
 
-	address := privateKey.ToNeoAddress()
+	address = privateKey.ToNeoAddress()
 	addressHash := hashAddress(address)[0:4]
 
 	// Normalize the passphrase according to the NFC standard.
 	phraseNorm := norm.NFC.Bytes([]byte(passphrase))
 	derivedKey, err := scrypt.Key(phraseNorm, addressHash, n, r, p, keyLen)
 	if err != nil {
-		return s, err
+		return s, "", err
 	}
 	derivedKey1 := derivedKey[:32]
 	derivedKey2 := derivedKey[32:]
@@ -67,7 +67,7 @@ func NEP2Encrypt(wif string, passphrase string) (s string, err error) {
 
 	encrypted, err := crypto.AESEncrypt(xr, derivedKey2)
 	if err != nil {
-		return s, err
+		return s, "", err
 	}
 
 	buf := new(bytes.Buffer)
@@ -77,10 +77,10 @@ func NEP2Encrypt(wif string, passphrase string) (s string, err error) {
 	buf.Write(encrypted)
 
 	if buf.Len() != 39 {
-		return s, fmt.Errorf("invalid buffer length: expecting 39 bytes got %d", buf.Len())
+		return s, "", fmt.Errorf("invalid buffer length: expecting 39 bytes got %d", buf.Len())
 	}
 
-	return crypto.Base58CheckEncode(buf.Bytes()), nil
+	return crypto.Base58CheckEncode(buf.Bytes()), address, nil
 }
 
 // NEP2Decrypt decrypts an encrypted key using a given passphrase

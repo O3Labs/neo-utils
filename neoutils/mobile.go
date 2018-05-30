@@ -23,6 +23,10 @@ func utxoFromO3Platform(network string, address string) (smartcontract.Unspent, 
 		client = o3.APIClientWithNEOTestnet()
 	}
 
+	if network == "private" {
+		client = o3.APIClientWithNEOPrivateNet()
+	}
+
 	response := client.GetNEOUTXO(address)
 	if response.Code != 200 {
 		return unspent, fmt.Errorf("Error cannot get utxo")

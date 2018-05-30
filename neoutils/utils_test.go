@@ -23,10 +23,15 @@ func TestScriptHashToNEOAddress(t *testing.T) {
 	}
 }
 
+func TestSmartContractScripthashToAddress(t *testing.T) {
+	address := ScriptHashToNEOAddress("fb5f6ac2a3b8396f8eafa5ac5c8f28ffcd247fc4")
+	log.Printf("%v", address)
+}
+
 func TestNEOAddressToScriptHash(t *testing.T) {
-	hash := NEOAddressToScriptHashWithEndian("ATLoURz25z4PpsrzZmnowRT3dya44LGEpS", binary.LittleEndian)
+	hash := NEOAddressToScriptHashWithEndian("ARLohhmauabPoyYgy6aSnFqCArf5RVpvtn", binary.LittleEndian)
 	b, _ := hex.DecodeString(hash)
-	log.Printf("\nlittle endian %v %v\nbig endian %x", hash, ReverseBytes(b))
+	log.Printf("\nlittle endian %v \nbig endian %x", hash, ReverseBytes(b))
 }
 
 func TestValidateNEOAddress(t *testing.T) {
