@@ -1,10 +1,15 @@
 package neoutils
 
 const (
-	VERSION = "1.0.4"
+	VERSION = "1.0.5"
 )
 
 //RELEASE NOTES
+// V. 1.0.5
+// - Added NEP6 Wallet format
+// - Make https handshake timeout lower to make get best node faster
+// - Added generate invocation script
+
 // V. 1.0.4
 // - Updated to use UTXO from O3
 

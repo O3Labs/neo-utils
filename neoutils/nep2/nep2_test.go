@@ -14,12 +14,12 @@ func TestNEP2(t *testing.T) {
 
 	// expctedUnencryptedHex := "CBF4B9F70470856BB4F40F80B87EDB90865997FFEE6DF315AB166D713AF433A5"
 
-	encrypted, err := nep2.NEP2Encrypt(WIF, passphase)
+	encrypted, address, err := nep2.NEP2Encrypt(WIF, passphase)
 	if err != nil {
 		log.Printf("err %v", err)
 		return
 	}
-	log.Printf("encrypted = %v", encrypted)
+	log.Printf("encrypted = %v address = %v", encrypted, address)
 
 	if encrypted != expectedEncrypted {
 		log.Printf("expected %v : got %v", expectedEncrypted, encrypted)

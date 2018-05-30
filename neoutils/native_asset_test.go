@@ -90,7 +90,7 @@ func TestSendingGAS(t *testing.T) {
 	}
 	asset := smartcontract.GAS
 	amount := float64(10)
-	toAddress := "AMpupnF6QweQXLfCtF4dR45FDdKbTXkLsr"
+	toAddress := "AaZmUKtuNEA2NTsjKGyjoAnFLxWsuQgeP3"
 	to := smartcontract.ParseNEOAddress(toAddress)
 	remark := "O3TX"
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
@@ -122,9 +122,9 @@ func TestSendingNEO(t *testing.T) {
 		t.Fail()
 		return
 	}
-	asset := smartcontract.NEO
-	amount := float64(100)
-	toAddress := "AFzkPLzXoN8UthJrizRrqUQCUxzoV5G8oY"
+	asset := smartcontract.GAS
+	amount := float64(1000)
+	toAddress := "Adm9ER3UwdJfimFtFhHq1L5MQ5gxLLTUes"
 	to := smartcontract.ParseNEOAddress(toAddress)
 	// remark := "O3TX"
 	attributes := map[smartcontract.TransactionAttribute][]byte{}

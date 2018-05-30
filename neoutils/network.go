@@ -2,6 +2,7 @@ package neoutils
 
 import (
 	"encoding/json"
+	"log"
 	"net"
 	"net/http"
 	"sort"
@@ -23,14 +24,14 @@ func newTransport() *customTransport {
 
 	tr := &customTransport{
 		dialer: &net.Dialer{
-			Timeout:   5 * time.Second, //keep timeout low
-			KeepAlive: 5 * time.Second,
+			Timeout:   1 * time.Second, //keep timeout low
+			KeepAlive: 1 * time.Second,
 		},
 	}
 	tr.rtp = &http.Transport{
 		Proxy:                 http.ProxyFromEnvironment,
 		Dial:                  tr.dial,
-		TLSHandshakeTimeout:   10 * time.Second,
+		TLSHandshakeTimeout:   1 * time.Second,
 		ResponseHeaderTimeout: 1 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 	}
@@ -88,6 +89,7 @@ func fetchSeedNode(url string) *BlockCountResponse {
 		return nil
 	}
 	blockResponse.ResponseTime = transport.ReqDuration().Nanoseconds()
+	log.Printf("%v(%v) %.4f", url, blockResponse.Result, transport.Duration().Seconds())
 	return &blockResponse
 }
 

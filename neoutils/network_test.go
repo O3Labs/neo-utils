@@ -20,8 +20,8 @@ func TestFetchDownNodeBlockCount(t *testing.T) {
 
 func TestBestNode(t *testing.T) {
 	urls := []string{
-		"http://seed1.neo.org:10332",
 		"http://seed2.neo.org:10332",
+		"https://seed1.neo.org:10331",
 		"http://seed3.neo.org:10332",
 		"http://seed4.neo.org:10332",
 		"http://seed5.neo.org:10332",
@@ -29,9 +29,15 @@ func TestBestNode(t *testing.T) {
 		"http://seed2.cityofzion.io:8080",
 		"http://seed3.cityofzion.io:8080",
 		"http://seed4.cityofzion.io:8080",
-		"http://seed5.cityofzion.io:8080",
-		"http://node1.o3.network:10332",
-		"http://node2.o3.network:10332",
+		"http://seed2.aphelion-neo.com:10332",
+		"http://seed2.aphelion-neo.com:10332",
+		"https://seed3.switcheo.network:10331",
+		"https://seed2.switcheo.network:10331",
+
+		"http://node2.ams2.bridgeprotocol.io:10332",
+		"http://seed1.o3node.org:10332",
+		"http://seed2.o3node.org:10332",
+		"http://seed3.o3node.org:10332",
 	}
 	commaSeparated := strings.Join(urls, ",")
 	best := SelectBestSeedNode(commaSeparated)

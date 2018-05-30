@@ -66,6 +66,10 @@ type GetRawTransactionResult struct {
 		Value   string `json:"value"`
 		Address string `json:"address"`
 	} `json:"vout"`
+	Claims []struct {
+		Txid string `json:"txid"`
+		Vout int    `json:"vout"`
+	} `json:"claims"`
 	SysFee  string `json:"sys_fee"`
 	NetFee  string `json:"net_fee"`
 	Scripts []struct {
@@ -113,6 +117,7 @@ type GetBlockResult struct {
 		Attributes []interface{} `json:"attributes"`
 		Vin        []interface{} `json:"vin"`
 		Vout       []interface{} `json:"vout"`
+		Claims     []interface{} `json:"claims"`
 		SysFee     string        `json:"sys_fee"`
 		NetFee     string        `json:"net_fee"`
 		Scripts    []interface{} `json:"scripts"`

@@ -9,16 +9,9 @@ import (
 )
 
 func TestMintTokensFromMobile(t *testing.T) {
-	scriptHash := "7c1de0a1fba67cbddbfea27aed370ff2ff35e8b2"
+	scriptHash := "5f03828cb45198eedd659d264b6d3a1c889978ce"
 
-	//both of these are whitelisted
-
-	//ALL PRIVATE NET TEST ADDRESSES
-	// wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr" // contract owner AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y
-	wif := "L2W3eBvPYMUaxDZGEb395HZf26tLPZgU5qN351HpyVSAG1DWgDtx" // AQmq2yU7DupE4VddmEoweKiJFyGhAAEZeH
-	// wif := "L5h6cTh45egotcxFZ2rkF1gv7rLxx9rScfuja9kEVEE9mEj9Uwtv" //AQaZPqcv9Kg2x1eSrF8UBYXLK4WQoTSLH5
-	//this addresss is not whitelisted
-	// wif := "L5gmcoaetU6YGSzg4wNqvKBEEAfwCAxWseuL3pxvLvEMZB9WyUYp"
+	wif := ""
 	wallet, _ := neoutils.GenerateFromWIF(wif)
 	log.Printf("address = %v\n address hash = %x", wallet.Address, wallet.HashedSignature)
 
@@ -26,9 +19,8 @@ func TestMintTokensFromMobile(t *testing.T) {
 	// gas := string(smartcontract.GAS)
 	amount := float64(2)
 	remark := "o3x"
-	network := "test"
+	network := "private"
 	networkFeeAmountInGAS := float64(0.0011)
-
 	tx, err := neoutils.MintTokensRawTransactionMobile(network, scriptHash, wif, neo, amount, remark, networkFeeAmountInGAS)
 	if err != nil {
 		log.Printf("%v", err)
