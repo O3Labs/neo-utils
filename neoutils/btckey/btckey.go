@@ -645,6 +645,9 @@ func Verify(publicKey []byte, signature []byte, hash []byte) bool {
 	p.Curve = elliptic.P256()
 	p.X = pub.X
 	p.Y = pub.Y
+	if p.X == nil || p.Y == nil {
+		return false
+	}
 	rBytes := new(big.Int).SetBytes(signature[0:32])
 	sBytes := new(big.Int).SetBytes(signature[32:64])
 	return ecdsa.Verify(p, hash, rBytes, sBytes)

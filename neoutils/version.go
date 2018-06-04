@@ -1,8 +1,12 @@
 package neoutils
 
 const (
-	VERSION = "1.0.5"
+	VERSION = "1.0.6"
 )
+
+//RELEASE NOTES
+// V. 1.0.6
+// - Added Verify method to verify signed data
 
 //RELEASE NOTES
 // V. 1.0.5
