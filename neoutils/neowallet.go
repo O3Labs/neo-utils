@@ -136,3 +136,8 @@ func (w *Wallet) ComputeSharedSecret(publicKey []byte) []byte {
 func Sign(data []byte, key string) ([]byte, error) {
 	return btckey.Sign(data, key)
 }
+
+// Verify signed hash using public key
+func Verify(publicKey []byte, signature []byte, hash []byte) bool {
+	return btckey.Verify(publicKey, signature, hash)
+}
