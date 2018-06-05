@@ -460,7 +460,7 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 		//first output is the amount to send to the receiver
 		sendingOutput := TransactionOutput{
 			Asset:   assetToSend,
-			Value:   int64(amountToSend * float64(100000000)),
+			Value:   int64(RoundFixed8(amountToSend) * float64(100000000)),
 			Address: receiver,
 		}
 		list = append(list, sendingOutput)
@@ -476,7 +476,7 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 		//return the left over to sender
 		returningOutput := TransactionOutput{
 			Asset:   assetToSend,
-			Value:   int64(returningAmount * float64(100000000)),
+			Value:   int64(RoundFixed8(returningAmount) * float64(100000000)),
 			Address: sender,
 		}
 		list = append(list, returningOutput)
@@ -484,7 +484,7 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 
 		out := TransactionOutput{
 			Asset:   assetToSend,
-			Value:   int64(amountToSend * float64(100000000)),
+			Value:   int64(RoundFixed8(amountToSend) * float64(100000000)),
 			Address: receiver,
 		}
 		list = append(list, out)
@@ -516,10 +516,11 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 		// GAS balance = 10
 		// sending back amount = 9
 		// this will make network fee = 1
+
 		returningAmount := runningFeeAmount - float64(feeAmount)
 		returningOutput := TransactionOutput{
 			Asset:   GAS,
-			Value:   int64(returningAmount * float64(100000000)),
+			Value:   int64(RoundFixed8(returningAmount) * float64(100000000)),
 			Address: sender,
 		}
 		list = append(list, returningOutput)

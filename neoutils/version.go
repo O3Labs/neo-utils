@@ -1,14 +1,17 @@
 package neoutils
 
 const (
-	VERSION = "1.0.6"
+	VERSION = "1.0.7"
 )
 
 //RELEASE NOTES
+
+// V. 1.0.7
+// - Make sure to round to fixed 8 decimals in output
+
 // V. 1.0.6
 // - Added Verify method to verify signed data
 
-//RELEASE NOTES
 // V. 1.0.5
 // - Added NEP6 Wallet format
 // - Make https handshake timeout lower to make get best node faster
