@@ -2,6 +2,7 @@ package smartcontract_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"log"
 	"testing"
 
@@ -37,6 +38,17 @@ func TestGenerateInvokeScript(t *testing.T) {
 	s.GenerateContractInvocationScript(scriptHash, "symbol", args)
 	s.GenerateContractInvocationScript(scriptHash, "totalSupply", args)
 	log.Printf("%x", s.ToBytes())
+}
+
+func TestRoundFixed8(t *testing.T) {
+	inputs := float64(0.00119)
+	fee := float64(0.0011)
+	change := inputs - fee
+	fmt.Println(change)
+	fixed8 := smartcontract.RoundFixed8(change)
+	fmt.Println(fixed8)
+	changeInt64 := int64(fixed8 * float64(100000000))
+	fmt.Println(changeInt64)
 }
 
 // func TestPushContractInvocationScript(t *testing.T) {
@@ -156,19 +168,50 @@ func TestGenerateInvokeScript(t *testing.T) {
 // 	//2c0848942be7b95beeda620ed484c26c763459a987a5836ea3d87e12dc2658dad00 fe65fc0c69b6d8bea4c7ff2e3b158ae089f055e1af8567ab747a120ec70f641b 00
 // }
 
-// func TestGenerateTransactionOutput(t *testing.T) {
-// 	s := NewScriptBuilder()
-// 	assetToSend := GAS
-// 	amountToSend := float64(0.00000001)
-// 	unspent := UTXODataForSmartContract()
-// 	sender := ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
-// 	receiver := ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+func UTXODataForSmartContract() smartcontract.Unspent {
 
-// 	b, err := s.GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend)
-// 	if err != nil {
-// 		log.Printf("%v", err)
-// 		t.Fail()
-// 	}
-// 	log.Printf("%x", b)
-// 	//52e72d286979ee6cb1b7e65dfddfb2e384100b8d148e7758de42e4168b71792c600088526a741423ba2703c53263e8d6e522dc32203339dcd8eee9e72d286979ee6cb1b7e65dfddfb2e384100b8d148e7758de42e4168b71792c6000584fa73d1423ba2703c53263e8d6e522dc32203339dcd8eee9
-// }
+	gasTX1 := smartcontract.UTXO{
+		Index: 0,
+		TXID:  "307d756074d9ee11220ccebf003bedb99f9b1a54e194a25e6ea5df1a7b2de84b",
+		Value: float64(0.00131679),
+	}
+
+	gasBalance := smartcontract.Balance{
+		Amount: float64(0.00131679),
+		UTXOs:  []smartcontract.UTXO{gasTX1},
+	}
+
+	neoTX1 := smartcontract.UTXO{
+		Index: 0,
+		TXID:  "e8b8bf4f98490368fc1caa86f8646e7383bb52751ffc3a1a7e296d715c4382ed",
+		Value: float64(10000000000000000) / float64(100000000),
+	}
+
+	neoBalance := smartcontract.Balance{
+		Amount: float64(10000000000000000) / float64(100000000),
+		UTXOs:  []smartcontract.UTXO{neoTX1},
+	}
+
+	unspent := smartcontract.Unspent{
+		Assets: map[smartcontract.NativeAsset]*smartcontract.Balance{},
+	}
+	unspent.Assets[smartcontract.NEO] = &neoBalance
+	unspent.Assets[smartcontract.GAS] = &gasBalance
+	return unspent
+}
+
+func TestGenerateTransactionOutput(t *testing.T) {
+	s := smartcontract.NewScriptBuilder()
+	assetToSend := smartcontract.GAS
+	amountToSend := float64(0.0011)
+	unspent := UTXODataForSmartContract()
+	sender := smartcontract.ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+	receiver := smartcontract.ParseNEOAddress("AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y")
+
+	b, err := s.GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, 0)
+	if err != nil {
+		log.Printf("%v", err)
+		t.Fail()
+	}
+	log.Printf("%x", b)
+}

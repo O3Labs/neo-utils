@@ -2,7 +2,6 @@ package neoutils
 
 import (
 	"encoding/json"
-	"log"
 	"net"
 	"net/http"
 	"sort"
@@ -89,7 +88,6 @@ func fetchSeedNode(url string) *BlockCountResponse {
 		return nil
 	}
 	blockResponse.ResponseTime = transport.ReqDuration().Nanoseconds()
-	log.Printf("%v(%v) %.4f", url, blockResponse.Result, transport.Duration().Seconds())
 	return &blockResponse
 }
 

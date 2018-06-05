@@ -3,6 +3,7 @@ package smartcontract
 import (
 	"bytes"
 	"encoding/binary"
+	"math"
 )
 
 func reverseBytes(b []byte) []byte {
@@ -23,4 +24,18 @@ func uint16ToFixBytes(value uint16) []byte {
 	countBytes := make([]byte, 2)
 	binary.LittleEndian.PutUint16(countBytes, value)
 	return countBytes
+}
+
+func RoundFixed8(val float64) (newVal float64) {
+	var round float64
+	pow := math.Pow(10, float64(8))
+	digit := pow * val
+	_, div := math.Modf(digit)
+	if div >= 0.5 {
+		round = math.Ceil(digit)
+	} else {
+		round = math.Floor(digit)
+	}
+	newVal = round / pow
+	return
 }
