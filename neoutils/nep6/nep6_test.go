@@ -5,8 +5,8 @@ import (
 	"log"
 	"testing"
 
+	"github.com/o3labs/neo-utils/neoutils"
 	"github.com/o3labs/neo-utils/neoutils/nep2"
-	"github.com/o3labs/neo-utils/neoutils/nep6"
 )
 
 func TestNEWNEP6Wallet(t *testing.T) {
@@ -21,10 +21,10 @@ func TestNEWNEP6Wallet(t *testing.T) {
 	walletName := "o3wallet"
 	addressLabel := "spending"
 
-	nep6Wallet := nep6.NewNEP6WithNEP2EncryptedKey(walletName, addressLabel, address, encryptedKey)
+	nep6Wallet := neoutils.GenerateNEP6FromEncryptedKey(walletName, addressLabel, address, encryptedKey)
 	log.Printf("%+v", nep6Wallet)
 
-	b, err := json.Marshal(nep6Wallet.Accounts[0])
+	b, err := json.Marshal(nep6Wallet)
 	if err != nil {
 		t.Fail()
 		return

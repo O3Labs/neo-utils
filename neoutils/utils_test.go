@@ -89,3 +89,10 @@ func TestHash256(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestPublicKeyToNEOAddress(t *testing.T) {
+	publicKey := "02ac3cecf6a5909c199fb5d6840577680c232fe3d5594c6514cc7897c4dd384728"
+	b, _ := hex.DecodeString(publicKey)
+	address := PublicKeyToNEOAddress(b)
+	log.Printf("%v", address)
+}
