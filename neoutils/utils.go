@@ -9,6 +9,7 @@ import (
 
 	nep9 "github.com/o3labs/NEP9-go/nep9"
 	"github.com/o3labs/neo-utils/neoutils/btckey"
+	"golang.org/x/crypto/ripemd160"
 )
 
 func ReverseBytes(b []byte) []byte {
@@ -123,4 +124,26 @@ func Hash256(b []byte) []byte {
 	hash := sha256.Sum256(b)
 	hash = sha256.Sum256(hash[:])
 	return hash[:]
+}
+
+func PublicKeyToNEOAddress(publicKeyBytes []byte) string {
+	publicKeyBytes = append([]byte{0x21}, publicKeyBytes...)
+	publicKeyBytes = append(publicKeyBytes, 0xAC)
+
+	/* SHA256 Hash */
+	sha256_h := sha256.New()
+	sha256_h.Reset()
+	sha256_h.Write(publicKeyBytes)
+	pub_hash_1 := sha256_h.Sum(nil)
+
+	/* RIPEMD-160 Hash */
+	ripemd160_h := ripemd160.New()
+	ripemd160_h.Reset()
+	ripemd160_h.Write(pub_hash_1)
+	pub_hash_2 := ripemd160_h.Sum(nil)
+
+	program_hash := pub_hash_2
+
+	address := btckey.B58checkencodeNEO(0x17, program_hash)
+	return address
 }

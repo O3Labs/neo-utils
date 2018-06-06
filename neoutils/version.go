@@ -1,10 +1,13 @@
 package neoutils
 
 const (
-	VERSION = "1.0.7"
+	VERSION = "1.0.8"
 )
 
 //RELEASE NOTES
+
+// V. 1.0.8
+// - Added Generate NEP6 wallet for mobile
 
 // V. 1.0.7
 // - Make sure to round to fixed 8 decimals in output

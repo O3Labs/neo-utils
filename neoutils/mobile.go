@@ -1,10 +1,12 @@
 package neoutils
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/o3labs/neo-utils/neoutils/nep6"
 	"github.com/o3labs/neo-utils/neoutils/o3"
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
 )
@@ -110,4 +112,13 @@ func MintTokensRawTransactionMobile(network string, scriptHash string, wif strin
 	rawTransaction.Data = data
 	rawTransaction.TXID = txIDString
 	return rawTransaction, nil
+}
+
+func GenerateNEP6FromEncryptedKey(walletName, addressLabel, address, encryptedKey string) string {
+	nep6Wallet := nep6.NewNEP6WithNEP2EncryptedKey(walletName, addressLabel, address, encryptedKey)
+	b, err := json.Marshal(nep6Wallet)
+	if err != nil {
+		return ""
+	}
+	return string(b)
 }

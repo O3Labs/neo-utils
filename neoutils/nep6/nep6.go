@@ -42,7 +42,7 @@ type NEP6Wallet struct {
 	Extra    interface{}   `json:"extra"`
 }
 
-func NewNEP6WithNEP2EncryptedKey(name string, addressLabel string, address string, encryptedKey string) NEP6Wallet {
+func NewNEP6WithNEP2EncryptedKey(name string, addressLabel string, address string, encryptedKey string) *NEP6Wallet {
 	account := NEP6Account{
 		Address:   address,
 		Label:     addressLabel,
@@ -61,5 +61,5 @@ func NewNEP6WithNEP2EncryptedKey(name string, addressLabel string, address strin
 		},
 	}
 	nep6.Accounts = append(nep6.Accounts, account)
-	return nep6
+	return &nep6
 }
