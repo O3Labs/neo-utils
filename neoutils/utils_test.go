@@ -29,7 +29,7 @@ func TestSmartContractScripthashToAddress(t *testing.T) {
 }
 
 func TestNEOAddressToScriptHash(t *testing.T) {
-	hash := NEOAddressToScriptHashWithEndian("ARLohhmauabPoyYgy6aSnFqCArf5RVpvtn", binary.LittleEndian)
+	hash := NEOAddressToScriptHashWithEndian("AbdWka5ichyQ47oAsCwDykjVDr9qPDUmcc", binary.LittleEndian)
 	b, _ := hex.DecodeString(hash)
 	log.Printf("\nlittle endian %v \nbig endian %x", hash, ReverseBytes(b))
 }
