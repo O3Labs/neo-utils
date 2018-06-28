@@ -122,7 +122,7 @@ func TestSendingNEO(t *testing.T) {
 		t.Fail()
 		return
 	}
-	asset := smartcontract.GAS
+	asset := smartcontract.NEO
 	amount := float64(1000)
 	toAddress := "Adm9ER3UwdJfimFtFhHq1L5MQ5gxLLTUes"
 	to := smartcontract.ParseNEOAddress(toAddress)
