@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"sort"
 
 	"github.com/o3labs/neo-utils/neoutils/btckey"
 	"golang.org/x/crypto/ripemd160"
@@ -51,12 +52,18 @@ type ScriptBuilderInterface interface {
 	GenerateTransactionOutput(sender NEOAddress, receiver NEOAddress, unspent Unspent, assetToSend NativeAsset, amountToSend float64, networkFeeAmount NetworkFeeAmount) ([]byte, error)
 
 	GenerateVerificationScripts(signatures []interface{}) []byte
+
+	GenerateVerificationScriptsMultiSig(signatures []TransactionSignature) []byte
+
 	EmptyTransactionAttributes() []byte
 	ToBytes() []byte
 	FullHexString() string
 	Clear()
 
-	EmitPush(data interface{}) error
+	//public method to wrap pushData
+	Push(data interface{}) error
+	PushOpCode(opcode OpCode)
+
 	ToScriptHash() []byte //UInt160
 
 	pushInt(value int) error
@@ -95,7 +102,7 @@ func (s ScriptBuilder) FullHexString() string {
 	return hex.EncodeToString(b)
 }
 
-func (s *ScriptBuilder) pushOpCode(opcode OpCode) {
+func (s *ScriptBuilder) PushOpCode(opcode OpCode) {
 	s.RawBytes = append(s.RawBytes, byte(opcode))
 }
 func (s *ScriptBuilder) pushInt8bytes(value int) error {
@@ -107,10 +114,10 @@ func (s *ScriptBuilder) pushInt8bytes(value int) error {
 func (s *ScriptBuilder) pushInt(value int) error {
 	switch {
 	case value == -1:
-		s.pushOpCode(PUSHM1)
+		s.PushOpCode(PUSHM1)
 		return nil
 	case value == 0:
-		s.pushOpCode(PUSH0)
+		s.PushOpCode(PUSH0)
 		return nil
 	case value >= 1 && value < 16:
 		rawValue := byte(PUSH1) + byte(value) - 1
@@ -151,22 +158,22 @@ func (s *ScriptBuilder) pushHexString(hexString string) error {
 		s.RawBytes = append(s.RawBytes, trimmedCountByte...)
 		s.RawBytes = append(s.RawBytes, b...)
 	} else if count < 0x100 {
-		s.pushOpCode(PUSHDATA1)
+		s.PushOpCode(PUSHDATA1)
 		s.RawBytes = append(s.RawBytes, trimmedCountByte...)
 		s.RawBytes = append(s.RawBytes, b...)
 	} else if count < 0x10000 {
-		s.pushOpCode(PUSHDATA2)
+		s.PushOpCode(PUSHDATA2)
 		s.RawBytes = append(s.RawBytes, trimmedCountByte...)
 		s.RawBytes = append(s.RawBytes, b...)
 	} else {
-		s.pushOpCode(PUSHDATA4)
+		s.PushOpCode(PUSHDATA4)
 		s.RawBytes = append(s.RawBytes, trimmedCountByte...)
 		s.RawBytes = append(s.RawBytes, b...)
 	}
 	return nil
 }
 
-func (s *ScriptBuilder) EmitPush(data interface{}) error {
+func (s *ScriptBuilder) Push(data interface{}) error {
 	return s.pushData(data)
 }
 
@@ -239,9 +246,9 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 		return s.pushHexString(hex.EncodeToString(e))
 	case bool:
 		if e == true {
-			s.pushOpCode(PUSH1)
+			s.PushOpCode(PUSH1)
 		} else {
-			s.pushOpCode(PUSH0)
+			s.PushOpCode(PUSH0)
 		}
 		return nil
 	case []interface{}:
@@ -251,7 +258,7 @@ func (s *ScriptBuilder) pushData(data interface{}) error {
 			s.pushData(e[i])
 		}
 		s.pushInt(count)
-		s.pushOpCode(PACK)
+		s.PushOpCode(PACK)
 		return nil
 	case int:
 		s.pushInt(e)
@@ -296,7 +303,7 @@ func (s *ScriptBuilder) GenerateContractInvocationData(scriptHash ScriptHash, op
 		s.pushData(args)
 	}
 	s.pushData([]byte(operation))                                     //operation is in string we need to convert it to hex first
-	s.pushOpCode(APPCALL)                                             //use APPCALL only
+	s.PushOpCode(APPCALL)                                             //use APPCALL only
 	s.pushData(scriptHash)                                            //script hash of the smart contract that we want to invoke
 	s.RawBytes = append([]byte{byte(len(s.RawBytes))}, s.RawBytes...) //the length of the entire raw bytes
 	return s.ToBytes()
@@ -308,7 +315,7 @@ func (s *ScriptBuilder) GenerateContractInvocationScript(scriptHash ScriptHash, 
 		s.pushData(args)
 	}
 	s.pushData([]byte(operation)) //operation is in string we need to convert it to hex first
-	s.pushOpCode(APPCALL)         //use APPCALL only
+	s.PushOpCode(APPCALL)         //use APPCALL only
 	s.pushData(scriptHash)        //script hash of the smart contract that we want to invoke
 	return s.ToBytes()
 }
@@ -547,11 +554,54 @@ func (s *ScriptBuilder) GenerateVerificationScripts(scripts []interface{}) []byt
 		switch e := script.(type) {
 		case TransactionSignature:
 			s.pushData(e)
-			s.pushOpCode(CHECKSIG)
+			s.PushOpCode(CHECKSIG)
 			continue
 		case TransactionValidationScript:
 			s.pushData(e)
 		}
 	}
+	return s.ToBytes()
+}
+
+func (s *ScriptBuilder) GenerateVerificationScriptsMultiSig(signatures []TransactionSignature) []byte {
+
+	s.pushLength(1)
+
+	list := []struct {
+		TransactionSignature
+		PB btckey.PublicKey
+	}{}
+
+	for _, e := range signatures {
+		pb := btckey.PublicKey{}
+
+		pb.FromBytes(e.PublicKey)
+		list = append(list,
+			struct {
+				TransactionSignature
+				PB btckey.PublicKey
+			}{
+				TransactionSignature: e,
+				PB:                   pb,
+			})
+	}
+
+	//we need to sort signature by public key here
+	sort.SliceStable(list, func(i, j int) bool {
+		return list[i].PB.Point.X.Cmp(list[j].PB.Point.X) == -1
+	})
+
+	all := []byte{}
+	for _, e := range list {
+		log.Printf("sorted %x", e.PublicKey)
+		b := []byte{}
+		b = append(b, uintToBytes(uint(len(e.SignedData)))...)
+		b = append(b, e.SignedData...)
+		all = append(all, b...)
+	}
+	//push length of signed data
+
+	s.pushLength(len(all))
+	s.RawBytes = append(s.RawBytes, all...)
 	return s.ToBytes()
 }

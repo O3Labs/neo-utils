@@ -3,12 +3,13 @@ package neoutils
 
 import (
 	"fmt"
+	"sort"
 
+	"github.com/o3labs/neo-utils/neoutils/btckey"
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
 )
 
 type MultiSigInterface interface {
-	CreateMultiSignedAddress(publicKeys [][]byte) error
 	CreateMultiSigRedeemScript(numerOfRequiredSignature int, publicKeys [][]byte) ([]byte, error)
 }
 
@@ -16,12 +17,6 @@ type MultiSig struct{}
 
 var _ MultiSigInterface = (*MultiSig)(nil)
 
-//TODO: finish this
-func (m *MultiSig) CreateMultiSignedAddress(publicKeys [][]byte) error {
-	return nil
-}
-
-//TODO: finish this
 func (m *MultiSig) CreateMultiSigRedeemScript(numerOfRequiredSignature int, publicKeys [][]byte) ([]byte, error) {
 	numberOfPublicKeys := len(publicKeys)
 	if numberOfPublicKeys <= 1 {
@@ -31,19 +26,23 @@ func (m *MultiSig) CreateMultiSigRedeemScript(numerOfRequiredSignature int, publ
 		return nil, fmt.Errorf("Number of required Signature is more than public keys provided.")
 	}
 
-	sb := smartcontract.NewScriptBuilder()
-	sb.EmitPush(numerOfRequiredSignature)
-	for _, publicKey := range publicKeys {
-		// pub := btckey.PublicKey{}
-		// err := pub.FromBytes(publicKey)
-		// if err != nil {
-		// 	return err
-		// }
-		//this publicKey is already a compressed bytes so we can add that directly
-		sb.EmitPush(publicKey)
+	//sort public key
+	keys := []btckey.PublicKey{}
+	for _, pb := range publicKeys {
+		publicKey := btckey.PublicKey{}
+		publicKey.FromBytes(pb)
+		keys = append(keys, publicKey)
 	}
 
-	sb.EmitPush(numberOfPublicKeys)
-	sb.EmitPush(smartcontract.CHECKMULTISIG)
+	//https://golang.org/pkg/math/big/#Int.Cmp
+	sort.SliceStable(keys, func(i, j int) bool { return keys[i].Point.X.Cmp(keys[j].Point.X) == -1 })
+
+	sb := smartcontract.NewScriptBuilder()
+	sb.Push(numerOfRequiredSignature)
+	for _, publicKey := range keys {
+		sb.Push(publicKey.ToBytes())
+	}
+	sb.Push(numberOfPublicKeys)
+	sb.PushOpCode(smartcontract.CHECKMULTISIG)
 	return sb.ToBytes(), nil
 }

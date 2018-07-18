@@ -8,6 +8,7 @@ import (
 
 type NativeAssetInterface interface {
 	SendNativeAssetRawTransaction(wallet Wallet, asset smartcontract.NativeAsset, amount float64, to smartcontract.NEOAddress, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, string, error)
+	GenerateRawTx(fromAddress string, asset smartcontract.NativeAsset, amount float64, to smartcontract.NEOAddress, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, string, error)
 }
 
 type NativeAsset struct {
@@ -23,42 +24,14 @@ func UseNativeAsset(networkFeeAmount smartcontract.NetworkFeeAmount) NativeAsset
 var _ NativeAssetInterface = (*NativeAsset)(nil)
 
 func (n *NativeAsset) SendNativeAssetRawTransaction(wallet Wallet, asset smartcontract.NativeAsset, amount float64, to smartcontract.NEOAddress, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, string, error) {
-	//New invocation transaction struct and fill with all necessary data
-	tx := smartcontract.NewContractTransaction()
-
-	amountToSend := amount
-	assetToSend := asset
-
-	//generate transaction inputs
-	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
+	tx, txID, err := n.GenerateRawTx(wallet.Address, asset, amount, to, unspent, attributes)
 	if err != nil {
 		return nil, "", err
 	}
-	//transaction inputs
-	tx.Inputs = txInputs
 
-	//generate transaction outputs
-	txAttributes, err := smartcontract.NewScriptBuilder().GenerateTransactionAttributes(attributes)
-	if err != nil {
-		return nil, "", err
-	}
-	//transaction attributes
-	tx.Attributes = txAttributes
-
-	sender := smartcontract.ParseNEOAddress(wallet.Address)
-	receiver := to
-	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
-	if err != nil {
-		log.Printf("%v", err)
-		return nil, "", err
-	}
-
-	tx.Outputs = txOutputs
-
-	//begin signing process and invocation script
+	//begin signing
 	privateKeyInHex := bytesToHex(wallet.PrivateKey)
-
-	signedData, err := Sign(tx.ToBytes(), privateKeyInHex)
+	signedData, err := Sign(tx, privateKeyInHex)
 	if err != nil {
 		log.Printf("err signing %v", err)
 		return nil, "", err
@@ -68,17 +41,49 @@ func (n *NativeAsset) SendNativeAssetRawTransaction(wallet Wallet, asset smartco
 		SignedData: signedData,
 		PublicKey:  wallet.PublicKey,
 	}
+	// try to verify it
+	// hash := sha256.Sum256(tx.ToBytes())
+	// valid := Verify(wallet.PublicKey, signedData, hash[:])
+	// log.Printf("verify tx %v", valid)
 
 	scripts := []interface{}{signature}
 	txScripts := smartcontract.NewScriptBuilder().GenerateVerificationScripts(scripts)
-	//assign scripts to the tx
-	tx.Script = txScripts
-	//end signing process
 
 	//concat data
 	endPayload := []byte{}
-	endPayload = append(endPayload, tx.ToBytes()...)
+	endPayload = append(endPayload, tx...)
+	endPayload = append(endPayload, txScripts...)
 
-	txID := tx.ToTXID()
 	return endPayload, txID, nil
+}
+
+func (n *NativeAsset) GenerateRawTx(fromAddress string, asset smartcontract.NativeAsset, amount float64, to smartcontract.NEOAddress, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, string, error) {
+	//New invocation transaction struct and fill with all necessary data
+	tx := smartcontract.NewContractTransaction()
+
+	//generate transaction inputs
+	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, asset, amount, n.NetworkFeeAmount)
+	if err != nil {
+		return nil, "", err
+	}
+	tx.Inputs = txInputs
+
+	txAttributes, err := smartcontract.NewScriptBuilder().GenerateTransactionAttributes(attributes)
+	if err != nil {
+		return nil, "", err
+	}
+
+	tx.Attributes = txAttributes
+
+	sender := smartcontract.ParseNEOAddress(fromAddress)
+
+	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, to, unspent, asset, amount, n.NetworkFeeAmount)
+	if err != nil {
+		log.Printf("%v", err)
+		return nil, "", err
+	}
+
+	tx.Outputs = txOutputs
+
+	return tx.ToBytes(), tx.ToTXID(), nil
 }

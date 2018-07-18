@@ -87,12 +87,12 @@ func TestGetAccountState(t *testing.T) {
 }
 
 func TestGetTokenBalance(t *testing.T) {
-	client := neorpc.NewClient("http://localhost:30333")
+	client := neorpc.NewClient("http://seed3.aphelion-neo.com:10332")
 	if client == nil {
 		t.Fail()
 	}
 
-	result := client.GetTokenBalance("0xc2b0fed82b8fa28c358f99849136f45f057bb6fe", "APLNwfJTHp1MBHYNeMAxkeqNCquLpBVjcD")
+	result := client.GetTokenBalance("fc732edee1efdf968c23c20a9628eaa5a6ccb934", "AcydXy1MvrzaT8qD3Qe4B8mqEoinTvRy8U")
 	log.Printf("%+v", result.Result)
 }
 

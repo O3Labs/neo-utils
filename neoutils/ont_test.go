@@ -8,12 +8,14 @@ import (
 )
 
 func TestONTTransfer(t *testing.T) {
-	endpoint := "http://polaris2.ont.io:20336"
+	endpoint := "http://dappnode2.ont.io:20336"
 	wif := ""
-	asset := "ong"
-	to := "AafQxV6wQhtGYGYFboEyBjw3eMYNtBFW8J"
-	amount := float64(1000)
-	txid, err := neoutils.OntologyTransfer(endpoint, wif, asset, to, amount)
+	asset := "ont"
+	to := "AcydXy1MvrzaT8qD3Qe4B8mqEoinTvRy8U"
+	amount := float64(2)
+	gasPrice := uint(500)
+	gasLimit := uint(20000)
+	txid, err := neoutils.OntologyTransfer(endpoint, gasPrice, gasLimit, wif, asset, to, amount)
 	if err != nil {
 		log.Printf("err %v", err)
 		return

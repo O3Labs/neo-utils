@@ -29,7 +29,7 @@ func TestSmartContractScripthashToAddress(t *testing.T) {
 }
 
 func TestNEOAddressToScriptHash(t *testing.T) {
-	hash := NEOAddressToScriptHashWithEndian("AbdWka5ichyQ47oAsCwDykjVDr9qPDUmcc", binary.LittleEndian)
+	hash := NEOAddressToScriptHashWithEndian("AeNkbJdiMx49kBStQdDih7BzfDwyTNVRfb", binary.LittleEndian)
 	b, _ := hex.DecodeString(hash)
 	log.Printf("\nlittle endian %v \nbig endian %x", hash, ReverseBytes(b))
 }
@@ -49,7 +49,7 @@ func TestValidateNEOAddressInvalidAddress(t *testing.T) {
 }
 
 func TestConverting(t *testing.T) {
-	hexByteArray := "0000b2d3595bf006" //500000000000000000
+	hexByteArray := "07ca92e5b37b4fff" //500000000000000000
 	//hex := "005c7c875e" = 405991873536
 	value := ConvertByteArrayToBigInt(hexByteArray)
 	vvv := float64(value.Int64()) / float64(math.Pow10(8))
