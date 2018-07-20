@@ -6,6 +6,10 @@ const (
 
 //RELEASE NOTES
 
+// V.1.2.0
+// - Added generate multisignature address redeem script
+// - Added gasPrice and gasLimit to ontology transfer method
+
 // V. 1.1.0
 // - Added Ontology asset transfer
 

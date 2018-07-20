@@ -13,8 +13,8 @@ func TestONTTransfer(t *testing.T) {
 	asset := "ont"
 	to := "AcydXy1MvrzaT8qD3Qe4B8mqEoinTvRy8U"
 	amount := float64(2)
-	gasPrice := uint(500)
-	gasLimit := uint(20000)
+	gasPrice := int(500)
+	gasLimit := int(20000)
 	txid, err := neoutils.OntologyTransfer(endpoint, gasPrice, gasLimit, wif, asset, to, amount)
 	if err != nil {
 		log.Printf("err %v", err)
