@@ -147,3 +147,22 @@ func PublicKeyToNEOAddress(publicKeyBytes []byte) string {
 	address := btckey.B58checkencodeNEO(0x17, program_hash)
 	return address
 }
+
+func VMCodeToNEOAddress(vmCode []byte) string {
+	/* SHA256 Hash */
+	sha256_h := sha256.New()
+	sha256_h.Reset()
+	sha256_h.Write(vmCode)
+	pub_hash_1 := sha256_h.Sum(nil)
+
+	/* RIPEMD-160 Hash */
+	ripemd160_h := ripemd160.New()
+	ripemd160_h.Reset()
+	ripemd160_h.Write(pub_hash_1)
+	pub_hash_2 := ripemd160_h.Sum(nil)
+
+	program_hash := pub_hash_2
+
+	address := btckey.B58checkencodeNEO(0x17, program_hash)
+	return address
+}

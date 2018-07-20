@@ -492,7 +492,7 @@ func TestGenerateKey(t *testing.T) {
 
 func TestSignData(t *testing.T) {
 
-	wif := "L5hbtj4mX16TnVnQTdda4znw1nvt3DB7DVxU6sP97RDVMtufQwbT"
+	wif := ""
 	var priv PrivateKey
 	err := priv.FromWIF(wif)
 
