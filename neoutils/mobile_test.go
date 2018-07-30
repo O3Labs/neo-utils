@@ -10,7 +10,7 @@ import (
 )
 
 func TestMintTokensFromMobile(t *testing.T) {
-	scriptHash := "5f03828cb45198eedd659d264b6d3a1c889978ce"
+	scriptHash := "0x3e390ae61acb6713389c8fbbd47d1d69c32655a3"
 
 	wif := ""
 	wallet, _ := neoutils.GenerateFromWIF(wif)
@@ -19,9 +19,9 @@ func TestMintTokensFromMobile(t *testing.T) {
 	neo := string(smartcontract.NEO)
 	// gas := string(smartcontract.GAS)
 	amount := float64(2)
-	remark := "o3x"
-	network := "private"
-	networkFeeAmountInGAS := float64(0.0011)
+	remark := "O3XMOONLIGHT2"
+	network := "test"
+	networkFeeAmountInGAS := float64(0)
 	tx, err := neoutils.MintTokensRawTransactionMobile(network, scriptHash, wif, neo, amount, remark, networkFeeAmountInGAS)
 	if err != nil {
 		log.Printf("%v", err)
