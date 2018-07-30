@@ -29,7 +29,7 @@ func TestSmartContractScripthashToAddress(t *testing.T) {
 }
 
 func TestNEOAddressToScriptHash(t *testing.T) {
-	hash := NEOAddressToScriptHashWithEndian("AeNkbJdiMx49kBStQdDih7BzfDwyTNVRfb", binary.LittleEndian)
+	hash := NEOAddressToScriptHashWithEndian("ASi48wqdF9avm91pWwdphcAmaDJQkPNdNt", binary.LittleEndian)
 	b, _ := hex.DecodeString(hash)
 	log.Printf("\nlittle endian %v \nbig endian %x", hash, ReverseBytes(b))
 }
@@ -49,7 +49,7 @@ func TestValidateNEOAddressInvalidAddress(t *testing.T) {
 }
 
 func TestConverting(t *testing.T) {
-	hexByteArray := "07ca92e5b37b4fff" //500000000000000000
+	hexByteArray := "c02709" //500000000000000000
 	//hex := "005c7c875e" = 405991873536
 	value := ConvertByteArrayToBigInt(hexByteArray)
 	vvv := float64(value.Int64()) / float64(math.Pow10(8))
@@ -91,7 +91,7 @@ func TestHash256(t *testing.T) {
 }
 
 func TestPublicKeyToNEOAddress(t *testing.T) {
-	publicKey := "02ac3cecf6a5909c199fb5d6840577680c232fe3d5594c6514cc7897c4dd384728"
+	publicKey := "022c9652d3ad5cc065aa9147dc2ad022f80001e8ed233de20f352950d351d472b7"
 	b, _ := hex.DecodeString(publicKey)
 	address := PublicKeyToNEOAddress(b)
 	log.Printf("%v", address)

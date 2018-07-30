@@ -19,3 +19,17 @@ func OntologyTransfer(endpoint string, gasPrice int, gasLimit int, wif string, a
 
 	return txid, nil
 }
+
+func ClaimONG(endpoint string, gasPrice int, gasLimit int, wif string) (string, error) {
+	raw, err := ontmobile.WithdrawONG(uint(gasPrice), uint(gasLimit), endpoint, wif)
+	if err != nil {
+		return "", err
+	}
+
+	txid, err := ontmobile.SendRawTransaction(endpoint, fmt.Sprintf("%x", raw.Data))
+	if err != nil {
+		return "", err
+	}
+
+	return txid, nil
+}
