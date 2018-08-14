@@ -59,9 +59,7 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 
 	tx.Data = txData
 
-	//for smart contract invocation we send the minimum amount of gas to it
-	//0.00000001 gas
-	amountToSend := float64(0.00000001)
+	amountToSend := float64(0)
 	assetToSend := smartcontract.GAS
 
 	//generate transaction inputs

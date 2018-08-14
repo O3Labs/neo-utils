@@ -348,7 +348,7 @@ func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend Na
 	//inputs = [input_count] + [[txID(32)] + [txIndex(2)]] = 34 x input_count bytes
 
 	//empty unspent
-	if len(unspent.Assets) == 0 || amountToSend == 0 {
+	if (len(unspent.Assets) == 0 || amountToSend == 0) && float64(networkFeeAmount) == 0 {
 		s.pushLength(0)
 		return s.ToBytes(), nil
 	}
@@ -360,10 +360,10 @@ func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend Na
 	feeAmount := networkFeeAmount
 
 	//if assetToSend is NEO and fee amount is more than zero
-	needAnotherAssetForFee := false
-	if assetToSend == NEO && feeAmount > 0 {
+	needAnotherInputForFee := false
+	if (assetToSend == NEO && feeAmount > 0) || (amountToSend == 0 && feeAmount > 0) {
 		//we need another input because fee is in GAS
-		needAnotherAssetForFee = true
+		needAnotherInputForFee = true
 	}
 
 	if amountToSend > sendingAsset.TotalAmount() {
@@ -380,7 +380,6 @@ func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend Na
 	//loop until we get enough sum amount
 	for utxoSumAmount < amountToSend {
 		addingUTXO := sendingAsset.UTXOs[index]
-		log.Printf("%+v", addingUTXO)
 		inputs = append(inputs, addingUTXO)
 		utxoSumAmount += addingUTXO.Value
 		index += 1
@@ -388,7 +387,7 @@ func (s *ScriptBuilder) GenerateTransactionInput(unspent Unspent, assetToSend Na
 	}
 
 	//fee input part
-	if needAnotherAssetForFee == true {
+	if needAnotherInputForFee == true {
 		gasBalanceForFee := unspent.Assets[GAS]
 		gasBalanceForFee.SortMinFirst()
 		if float64(feeAmount) > gasBalanceForFee.TotalAmount() {
@@ -419,8 +418,8 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 
 	//output = [output_count] + [assetID(32)] + [amount(8)] + [sender_scripthash(20)] = 60 x output_count bytes
 	//empty unspent
-	if len(unspent.Assets) == 0 || amountToSend == 0 {
-		log.Printf("unspent is empty")
+	if (len(unspent.Assets) == 0 || amountToSend == 0) && float64(networkFeeAmount) == 0 {
+		log.Printf("asset less ending")
 		s.pushLength(0)
 		return s.ToBytes(), nil
 	}
@@ -436,6 +435,10 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 	//if assetToSend is NEO and fee amount is more than zero
 	needAnotherAssetForFee := false
 	if assetToSend == NEO && feeAmount > 0 {
+		needAnotherAssetForFee = true
+	}
+
+	if amountToSend == 0 && float64(feeAmount) > 0 {
 		needAnotherAssetForFee = true
 	}
 
@@ -487,7 +490,7 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 			Address: sender,
 		}
 		list = append(list, returningOutput)
-	} else {
+	} else if amountToSend > 0 && needTwoOutputTransaction == false {
 
 		out := TransactionOutput{
 			Asset:   assetToSend,
@@ -525,13 +528,19 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 		// this will make network fee = 1
 
 		returningAmount := runningFeeAmount - float64(feeAmount)
-		returningOutput := TransactionOutput{
-			Asset:   GAS,
-			Value:   int64(RoundFixed8(returningAmount) * float64(100000000)),
-			Address: sender,
+		//so if the input and the fee is the exact match we don't need to have the output
+		//sending output with value = 0  will not work
+		if returningAmount > 0 {
+			returningOutput := TransactionOutput{
+				Asset:   GAS,
+				Value:   int64(RoundFixed8(returningAmount) * float64(100000000)),
+				Address: sender,
+			}
+			list = append(list, returningOutput)
 		}
-		list = append(list, returningOutput)
+
 	}
+	log.Printf("output %+v (%v)", list, len(list))
 
 	//number of outputs
 	s.pushLength(len(list))
