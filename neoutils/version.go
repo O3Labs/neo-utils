@@ -1,10 +1,13 @@
 package neoutils
 
 const (
-	VERSION = "1.2.1"
+	VERSION = "1.2.2"
 )
 
 //RELEASE NOTES
+
+// V.1.2.2
+// - Allow sending NEP5 with fee
 
 // V.1.2.1
 // - Added ClaimONG
