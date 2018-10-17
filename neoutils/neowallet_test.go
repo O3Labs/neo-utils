@@ -93,3 +93,17 @@ func TestRecoverFromString(t *testing.T) {
 	}
 	fmt.Printf("%v", recovered)
 }
+
+func TestSign(t *testing.T) {
+	wif := ""
+
+	wallet, _ := neoutils.GenerateFromWIF(wif)
+	log.Printf("%x", wallet.PrivateKey)
+	key := wallet.PrivateKey
+	keyString := neoutils.BytesToHex(key)
+	data := "abc"
+	b := neoutils.HexTobytes(data)
+	// log.Printf("%v", keyString)
+	result, _ := neoutils.Sign(b, keyString)
+	log.Printf("result %x", result)
+}

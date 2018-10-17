@@ -2,6 +2,7 @@ package neoutils
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/o3labs/ont-mobile/ontmobile"
 )
@@ -11,7 +12,7 @@ func OntologyTransfer(endpoint string, gasPrice int, gasLimit int, wif string, a
 	if err != nil {
 		return "", err
 	}
-
+	log.Printf("raw = %x", raw.Data)
 	txid, err := ontmobile.SendRawTransaction(endpoint, fmt.Sprintf("%x", raw.Data))
 	if err != nil {
 		return "", err

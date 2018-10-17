@@ -40,6 +40,14 @@ func TestGenerateInvokeScript(t *testing.T) {
 	log.Printf("%x", s.ToBytes())
 }
 
+func TestAdd(t *testing.T) {
+	s := smartcontract.NewScriptBuilder()
+	s.PushOpCode(smartcontract.PUSH1)
+	s.PushOpCode(smartcontract.PUSH3)
+	s.PushOpCode(smartcontract.ADD)
+	log.Printf("%x", s.ToBytes())
+}
+
 func TestRoundFixed8(t *testing.T) {
 	inputs := float64(0.00119)
 	fee := float64(0.0011)

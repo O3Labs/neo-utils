@@ -2,6 +2,7 @@ package smartcontract
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"fmt"
 )
 
@@ -14,6 +15,7 @@ type Transaction struct {
 	Outputs    []byte
 	//scripts contains two parts, Invocation script and Verification script
 	Script []byte
+	GAS    uint64 //only for version 1
 }
 
 type TransactionOutput struct {
@@ -27,6 +29,13 @@ func (t *Transaction) ToBytes() []byte {
 	payload = append(payload, byte(t.Type))
 	payload = append(payload, byte(t.Version))
 	payload = append(payload, t.Data...)
+
+	if t.Version >= NEOTradingVersionPayableGAS {
+		gasInBytes := make([]byte, 8)
+		binary.LittleEndian.PutUint64(gasInBytes, uint64(t.GAS*uint64(100000000)))
+		payload = append(payload, gasInBytes...)
+	}
+
 	payload = append(payload, t.Attributes...)
 	payload = append(payload, t.Inputs...)
 	payload = append(payload, t.Outputs...)
@@ -42,6 +51,12 @@ func (t *Transaction) ToHash256() []byte {
 	payload = append(payload, byte(t.Type))
 	payload = append(payload, byte(t.Version))
 	payload = append(payload, t.Data...)
+
+	if t.Version >= NEOTradingVersionPayableGAS {
+		gasInBytes := make([]byte, 8)
+		binary.LittleEndian.PutUint64(gasInBytes, uint64(t.GAS*uint64(100000000)))
+		payload = append(payload, gasInBytes...)
+	}
 	payload = append(payload, t.Attributes...)
 	payload = append(payload, t.Inputs...)
 	payload = append(payload, t.Outputs...)
@@ -56,9 +71,6 @@ func (t *Transaction) ToTXID() string {
 	return fmt.Sprintf("%x", reverseBytes(t.ToHash256()))
 }
 
-//version is 0 currently
-//it needs to change to 1 eventually to support pay gas to run smart contract
-//https://github.com/neo-project/neo/blob/11d8db11568d9eadeeb86c5b8c21a1d3937e0912/neo/Core/InvocationTransaction.cs#L23
 func NewInvocationTransaction() Transaction {
 	return Transaction{
 		Type:    InvocationTransaction,
@@ -66,9 +78,29 @@ func NewInvocationTransaction() Transaction {
 	}
 }
 
+func NewInvocationTransactionPayable() Transaction {
+	return Transaction{
+		Type:    InvocationTransaction,
+		Version: NEOTradingVersionPayableGAS, //version 1 this will allow paying GAS
+	}
+}
+
 func NewContractTransaction() Transaction {
 	return Transaction{
 		Type:    ContractTransaction,
 		Version: NEOTradingVersion,
+	}
+}
+
+func NewTransactionWithType(txType byte, version int) Transaction {
+	if txType == byte(InvocationTransaction) {
+		return Transaction{
+			Type:    InvocationTransaction,
+			Version: TradingVersion(version),
+		}
+	}
+	return Transaction{
+		Type:    InvocationTransaction,
+		Version: NEOTradingVersionPayableGAS, //version 1 this will allow paying GAS
 	}
 }

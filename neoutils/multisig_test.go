@@ -10,17 +10,20 @@ import (
 )
 
 func TestGenerateMultiSigAddress(t *testing.T) {
-
-	pb1 := "02e77ff280db51ef3638009f11947c544ed094d4e5f2d96a9e654dc817bc3a8986"
-	pb2 := "024da93f9a66981e499b36ce763e57fd89a47a052e86d40b42f81708c40fe9eff0"
-	require := 2
+	// 1/2
+	pb1 := "024e543aee592c4dd2361f8e02b4275e18eb665bcfb1c4b6c09bc6aed125b2f13c"
+	pb2 := "030adab68b3eeb02734f65b8ced64f023e70c15bcdfae94c3e74b9d647ddf9c976"
+	require := 1
 	pubKeys := [][]byte{}
 
 	pubKeys = append(pubKeys, neoutils.HexTobytes(pb1))
 	pubKeys = append(pubKeys, neoutils.HexTobytes(pb2))
 
-	multisign := neoutils.MultiSig{}
-	vmCode, err := multisign.CreateMultiSigRedeemScript(require, pubKeys)
+	multisign := neoutils.MultiSig{
+		NumberOfRequiredSignatures: require,
+		PublicKeys:                 pubKeys,
+	}
+	vmCode, err := multisign.CreateMultiSigRedeemScript()
 	if err != nil {
 		log.Printf("%v", err)
 	}
