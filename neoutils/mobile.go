@@ -1,8 +1,11 @@
 package neoutils
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -121,4 +124,23 @@ func GenerateNEP6FromEncryptedKey(walletName, addressLabel, address, encryptedKe
 		return ""
 	}
 	return string(b)
+}
+
+func SerializeTX(jsonString string) []byte {
+	tx := NeonJSTransaction{}
+	json.Unmarshal([]byte(jsonString), &tx)
+	log.Printf("%+v", tx)
+	final := NeonJSTXSerializer(tx)
+	return final
+}
+
+func NEOAddresstoScriptHashBigEndian(neoAddress string) string {
+	return NEOAddressToScriptHashWithEndian(neoAddress, binary.BigEndian)
+}
+
+func GetVarUInt(value int64) []byte {
+	buff := new(bytes.Buffer)
+	WriteVarUint(buff, uint64(value))
+
+	return buff.Bytes()
 }

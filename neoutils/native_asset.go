@@ -41,10 +41,6 @@ func (n *NativeAsset) SendNativeAssetRawTransaction(wallet Wallet, asset smartco
 		SignedData: signedData,
 		PublicKey:  wallet.PublicKey,
 	}
-	// try to verify it
-	// hash := sha256.Sum256(tx.ToBytes())
-	// valid := Verify(wallet.PublicKey, signedData, hash[:])
-	// log.Printf("verify tx %v", valid)
 
 	scripts := []interface{}{signature}
 	txScripts := smartcontract.NewScriptBuilder().GenerateVerificationScripts(scripts)

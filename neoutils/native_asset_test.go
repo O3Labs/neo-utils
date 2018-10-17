@@ -89,9 +89,9 @@ func TestSendingGAS(t *testing.T) {
 		t.Fail()
 		return
 	}
-	asset := smartcontract.GAS
-	amount := float64(0.1)
-	toAddress := "AKo8k27H5nCG8MwSirmnraH6uUG6fQQVC2" //this is multi signature adddress 3/2
+	asset := smartcontract.NEO
+	amount := float64(3)
+	toAddress := "ANoW2zD8HmhbWJAjL4yKJWCZcF2WFb1ire" //this is multi signature adddress 3/2
 	to := smartcontract.ParseNEOAddress(toAddress)
 	// remark := "O3TX"
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
@@ -143,17 +143,17 @@ func TestSendingNEO(t *testing.T) {
 }
 
 func TestSendingGASFromMultiSig(t *testing.T) {
-	fromAddress := "AKo8k27H5nCG8MwSirmnraH6uUG6fQQVC2" //this is multi signature adddress 3/2
+	fromAddress := "AFrFrNjKKLc6vEztHeDhNmqpdHuciKzBqt" //this is multi signature adddress 3/2
 	unspent, err := utxoFromO3Platform("test", fromAddress)
 	if err != nil {
 		log.Printf("error %v", err)
 		t.Fail()
 		return
 	}
-	asset := smartcontract.GAS
-	amount := float64(0.1)
+	asset := smartcontract.NEO
+	amount := float64(1)
 
-	toAddress := "AKo8k27H5nCG8MwSirmnraH6uUG6fQQVC2"
+	toAddress := "ANovQs3YXipL4HxRmj4D62YLCLEGsK7iDG"
 	to := smartcontract.ParseNEOAddress(toAddress)
 
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
@@ -170,9 +170,9 @@ func TestSendingGASFromMultiSig(t *testing.T) {
 	log.Printf("raw %x\n", rawtx)
 
 	wallet1, _ := neoutils.GenerateFromWIF("")
-	wallet2, _ := neoutils.GenerateFromWIF("")
+	// wallet2, _ := neoutils.GenerateFromWIF("")
 
-	wallets := []*neoutils.Wallet{wallet1, wallet2}
+	wallets := []*neoutils.Wallet{wallet1}
 
 	signatures := []smartcontract.TransactionSignature{}
 
@@ -205,7 +205,7 @@ func TestSendingGASFromMultiSig(t *testing.T) {
 	endPayload = append(endPayload, rawtx...)
 	endPayload = append(endPayload, verificationScripts...)
 
-	redeemScript := "5221024da93f9a66981e499b36ce763e57fd89a47a052e86d40b42f81708c40fe9eff02102e77ff280db51ef3638009f11947c544ed094d4e5f2d96a9e654dc817bc3a898652ae"
+	redeemScript := "5121030adab68b3eeb02734f65b8ced64f023e70c15bcdfae94c3e74b9d647ddf9c97621024e543aee592c4dd2361f8e02b4275e18eb665bcfb1c4b6c09bc6aed125b2f13c52ae"
 	b := neoutils.HexTobytes(redeemScript)
 	length := len(b)
 	log.Printf("%x%x%v", endPayload, length, redeemScript)

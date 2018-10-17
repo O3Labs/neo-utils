@@ -1,10 +1,16 @@
 package neoutils
 
 const (
-	VERSION = "1.2.2"
+	VERSION = "1.3.0"
 )
 
 //RELEASE NOTES
+
+// V.1.3.0
+// - Sample Deploy Smart Contract without syncing
+// - Fixed add empty string as a argument when invoke script
+// - Sample NNS invoke script
+// - Sample Multisignature address
 
 // V.1.2.2
 // - Allow sending NEP5 with fee

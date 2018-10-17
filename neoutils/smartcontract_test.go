@@ -141,7 +141,11 @@ func TestGenerateInvokeTransferNEP5Token(t *testing.T) {
 }
 
 func TestCallDeployFunction(t *testing.T) {
-	wif := ""
+
+	encryptedKey := ""
+	passphrase := ""
+	wif, err := neoutils.NEP2Decrypt(encryptedKey, passphrase)
+
 	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
 	if err != nil {
 		log.Printf("%v", err)
@@ -150,13 +154,13 @@ func TestCallDeployFunction(t *testing.T) {
 
 	unspent := smartcontract.Unspent{}
 
-	sc := neoutils.UseSmartContract("0x7cd338644833db2fd8824c410e364890d179e6f8")
+	sc := neoutils.UseSmartContract("323571cfc42a40d48d64832a7da594039fbac76a")
 	args := []interface{}{}
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
 	addressScriptHash := neoutils.NEOAddressToScriptHashWithEndian(privateNetwallet.Address, binary.LittleEndian)
 	b, _ := hex.DecodeString(addressScriptHash)
 	attributes[smartcontract.Script] = []byte(b)
-	attributes[smartcontract.Remark1] = []byte(fmt.Sprintf("O3TXAPT%v", time.Now().Unix()))
+	attributes[smartcontract.Remark1] = []byte(fmt.Sprintf("O3TXSCC%v", time.Now().Unix()))
 
 	tx, err := sc.GenerateInvokeFunctionRawTransaction(*privateNetwallet, unspent, attributes, "deploy", args)
 	if err != nil {
@@ -164,4 +168,224 @@ func TestCallDeployFunction(t *testing.T) {
 		return
 	}
 	log.Printf("%x", tx)
+}
+
+func TestRefund1stCGAS(t *testing.T) {
+	wif := ""
+	wallet, _ := neoutils.GenerateFromWIF(wif)
+
+	refundValue := float64(1)
+
+	cgas, _ := smartcontract.NewScriptHash("9121e89e8a0849857262d67c8408601b5e8e0524")
+
+	// unspent, _ := utxo("test", wallet.Address)
+
+	unspent := smartcontract.Unspent{}
+	unspent.Assets = map[smartcontract.NativeAsset]*smartcontract.Balance{}
+
+	//any utxo from SGAS address that is not marked as refund.
+	txid := "0x472eadfd5fc2b726d07b78a83887a5f9ea00eafe1bc7dcc899dcbed21c9c99af"
+	gasBalance := smartcontract.Balance{
+		Amount: float64(0) / float64(100000000),
+		UTXOs:  []smartcontract.UTXO{},
+	}
+
+	gasTX1 := smartcontract.UTXO{
+		Index: 0,
+		TXID:  txid,
+		Value: 1,
+	}
+	gasBalance.UTXOs = append(gasBalance.UTXOs, gasTX1)
+	unspent.Assets[smartcontract.GAS] = &gasBalance
+
+	from := smartcontract.ParseNEOAddress(wallet.Address)
+	args := []interface{}{from}
+
+	//New invocation transaction struct and fill with all necessary data
+	tx := smartcontract.NewInvocationTransaction()
+
+	txData := smartcontract.NewScriptBuilder().GenerateContractInvocationData(cgas, "refund", args)
+	tx.Data = txData
+
+	//basically sending GAS to myself
+	amountToSend := refundValue
+	assetToSend := smartcontract.GAS
+
+	networkFee := smartcontract.NetworkFeeAmount(0)
+
+	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend, networkFee)
+	if err != nil {
+		return
+	}
+	tx.Inputs = txInputs
+	log.Printf("input %x", txInputs)
+	//this is a MUST
+	sender := smartcontract.ParseNEOAddress("AK4LdT5ZXR9DQZjfk5X6Xy79mE8ad8jKAW")
+	receiver := smartcontract.ParseNEOAddress("AK4LdT5ZXR9DQZjfk5X6Xy79mE8ad8jKAW")
+	log.Printf("receiver %v", receiver.ToString())
+	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, networkFee)
+	if err != nil {
+		return
+	}
+
+	tx.Outputs = txOutputs
+
+	attributes := map[smartcontract.TransactionAttribute][]byte{}
+	// attributes[smartcontract.Remark1] = []byte(remark)
+	attributes[smartcontract.Script] = neoutils.HexTobytes(neoutils.NEOAddressToScriptHashWithEndian(wallet.Address, binary.LittleEndian))
+
+	//generate transaction outputs
+	txAttributes, err := smartcontract.NewScriptBuilder().GenerateTransactionAttributes(attributes)
+	if err != nil {
+		return
+	}
+	//transaction attributes
+	tx.Attributes = txAttributes
+
+	//begin signing process and invocation script
+	privateKeyInHex := neoutils.BytesToHex(wallet.PrivateKey)
+	signedData, err := neoutils.Sign(tx.ToBytes(), privateKeyInHex)
+	if err != nil {
+		return
+	}
+
+	signature := smartcontract.TransactionSignature{
+		SignedData: signedData,
+		PublicKey:  wallet.PublicKey,
+	}
+
+	scripts := []interface{}{signature}
+
+	//this empty verification script is needed in order to make it triggers Verification part
+	//and use Script field in Transaction attribute
+	emptyVerificationScript := smartcontract.TransactionValidationScript{
+		StackScript:  []byte{0x00, 0x00},
+		RedeemScript: nil,
+	}
+
+	//basically we need to sort in descending order for address and script hash
+	scriptHashInt := neoutils.ConvertByteArrayToBigInt(fmt.Sprintf("%x", cgas))
+	addressInt := neoutils.ConvertByteArrayToBigInt(fmt.Sprintf("%x", wallet.HashedSignature))
+	//https://godoc.org/math/big#Int.Cmp
+	//if scripthash int is grether than address int
+	if scriptHashInt.Cmp(addressInt) == 1 {
+		scripts = append(scripts, emptyVerificationScript)
+	} else {
+		scripts = append([]interface{}{emptyVerificationScript}, scripts...)
+	}
+
+	txScripts := smartcontract.NewScriptBuilder().GenerateVerificationScripts(scripts)
+	//assign scripts to the tx
+	tx.Script = txScripts
+
+	log.Printf("txid = %v", tx.ToTXID())
+	log.Printf("endPayload = %x", tx.ToBytes())
+}
+
+func TestRefund2ndStep(t *testing.T) {
+	wif := ""
+	wallet, _ := neoutils.GenerateFromWIF(wif)
+
+	refundValue := float64(1)
+
+	cgas, _ := smartcontract.NewScriptHash("9121e89e8a0849857262d67c8408601b5e8e0524")
+
+	unspent := smartcontract.Unspent{}
+	unspent.Assets = map[smartcontract.NativeAsset]*smartcontract.Balance{}
+	txid := "0x9296fef6b14f85eb29155639ab3cf46edd6fcc529177b7259bfeb2a932278238"
+	gasBalance := smartcontract.Balance{
+		Amount: float64(0) / float64(100000000),
+		UTXOs:  []smartcontract.UTXO{},
+	}
+
+	gasTX1 := smartcontract.UTXO{
+		Index: 0,
+		TXID:  txid,
+		Value: 1,
+	}
+	gasBalance.UTXOs = append(gasBalance.UTXOs, gasTX1)
+	unspent.Assets[smartcontract.GAS] = &gasBalance
+
+	from := smartcontract.ParseNEOAddress(wallet.Address)
+	args := []interface{}{from}
+
+	//New invocation transaction struct and fill with all necessary data
+	tx := smartcontract.NewInvocationTransaction()
+
+	txData := smartcontract.NewScriptBuilder().GenerateContractInvocationData(cgas, "refund", args)
+	tx.Data = txData
+
+	//basically sending GAS to myself
+	amountToSend := refundValue
+	assetToSend := smartcontract.GAS
+
+	networkFee := smartcontract.NetworkFeeAmount(0)
+
+	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend, networkFee)
+	if err != nil {
+		return
+	}
+	tx.Inputs = txInputs
+	log.Printf("input %x", txInputs)
+
+	sender := smartcontract.ParseNEOAddress("AK4LdT5ZXR9DQZjfk5X6Xy79mE8ad8jKAW")
+	receiver := smartcontract.ParseNEOAddress(wallet.Address)
+	log.Printf("receiver %v", receiver.ToString())
+	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, networkFee)
+	if err != nil {
+		return
+	}
+
+	tx.Outputs = txOutputs
+
+	attributes := map[smartcontract.TransactionAttribute][]byte{}
+	// attributes[smartcontract.Remark1] = []byte(remark)
+	attributes[smartcontract.Script] = neoutils.HexTobytes(neoutils.NEOAddressToScriptHashWithEndian(wallet.Address, binary.LittleEndian))
+
+	//generate transaction outputs
+	txAttributes, err := smartcontract.NewScriptBuilder().GenerateTransactionAttributes(attributes)
+	if err != nil {
+		return
+	}
+	//transaction attributes
+	tx.Attributes = txAttributes
+
+	//begin signing process and invocation script
+	privateKeyInHex := neoutils.BytesToHex(wallet.PrivateKey)
+	signedData, err := neoutils.Sign(tx.ToBytes(), privateKeyInHex)
+	if err != nil {
+		return
+	}
+
+	signature := smartcontract.TransactionSignature{
+		SignedData: signedData,
+		PublicKey:  wallet.PublicKey,
+	}
+
+	scripts := []interface{}{signature}
+
+	//this empty verification script is needed in order to make it triggers Verification part
+	emptyVerificationScript := smartcontract.TransactionValidationScript{
+		StackScript:  []byte{0x00, 0x00},
+		RedeemScript: nil,
+	}
+
+	//basically we need to sort in descending order for address and script hash
+	scriptHashInt := neoutils.ConvertByteArrayToBigInt(fmt.Sprintf("%x", cgas))
+	addressInt := neoutils.ConvertByteArrayToBigInt(fmt.Sprintf("%x", wallet.HashedSignature))
+	//https://godoc.org/math/big#Int.Cmp
+	//if scripthash int is grether than address int
+	if scriptHashInt.Cmp(addressInt) == 1 {
+		scripts = append(scripts, emptyVerificationScript)
+	} else {
+		scripts = append([]interface{}{emptyVerificationScript}, scripts...)
+	}
+
+	txScripts := smartcontract.NewScriptBuilder().GenerateVerificationScripts(scripts)
+	//assign scripts to the tx
+	tx.Script = txScripts
+
+	log.Printf("txid = %v", tx.ToTXID())
+	log.Printf("endPayload = %x", tx.ToBytes())
+
 }

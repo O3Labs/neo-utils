@@ -14,8 +14,8 @@ import (
 )
 
 func TestMintTokens(t *testing.T) {
-	scripthash := "55d8d97603701a34f1bda8c30777c8c04deefe55"
-	fee := smartcontract.NetworkFeeAmount(0.001)
+	scripthash := ""
+	fee := smartcontract.NetworkFeeAmount(0)
 	nep5 := neoutils.UseNEP5WithNetworkFee(scripthash, fee)
 
 	wif := ""
@@ -27,7 +27,7 @@ func TestMintTokens(t *testing.T) {
 	}
 	unspent := smartcontract.Unspent{}
 
-	remark := "O3TX"
+	remark := "APISIT FROM O3 IS HERE."
 
 	asset := smartcontract.NEO
 	amount := float64(10)
@@ -108,8 +108,8 @@ func utxo(network string, address string) (smartcontract.Unspent, error) {
 func TestTransferNEP5PrivateNet(t *testing.T) {
 
 	//this is NNC token
-	scripthash := "fc732edee1efdf968c23c20a9628eaa5a6ccb934"
-	fee := smartcontract.NetworkFeeAmount(0.00000001)
+	scripthash := "0xe8fe7fbaf639722e577a1961b9cc1d43572ed6c3"
+	fee := smartcontract.NetworkFeeAmount(0)
 	nep5 := neoutils.UseNEP5WithNetworkFee(scripthash, fee)
 
 	wif := ""
