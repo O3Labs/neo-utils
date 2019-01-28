@@ -62,9 +62,9 @@ type Parameter = ontmobile.Parameter
 type ParameterType = ontmobile.ParameterType
 
 const (
-  Address     ParameterType = 0
-  String      ParameterType = 1
-  Integer     ParameterType = 2
-  Fixed8      ParameterType = 3
-  Array       ParameterType = 4
+  Address = ontmobile.Address
+  String  = ontmobile.String
+  Integer = ontmobile.Integer
+  Fixed8  = ontmobile.Fixed8
+  Array   = ontmobile.Array
 )
