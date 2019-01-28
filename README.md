@@ -1,5 +1,5 @@
 # neo-utils
-Useful functions for NEO blockchain written in Go.
+Useful functions for the NEO blockchain written in Go.
 
 This library can be fully compiled to native iOS and Android framework using `gomobile bind`
 
