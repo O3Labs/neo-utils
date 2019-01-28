@@ -44,7 +44,7 @@ func BuildOntologyInvocationTransaction(contractHex string, operation string, ar
 	return raw, nil
 }
 
-func OntologyInvoke(endpoint string, contractHex string, operation string, args []ontmobile.Parameter, gasPrice uint, gasLimit uint, wif string) (string, error) {
+func OntologyInvoke(endpoint string, contractHex string, operation string, args []Parameter, gasPrice uint, gasLimit uint, wif string) (string, error) {
 	raw, err := ontmobile.BuildInvocationTransaction(contractHex, operation, args, gasPrice, gasLimit, wif)
 	if err != nil {
 		return "", err
@@ -57,3 +57,14 @@ func OntologyInvoke(endpoint string, contractHex string, operation string, args 
 
 	return txid, nil
 }
+
+type Parameter = ontmobile.Parameter
+type ParameterType = ontmobile.ParameterType
+
+const (
+  Address     ParameterType = 0
+  String      ParameterType = 1
+  Integer     ParameterType = 2
+  Fixed8      ParameterType = 3
+  Array       ParameterType = 4
+)
