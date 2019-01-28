@@ -9,6 +9,15 @@ import (
 	"github.com/o3labs/neo-utils/neoutils"
 )
 
+type parameterJSONArrayForm struct {
+	A []parameterJSONForm `json:"array"`
+}
+
+type parameterJSONForm struct {
+	T string `json:"type"`
+	V interface{} `json:"value"`
+}
+
 func TestONTTransfer(t *testing.T) {
 
 	for i := 1; i <= 100; i++ {
@@ -60,15 +69,15 @@ func TestBuildOntologyInvocation(t *testing.T) {
   account, _ := neoutils.GenerateFromWIF(wif)
   address := account.Address
 
-	addr := neoutils.ParameterJSONForm{T: "Address", V: address}
-  val := neoutils.ParameterJSONForm{T: "String", V: "Hi there"}
+	addr := parameterJSONForm{T: "Address", V: address}
+  val := parameterJSONForm{T: "String", V: "Hi there"}
 
-  jsondat := &neoutils.ParameterJSONArrayForm{A: []neoutils.ParameterJSONForm{addr, val}}
+  jsondat := &parameterJSONArrayForm{A: []parameterJSONForm{addr, val}}
   argData, _ := json.Marshal(jsondat)
 	argString := string(argData)
 
-  gasPrice := uint(500)
-  gasLimit := uint(20000)
+  gasPrice := int(500)
+  gasLimit := int(20000)
 
   txData, err := neoutils.BuildOntologyInvocationTransaction("c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", argString, gasPrice, gasLimit, wif)
   if err != nil {
@@ -89,15 +98,15 @@ func TestOntologyInvoke(t *testing.T) {
   account, _ := neoutils.GenerateFromWIF(wif)
   address := account.Address
 
-	addr := neoutils.ParameterJSONForm{T: "Address", V: address}
-  val := neoutils.ParameterJSONForm{T: "String", V: "Hi there"}
+	addr := parameterJSONForm{T: "Address", V: address}
+  val := parameterJSONForm{T: "String", V: "Hi there"}
 
-  jsondat := &neoutils.ParameterJSONArrayForm{A: []neoutils.ParameterJSONForm{addr, val}}
+  jsondat := &parameterJSONArrayForm{A: []parameterJSONForm{addr, val}}
   argData, _ := json.Marshal(jsondat)
 	argString := string(argData)
 
-  gasPrice := uint(500)
-  gasLimit := uint(20000)
+  gasPrice := int(500)
+  gasLimit := int(20000)
 
 	endpoint := "http://polaris2.ont.io:20336"
 

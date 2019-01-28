@@ -35,8 +35,8 @@ func ClaimONG(endpoint string, gasPrice int, gasLimit int, wif string) (string, 
 	return txid, nil
 }
 
-func BuildOntologyInvocationTransaction(contractHex string, operation string, argString string, gasPrice uint, gasLimit uint, wif string) (string, error) {
-	raw, err := ontmobile.BuildInvocationTransaction(contractHex, operation, argString, gasPrice, gasLimit, wif)
+func BuildOntologyInvocationTransaction(contract string, method string, args string, gasPrice int, gasLimit int, wif string) (string, error) {
+	raw, err := ontmobile.BuildInvocationTransaction(contract, method, args, uint(gasPrice), uint(gasLimit), wif)
 	if err != nil {
 		return "", err
 	}
@@ -45,8 +45,8 @@ func BuildOntologyInvocationTransaction(contractHex string, operation string, ar
 }
 
 // OntologyInvoke : Invoke a neovm contract in Ontology
-func OntologyInvoke(endpoint string, contractHex string, operation string, argString string, gasPrice uint, gasLimit uint, wif string) (string, error) {
-	raw, err := ontmobile.BuildInvocationTransaction(contractHex, operation, argString, gasPrice, gasLimit, wif)
+func OntologyInvoke(endpoint string, contract string, method string, args string, gasPrice int, gasLimit int, wif string) (string, error) {
+	raw, err := ontmobile.BuildInvocationTransaction(contract, method, args, uint(gasPrice), uint(gasLimit), wif)
 	if err != nil {
 		return "", err
 	}
@@ -57,13 +57,4 @@ func OntologyInvoke(endpoint string, contractHex string, operation string, argSt
 	}
 
 	return txid, nil
-}
-
-type ParameterJSONArrayForm struct {
-	A []ParameterJSONForm `json:"array"`
-}
-
-type ParameterJSONForm struct {
-	T string `json:"type"`
-	V interface{} `json:"value"`
 }
