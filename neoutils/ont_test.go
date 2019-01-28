@@ -34,6 +34,10 @@ func TestONTTransfer(t *testing.T) {
 func TestClaimONG(t *testing.T) {
 	endpoint := "http://dappnode2.ont.io:20336"
 	wif, _ := neoutils.NEP2Decrypt("", "")
+	if wif == "" {
+		log.Printf("No wif")
+		return
+	}
 
 	gasPrice := int(500)
 	gasLimit := int(20000)
@@ -43,4 +47,60 @@ func TestClaimONG(t *testing.T) {
 		return
 	}
 	log.Printf("tx id =%v", txid)
+}
+
+func TestBuildOntologyInvocation(t *testing.T) {
+	wif := ""
+	if wif == "" {
+		log.Printf("No wif")
+		return
+	}
+
+  account, _ := neoutils.GenerateFromWIF(wif)
+  address := account.Address
+
+  addr := neoutils.Parameter{neoutils.Address, address}
+  val := neoutils.Parameter{neoutils.String, "Hi there"}
+
+  args := []neoutils.Parameter{addr, val}
+
+  gasPrice := uint(500)
+  gasLimit := uint(20000)
+
+  txData, err := neoutils.BuildOntologyInvocationTransaction("c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", args, gasPrice, gasLimit, wif)
+  if err != nil {
+    log.Printf("Error creating invocation transaction: %s", err)
+    t.Fail()
+  } else {
+    log.Printf("Raw transaction: %s", txData)
+  }
+}
+
+func TestOntologyInvoke(t *testing.T) {
+	wif := ""
+	if wif == "" {
+		log.Printf("No wif")
+		return
+	}
+
+  account, _ := neoutils.GenerateFromWIF(wif)
+  address := account.Address
+
+  addr := neoutils.Parameter{neoutils.Address, address}
+  val := neoutils.Parameter{neoutils.String, "Hi there"}
+
+  args := []neoutils.Parameter{addr, val}
+
+  gasPrice := uint(500)
+  gasLimit := uint(20000)
+
+	endpoint := "http://polaris2.ont.io:20336"
+
+  txid, err := neoutils.OntologyInvoke(endpoint, "c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", args, gasPrice, gasLimit, wif)
+  if err != nil {
+    log.Printf("Error creating invocation transaction: %s", err)
+    t.Fail()
+  } else {
+		log.Printf("tx id = %s", txid)
+  }
 }

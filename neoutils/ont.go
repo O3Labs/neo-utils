@@ -34,3 +34,37 @@ func ClaimONG(endpoint string, gasPrice int, gasLimit int, wif string) (string, 
 
 	return txid, nil
 }
+
+func BuildOntologyInvocationTransaction(contractHex string, operation string, args []ontmobile.Parameter, gasPrice uint, gasLimit uint, wif string) (string, error) {
+	raw, err := ontmobile.BuildInvocationTransaction(contractHex, operation, args, gasPrice, gasLimit, wif)
+	if err != nil {
+		return "", err
+	}
+
+	return raw, nil
+}
+
+func OntologyInvoke(endpoint string, contractHex string, operation string, args []Parameter, gasPrice uint, gasLimit uint, wif string) (string, error) {
+	raw, err := ontmobile.BuildInvocationTransaction(contractHex, operation, args, gasPrice, gasLimit, wif)
+	if err != nil {
+		return "", err
+	}
+
+	txid, err := ontmobile.SendRawTransaction(endpoint, raw)
+	if err != nil {
+		return "", err
+	}
+
+	return txid, nil
+}
+
+type Parameter = ontmobile.Parameter
+type ParameterType = ontmobile.ParameterType
+
+const (
+  Address = ontmobile.Address
+  String  = ontmobile.String
+  Integer = ontmobile.Integer
+  Fixed8  = ontmobile.Fixed8
+  Array   = ontmobile.Array
+)
