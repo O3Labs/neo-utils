@@ -34,7 +34,8 @@ XCode is required.
 
 ### Compile to Android framework
 Android NDK is required. https://developer.android.com/ndk/guides/index.html  
-```gomobile init -ndk ~/Library/Android/sdk/ndk-bundle/
+```
+gomobile init -ndk ~/Library/Android/sdk/ndk-bundle/
 
 ANDROID_HOME=/Users/$USER/Library/Android/sdk gomobile bind -target=android -o=output/android/neoutils.aar github.com/o3labs/neo-utils/neoutils
 ```
