@@ -1,21 +1,32 @@
 # neo-utils
-Useful functions for NEO blockchain written in Go. 
+Useful functions for NEO blockchain written in Go.
 
 This library can be fully compiled to native iOS and Android framework using `gomobile bind`
 
 note: `gomobile` does not support slice parameter yet so some functions are optimized to take a comma separated string as a param instead of a array of string.  
-For methods specfically designed to be used on mobile see ```mobile.go```  
+For methods specifically designed to be used on mobile see ```mobile.go```  
 
-### Installation 
+### Installation
 `go get github.com/o3labs/neo-utils/neoutils`
-
 
 ## Compile this library to native mobile frameworks.
 
 ### Install gomobile
-`go get golang.org/x/mobile/cmd/gomobile`  
-`gomobile init`  
+```
+go get golang.org/x/mobile/cmd/gomobile
 
+gomobile init
+```  
+
+### Install Dependencies
+```
+. dep.sh
+```
+
+### Compile to both iOS and Android frameworks
+```
+. build.sh
+```
 
 ### Compile to iOS framework
 XCode is required.  
@@ -24,4 +35,4 @@ XCode is required.
 ### Compile to Android framework
 Android NDK is required. https://developer.android.com/ndk/guides/index.html  
 `gomobile init -ndk ~/Library/Android/sdk/ndk-bundle/`  
-`ANDROID_HOME=/Users/apisit/Library/Android/sdk gomobile bind -target=android -o=output/android/neoutils.aar github.com/o3labs/neo-utils/neoutils`
+`ANDROID_HOME=/Users/$USER/Library/Android/sdk gomobile bind -target=android -o=output/android/neoutils.aar github.com/o3labs/neo-utils/neoutils`
