@@ -4,6 +4,7 @@ import (
 	"log"
 	"math"
 	"testing"
+	"encoding/json"
 
 	"github.com/o3labs/neo-utils/neoutils"
 )
@@ -59,15 +60,17 @@ func TestBuildOntologyInvocation(t *testing.T) {
   account, _ := neoutils.GenerateFromWIF(wif)
   address := account.Address
 
-  addr := neoutils.Parameter{neoutils.Address, address}
-  val := neoutils.Parameter{neoutils.String, "Hi there"}
+	addr := neoutils.ParameterJSONForm{T: "Address", V: address}
+  val := neoutils.ParameterJSONForm{T: "String", V: "Hi there"}
 
-  args := []neoutils.Parameter{addr, val}
+  jsondat := &neoutils.ParameterJSONArrayForm{A: []neoutils.ParameterJSONForm{addr, val}}
+  argData, _ := json.Marshal(jsondat)
+	argString := string(argData)
 
   gasPrice := uint(500)
   gasLimit := uint(20000)
 
-  txData, err := neoutils.BuildOntologyInvocationTransaction("c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", args, gasPrice, gasLimit, wif)
+  txData, err := neoutils.BuildOntologyInvocationTransaction("c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", argString, gasPrice, gasLimit, wif)
   if err != nil {
     log.Printf("Error creating invocation transaction: %s", err)
     t.Fail()
@@ -86,17 +89,19 @@ func TestOntologyInvoke(t *testing.T) {
   account, _ := neoutils.GenerateFromWIF(wif)
   address := account.Address
 
-  addr := neoutils.Parameter{neoutils.Address, address}
-  val := neoutils.Parameter{neoutils.String, "Hi there"}
+	addr := neoutils.ParameterJSONForm{T: "Address", V: address}
+  val := neoutils.ParameterJSONForm{T: "String", V: "Hi there"}
 
-  args := []neoutils.Parameter{addr, val}
+  jsondat := &neoutils.ParameterJSONArrayForm{A: []neoutils.ParameterJSONForm{addr, val}}
+  argData, _ := json.Marshal(jsondat)
+	argString := string(argData)
 
   gasPrice := uint(500)
   gasLimit := uint(20000)
 
 	endpoint := "http://polaris2.ont.io:20336"
 
-  txid, err := neoutils.OntologyInvoke(endpoint, "c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", args, gasPrice, gasLimit, wif)
+  txid, err := neoutils.OntologyInvoke(endpoint, "c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", argString, gasPrice, gasLimit, wif)
   if err != nil {
     log.Printf("Error creating invocation transaction: %s", err)
     t.Fail()
