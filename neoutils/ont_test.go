@@ -1,12 +1,22 @@
 package neoutils_test
 
 import (
+	"encoding/json"
 	"log"
 	"math"
 	"testing"
 
 	"github.com/o3labs/neo-utils/neoutils"
 )
+
+type parameterJSONArrayForm struct {
+	A []parameterJSONForm `json:"array"`
+}
+
+type parameterJSONForm struct {
+	T string      `json:"type"`
+	V interface{} `json:"value"`
+}
 
 func TestONTTransfer(t *testing.T) {
 
@@ -56,24 +66,26 @@ func TestBuildOntologyInvocation(t *testing.T) {
 		return
 	}
 
-  account, _ := neoutils.GenerateFromWIF(wif)
-  address := account.Address
+	account, _ := neoutils.GenerateFromWIF(wif)
+	address := account.Address
 
-  addr := neoutils.Parameter{neoutils.Address, address}
-  val := neoutils.Parameter{neoutils.String, "Hi there"}
+	addr := parameterJSONForm{T: "Address", V: address}
+	val := parameterJSONForm{T: "String", V: "Hi there"}
 
-  args := []neoutils.Parameter{addr, val}
+	jsondat := &parameterJSONArrayForm{A: []parameterJSONForm{addr, val}}
+	argData, _ := json.Marshal(jsondat)
+	argString := string(argData)
 
-  gasPrice := uint(500)
-  gasLimit := uint(20000)
+	gasPrice := int(500)
+	gasLimit := int(20000)
 
-  txData, err := neoutils.BuildOntologyInvocationTransaction("c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", args, gasPrice, gasLimit, wif)
-  if err != nil {
-    log.Printf("Error creating invocation transaction: %s", err)
-    t.Fail()
-  } else {
-    log.Printf("Raw transaction: %s", txData)
-  }
+	txData, err := neoutils.BuildOntologyInvocationTransaction("c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", argString, gasPrice, gasLimit, wif)
+	if err != nil {
+		log.Printf("Error creating invocation transaction: %s", err)
+		t.Fail()
+	} else {
+		log.Printf("Raw transaction: %s", txData)
+	}
 }
 
 func TestOntologyInvoke(t *testing.T) {
@@ -83,24 +95,26 @@ func TestOntologyInvoke(t *testing.T) {
 		return
 	}
 
-  account, _ := neoutils.GenerateFromWIF(wif)
-  address := account.Address
+	account, _ := neoutils.GenerateFromWIF(wif)
+	address := account.Address
 
-  addr := neoutils.Parameter{neoutils.Address, address}
-  val := neoutils.Parameter{neoutils.String, "Hi there"}
+	addr := parameterJSONForm{T: "Address", V: address}
+	val := parameterJSONForm{T: "String", V: "Hi there"}
 
-  args := []neoutils.Parameter{addr, val}
+	jsondat := &parameterJSONArrayForm{A: []parameterJSONForm{addr, val}}
+	argData, _ := json.Marshal(jsondat)
+	argString := string(argData)
 
-  gasPrice := uint(500)
-  gasLimit := uint(20000)
+	gasPrice := int(500)
+	gasLimit := int(20000)
 
 	endpoint := "http://polaris2.ont.io:20336"
 
-  txid, err := neoutils.OntologyInvoke(endpoint, "c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", args, gasPrice, gasLimit, wif)
-  if err != nil {
-    log.Printf("Error creating invocation transaction: %s", err)
-    t.Fail()
-  } else {
+	txid, err := neoutils.OntologyInvoke(endpoint, "c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", argString, gasPrice, gasLimit, wif)
+	if err != nil {
+		log.Printf("Error creating invocation transaction: %s", err)
+		t.Fail()
+	} else {
 		log.Printf("tx id = %s", txid)
-  }
+	}
 }
