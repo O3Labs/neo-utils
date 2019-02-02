@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/o3labs/ont-mobile/ontmobile"
+	"github.com/o3labs/ont-mobile/ontmobile/ontrpc"
 )
 
 func OntologyTransfer(endpoint string, gasPrice int, gasLimit int, wif string, asset string, to string, amount float64) (string, error) {
@@ -57,4 +58,76 @@ func OntologyInvoke(endpoint string, contract string, method string, args string
 	}
 
 	return txid, nil
+}
+
+func OntologyGetBlockCount(endpoint string) (ontrpc.GetBlockCountResponse, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetBlockCount()
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func OntologyGetBalance(endpoint string, address string) (ontrpc.GetBalanceResponse, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetBalance(address)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func OntologyGetSmartCodeEvent(endpoint string, txHash string) (ontrpc.GetSmartCodeEventResponse, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetSmartCodeEvent(txHash)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func OntologySendRawTransaction(endpoint string, raw string) (string, error) {
+	txid, err := ontmobile.SendRawTransaction(endpoint, raw)
+	if err != nil {
+		return "", err
+	}
+
+	return txid, nil
+}
+
+func OntologyGetStorage(endpoint string, scriptHash string, key string) (ontrpc.GetStorageResponse, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetStorage(scriptHash, key)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func OntologyGetRawTransaction(endpoint string, txID string) (ontrpc.GetRawTransactionResponse, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetRawTransaction(txID)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func OntologyGetBlockWithHash(endpoint string, blockHash string) (ontrpc.GetBlockResponse, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetBlockWithHash(blockHash)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func OntologyGetBlockWithHeight(endpoint string, blockHeight int) (ontrpc.GetBlockResponse, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetBlockWithHeight(blockHeight)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
 }
