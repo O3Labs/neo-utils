@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/o3labs/ont-mobile/ontmobile"
+	"github.com/o3labs/ont-mobile/ontmobile/ontrpc"
 )
 
 func OntologyTransfer(endpoint string, gasPrice int, gasLimit int, wif string, asset string, to string, amount float64) (string, error) {
@@ -51,6 +52,42 @@ func OntologyInvoke(endpoint string, contract string, method string, args string
 		return "", err
 	}
 
+	txid, err := ontmobile.SendRawTransaction(endpoint, raw)
+	if err != nil {
+		return "", err
+	}
+
+	return txid, nil
+}
+
+func ontGetBlockCount(endpoint string) (ontrpc.GetBlockCountResponse, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetBlockCount()
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func ontGetBalance(endpoint string, address string) (ontrpc.GetBalanceResponse, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetBalance(address)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func ontGetSmartCodeEvent(endpoint string, txHash string) (ontrpc.GetSmartCodeEventResponse, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetSmartCodeEvent(txHash)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func ontSendRawTransaction(endpoint string, raw string) (string, error) {
 	txid, err := ontmobile.SendRawTransaction(endpoint, raw)
 	if err != nil {
 		return "", err
