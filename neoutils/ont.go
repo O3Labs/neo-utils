@@ -95,3 +95,39 @@ func ontSendRawTransaction(endpoint string, raw string) (string, error) {
 
 	return txid, nil
 }
+
+func ontGetStorage(endpoint string, scriptHash string, key string) (ontrpc.GetStorageResponse, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetStorage(scriptHash, key)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func ontGetRawTransaction(endpoint string, txID string) (ontrpc.GetRawTransactionResponse, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetRawTransaction(txID)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func ontGetBlockWithHash(endpoint string, blockHash string) (ontrpc.GetBlockResponse, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetBlockWithHash(blockHash)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func ontGetBlockWithHeight(endpoint string, blockHeight int) (ontrpc.GetBlockResponse, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetBlockWithHeight(blockHeight)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
