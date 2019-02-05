@@ -36,8 +36,8 @@ func ClaimONG(endpoint string, gasPrice int, gasLimit int, wif string) (string, 
 	return txid, nil
 }
 
-func BuildOntologyInvocationTransaction(contract string, method string, args string, gasPrice int, gasLimit int, wif string) (string, error) {
-	raw, err := ontmobile.BuildInvocationTransaction(contract, method, args, uint(gasPrice), uint(gasLimit), wif)
+func BuildOntologyInvocationTransaction(contract string, method string, args string, gasPrice int, gasLimit int, wif string, payer string) (string, error) {
+	raw, err := ontmobile.BuildInvocationTransaction(contract, method, args, uint(gasPrice), uint(gasLimit), wif, payer)
 	if err != nil {
 		return "", err
 	}
@@ -46,8 +46,8 @@ func BuildOntologyInvocationTransaction(contract string, method string, args str
 }
 
 // OntologyInvoke : Invoke a neovm contract in Ontology
-func OntologyInvoke(endpoint string, contract string, method string, args string, gasPrice int, gasLimit int, wif string) (string, error) {
-	raw, err := ontmobile.BuildInvocationTransaction(contract, method, args, uint(gasPrice), uint(gasLimit), wif)
+func OntologyInvoke(endpoint string, contract string, method string, args string, gasPrice int, gasLimit int, wif string, payer string) (string, error) {
+	raw, err := ontmobile.BuildInvocationTransaction(contract, method, args, uint(gasPrice), uint(gasLimit), wif, payer)
 	if err != nil {
 		return "", err
 	}
