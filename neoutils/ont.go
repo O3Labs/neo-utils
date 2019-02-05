@@ -60,31 +60,42 @@ func OntologyInvoke(endpoint string, contract string, method string, args string
 	return txid, nil
 }
 
-func OntologyGetBlockCount(endpoint string) (ontrpc.GetBlockCountResponse, error) {
+func OntologyGetBlockCount(endpoint string) (int, error) {
 	client := ontrpc.NewRPCClient(endpoint)
 	response, err := client.GetBlockCount()
 	if err != nil {
-		return response, err
+		return response.Result, err
 	}
-	return response, nil
+	return response.Result, nil
 }
 
-func OntologyGetBalance(endpoint string, address string) (ontrpc.GetBalanceResponse, error) {
+type OntologyBalances struct {
+	Ont string
+	Ong string
+}
+
+func OntologyGetBalance(endpoint string, address string) (*OntologyBalances, error) {
 	client := ontrpc.NewRPCClient(endpoint)
 	response, err := client.GetBalance(address)
 	if err != nil {
-		return response, err
+		return nil, err
 	}
-	return response, nil
+
+	balances := &OntologyBalances{
+		Ont: response.Result.Ont,
+		Ong: response.Result.Ong,
+	}
+
+	return balances, nil
 }
 
-func OntologyGetSmartCodeEvent(endpoint string, txHash string) (ontrpc.GetSmartCodeEventResponse, error) {
+func OntologyGetSmartCodeEvent(endpoint string, txHash string) (*ontrpc.GetSmartCodeEventResponse, error) {
 	client := ontrpc.NewRPCClient(endpoint)
 	response, err := client.GetSmartCodeEvent(txHash)
 	if err != nil {
-		return response, err
+		return nil, err
 	}
-	return response, nil
+	return &response, nil
 }
 
 func OntologySendRawTransaction(endpoint string, raw string) (string, error) {
@@ -96,38 +107,38 @@ func OntologySendRawTransaction(endpoint string, raw string) (string, error) {
 	return txid, nil
 }
 
-func OntologyGetStorage(endpoint string, scriptHash string, key string) (ontrpc.GetStorageResponse, error) {
+func OntologyGetStorage(endpoint string, scriptHash string, key string) (string, error) {
 	client := ontrpc.NewRPCClient(endpoint)
 	response, err := client.GetStorage(scriptHash, key)
 	if err != nil {
-		return response, err
+		return response.Result, err
 	}
-	return response, nil
+	return response.Result, nil
 }
 
-func OntologyGetRawTransaction(endpoint string, txID string) (ontrpc.GetRawTransactionResponse, error) {
+func OntologyGetRawTransaction(endpoint string, txID string) (string, error) {
 	client := ontrpc.NewRPCClient(endpoint)
 	response, err := client.GetRawTransaction(txID)
 	if err != nil {
-		return response, err
+		return response.Result, err
 	}
-	return response, nil
+	return response.Result, nil
 }
 
-func OntologyGetBlockWithHash(endpoint string, blockHash string) (ontrpc.GetBlockResponse, error) {
+func OntologyGetBlockWithHash(endpoint string, blockHash string) (string, error) {
 	client := ontrpc.NewRPCClient(endpoint)
 	response, err := client.GetBlockWithHash(blockHash)
 	if err != nil {
-		return response, err
+		return response.Result, err
 	}
-	return response, nil
+	return response.Result, nil
 }
 
-func OntologyGetBlockWithHeight(endpoint string, blockHeight int) (ontrpc.GetBlockResponse, error) {
+func OntologyGetBlockWithHeight(endpoint string, blockHeight int) (string, error) {
 	client := ontrpc.NewRPCClient(endpoint)
 	response, err := client.GetBlockWithHeight(blockHeight)
 	if err != nil {
-		return response, err
+		return response.Result, err
 	}
-	return response, nil
+	return response.Result, nil
 }
