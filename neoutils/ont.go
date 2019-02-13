@@ -142,3 +142,40 @@ func OntologyGetBlockWithHeight(endpoint string, blockHeight int) (string, error
 	}
 	return response.Result, nil
 }
+
+type ONTAccount struct {
+	Address    string //base58
+	WIF        string
+	PrivateKey []byte
+	PublicKey  []byte
+}
+
+func ONTCreateAccount() *ontmobile.ONTAccount {
+	acc := ontmobile.NewONTAccount()
+	return &ONTAccount{
+		Address:    acc.Address,
+		WIF:        acc.WIF,
+		PrivateKey: acc.PrivateKey,
+		PublicKey:  acc.PublicKey,
+	}
+}
+
+func ONTAccountFromPrivateKey(privateKeyBytes []byte) *ontmobile.ONTAccount {
+	acc := ontmobile.ONTAccountWithPrivateKey(privateKeyBytes)
+	return &ONTAccount{
+		Address:    acc.Address,
+		WIF:        acc.WIF,
+		PrivateKey: acc.PrivateKey,
+		PublicKey:  acc.PublicKey,
+	}
+}
+
+func ONTAccountFromWIF(wif string) *ontmobile.ONTAccount {
+	acc := ontmobile.ONTAccountWithWIF(wif)
+	return &ONTAccount{
+		Address:    acc.Address,
+		WIF:        acc.WIF,
+		PrivateKey: acc.PrivateKey,
+		PublicKey:  acc.PublicKey,
+	}
+}
