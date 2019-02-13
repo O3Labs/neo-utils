@@ -150,7 +150,7 @@ type ONTAccount struct {
 	PublicKey  []byte
 }
 
-func ONTCreateAccount() *ontmobile.ONTAccount {
+func ONTCreateAccount() *ONTAccount {
 	acc := ontmobile.NewONTAccount()
 	return &ONTAccount{
 		Address:    acc.Address,
@@ -160,7 +160,7 @@ func ONTCreateAccount() *ontmobile.ONTAccount {
 	}
 }
 
-func ONTAccountFromPrivateKey(privateKeyBytes []byte) *ontmobile.ONTAccount {
+func ONTAccountFromPrivateKey(privateKeyBytes []byte) *ONTAccount {
 	acc := ontmobile.ONTAccountWithPrivateKey(privateKeyBytes)
 	return &ONTAccount{
 		Address:    acc.Address,
@@ -170,7 +170,7 @@ func ONTAccountFromPrivateKey(privateKeyBytes []byte) *ontmobile.ONTAccount {
 	}
 }
 
-func ONTAccountFromWIF(wif string) *ontmobile.ONTAccount {
+func ONTAccountFromWIF(wif string) *ONTAccount {
 	acc := ontmobile.ONTAccountWithWIF(wif)
 	return &ONTAccount{
 		Address:    acc.Address,
