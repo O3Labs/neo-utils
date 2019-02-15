@@ -152,6 +152,9 @@ type ONTAccount struct {
 
 func ONTCreateAccount() *ONTAccount {
 	acc := ontmobile.NewONTAccount()
+	if acc == nil {
+		return nil
+	}
 	return &ONTAccount{
 		Address:    acc.Address,
 		WIF:        acc.WIF,
@@ -162,6 +165,9 @@ func ONTCreateAccount() *ONTAccount {
 
 func ONTAccountFromPrivateKey(privateKeyBytes []byte) *ONTAccount {
 	acc := ontmobile.ONTAccountWithPrivateKey(privateKeyBytes)
+	if acc == nil {
+		return nil
+	}
 	return &ONTAccount{
 		Address:    acc.Address,
 		WIF:        acc.WIF,
@@ -172,6 +178,9 @@ func ONTAccountFromPrivateKey(privateKeyBytes []byte) *ONTAccount {
 
 func ONTAccountFromWIF(wif string) *ONTAccount {
 	acc := ontmobile.ONTAccountWithWIF(wif)
+	if acc == nil {
+		return nil
+	}
 	return &ONTAccount{
 		Address:    acc.Address,
 		WIF:        acc.WIF,
