@@ -89,13 +89,26 @@ func OntologyGetBalance(endpoint string, address string) (*OntologyBalances, err
 	return balances, nil
 }
 
-func OntologyGetSmartCodeEvent(endpoint string, txHash string) (*ontrpc.GetSmartCodeEventResponse, error) {
+type SmartCodeEvent struct {
+	TxHash      string
+	State       int
+	GasConsumed int
+}
+
+func OntologyGetSmartCodeEvent(endpoint string, txHash string) (*SmartCodeEvent, error) {
 	client := ontrpc.NewRPCClient(endpoint)
 	response, err := client.GetSmartCodeEvent(txHash)
 	if err != nil {
 		return nil, err
 	}
-	return &response, nil
+
+	event := &SmartCodeEvent{
+		TxHash:      response.Result.TxHash,
+		State:       response.Result.State,
+		GasConsumed: response.Result.GasConsumed,
+	}
+
+	return event, nil
 }
 
 func OntologySendRawTransaction(endpoint string, raw string) (string, error) {
@@ -105,6 +118,16 @@ func OntologySendRawTransaction(endpoint string, raw string) (string, error) {
 	}
 
 	return txid, nil
+}
+
+func OntologyGetUnboundONG(endpoint string, address string) (string, error) {
+	client := ontrpc.NewRPCClient(endpoint)
+	response, err := client.GetUnboundONG(address)
+	if err != nil {
+		return "", err
+	}
+
+	return response.Result, nil
 }
 
 func OntologyGetStorage(endpoint string, scriptHash string, key string) (string, error) {
