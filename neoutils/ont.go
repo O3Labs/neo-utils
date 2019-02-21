@@ -120,6 +120,15 @@ func OntologySendRawTransaction(endpoint string, raw string) (string, error) {
 	return txid, nil
 }
 
+func OntologySendPreExecRawTransaction(endpoint string, raw string) (string, error) {
+	result, err := ontmobile.SendPreExecRawTransaction(endpoint, raw)
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
+}
+
 func OntologyGetUnboundONG(endpoint string, address string) (string, error) {
 	client := ontrpc.NewRPCClient(endpoint)
 	response, err := client.GetUnboundONG(address)
@@ -210,4 +219,20 @@ func ONTAccountFromWIF(wif string) *ONTAccount {
 		PrivateKey: acc.PrivateKey,
 		PublicKey:  acc.PublicKey,
 	}
+}
+
+func OntologyMakeRegister(gasPrice int, gasLimit int, ontidWif string, payerWif string) (string, error) {
+	raw, err := ontmobile.MakeRegister(uint(gasPrice), uint(gasLimit), ontidWif, payerWif)
+	if err != nil {
+		return "", err
+	}
+	return raw, nil
+}
+
+func OntologyBuildGetDDO(ontid string) (string, error) {
+	raw, err := ontmobile.BuildGetDDO(ontid)
+	if err != nil {
+		return "", err
+	}
+	return raw, nil
 }
