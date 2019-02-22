@@ -236,3 +236,7 @@ func OntologyBuildGetDDO(ontid string) (string, error) {
 	}
 	return raw, nil
 }
+
+func ONTAddressFromPublicKey(publicKey []byte) string {
+	return ontmobile.ONTAddressFromPublicKey(publicKey)
+}
