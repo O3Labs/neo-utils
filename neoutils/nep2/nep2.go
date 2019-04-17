@@ -126,13 +126,13 @@ func NEP2Decrypt(key, passphrase string) (s string, err error) {
 	return privKey.ToWIFC(), nil
 }
 
-func NEP2DecryptToWallet(key, passphrase string) (*Wallet, err error) {
+func NEP2DecryptToPrivateKey(key, passphrase string) (pk btckey.PrivateKey, err error) {
 	encrypted, err := crypto.Base58CheckDecode(key)
 	if err != nil {
-		return s, nil
+		return pk, err
 	}
 	if err := validateNEP2Format(encrypted); err != nil {
-		return s, err
+		return pk, err
 	}
 
 	addrHash := encrypted[3:7]
@@ -141,7 +141,7 @@ func NEP2DecryptToWallet(key, passphrase string) (*Wallet, err error) {
 	phraseNorm := norm.NFC.Bytes([]byte(passphrase))
 	derivedKey, err := scrypt.Key(phraseNorm, addrHash, n, r, p, keyLen)
 	if err != nil {
-		return s, err
+		return pk, err
 	}
 
 	derivedKey1 := derivedKey[:32]
@@ -150,28 +150,21 @@ func NEP2DecryptToWallet(key, passphrase string) (*Wallet, err error) {
 
 	decrypted, err := crypto.AESDecrypt(encryptedBytes, derivedKey2)
 	if err != nil {
-		return s, err
+		return pk, err
 	}
 	privBytes := xor(decrypted, derivedKey1)
 	// Rebuild the private key.
 	var privKey btckey.PrivateKey
 	err = privKey.FromBytes(privBytes)
 	if err != nil {
-		return s, err
+		return pk, err
 	}
 
 	if !compareAddressHash(&privKey, addrHash) {
-		return s, errors.New("password mismatch")
+		return pk, errors.New("password mismatch")
 	}
 
-	wallet := &Wallet{
-		PublicKey:       privKey.PublicKey.ToBytes(),
-		PrivateKey:      privKey.ToBytes(),
-		Address:         privKey.ToNeoAddress(),
-		WIF:             privKey.ToWIFC(),
-		HashedSignature: privKey.ToNeoSignature(),
-	}
-	return wallet, nil
+	return privKey, nil
 }
 
 func compareAddressHash(priv *btckey.PrivateKey, hash []byte) bool {
