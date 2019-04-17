@@ -1,6 +1,7 @@
 package neoutils_test
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -18,6 +19,8 @@ func TestNewWallet(t *testing.T) {
 	}
 	log.Printf("address %v", w.Address)
 	log.Printf("WIF %v", w.WIF)
+	log.Printf("Private key hex %x", w.PrivateKey)
+	log.Printf("public key hex %x", w.PublicKey)
 }
 
 func TestGenKey(t *testing.T) {
@@ -94,16 +97,20 @@ func TestRecoverFromString(t *testing.T) {
 	fmt.Printf("%v", recovered)
 }
 
-func TestSign(t *testing.T) {
+func TestSignAndVerify(t *testing.T) {
 	wif := ""
 
 	wallet, _ := neoutils.GenerateFromWIF(wif)
-	log.Printf("%x", wallet.PrivateKey)
+	log.Printf("%v", wallet.Address)
 	key := wallet.PrivateKey
 	keyString := neoutils.BytesToHex(key)
-	data := "abc"
-	b := neoutils.HexTobytes(data)
-	// log.Printf("%v", keyString)
-	result, _ := neoutils.Sign(b, keyString)
-	log.Printf("result %x", result)
+	message := `hello`
+	b, _ := hex.DecodeString(message)
+	signature, _ := neoutils.Sign(b, keyString)
+	log.Printf("signature %x", signature)
+
+	fake, _ := hex.DecodeString("hello")
+	hash := sha256.Sum256(fake)
+	valid := neoutils.Verify(wallet.PublicKey, signature, hash[:])
+	log.Printf("%v", valid)
 }

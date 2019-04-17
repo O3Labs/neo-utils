@@ -14,6 +14,17 @@ func TestDecrypt(t *testing.T) {
 	log.Printf("%v", decrypted)
 }
 
+func TestEncryptWithPublicKey(t *testing.T) {
+	wif := "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr"
+	wallet, _ := GenerateFromWIF(wif)
+	log.Printf("address %v", wallet.Address)
+	data := "test"
+	encryptedText := Encrypt(wallet.PublicKey, data)
+	log.Printf("encrypted %v", encryptedText)
+	decrypted := Decrypt(wallet.PrivateKey, encryptedText)
+	log.Printf("decrypted %v", decrypted)
+}
+
 func TestEncryptWithAddress(t *testing.T) {
 	alice, err := NewWallet()
 	if err != nil {

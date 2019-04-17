@@ -31,7 +31,7 @@ func TestGenerateMultiSigAddress(t *testing.T) {
 
 	multisigAddress := neoutils.VMCodeToNEOAddress(vmCode)
 	log.Printf("multi sig address %v", multisigAddress)
-	if multisigAddress != "AKo8k27H5nCG8MwSirmnraH6uUG6fQQVC2" {
+	if multisigAddress != "AFrFrNjKKLc6vEztHeDhNmqpdHuciKzBqt" {
 		t.Fail()
 	}
 }

@@ -182,8 +182,8 @@ func (n *NEP5) MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract
 	if needVerification == true {
 		//this empty verification script is needed in order to make it triggers Verification part
 		emptyVerificationScript := smartcontract.TransactionValidationScript{
-			StackScript:  []byte{0x00, 0x00},
-			RedeemScript: nil,
+			Invocation:   []byte{0x00, 0x00},
+			Verification: nil,
 		}
 
 		//this logic is still unknown to me

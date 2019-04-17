@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"math"
 	"sort"
 
 	"github.com/o3labs/neo-utils/neoutils/btckey"
@@ -116,6 +117,7 @@ func (s *ScriptBuilder) pushInt8bytes(value int) error {
 }
 
 func (s *ScriptBuilder) pushInt(value int) error {
+	log.Printf("pushint %v", value)
 	switch {
 	case value == -1:
 		s.PushOpCode(PUSHM1)
@@ -186,27 +188,49 @@ func (s *ScriptBuilder) pushHexString(hexString string) error {
 func (s *ScriptBuilder) PushVarData(b []byte) {
 
 	length := len(b)
+	buff := new(bytes.Buffer)
+	if length < 0xfd {
+		binary.Write(buff, binary.LittleEndian, uint8(length))
 
-	countBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(countBytes, uint64(length))
-	trimmedCountByte := bytes.TrimRight(countBytes, "\x00")
+	} else if length < 0xFFFF {
+		binary.Write(buff, binary.LittleEndian, byte(0xfd))
+		binary.Write(buff, binary.LittleEndian, uint16(length))
 
-	if length < int(PUSHBYTES75) {
-		s.RawBytes = append(s.RawBytes, trimmedCountByte...)
-		s.RawBytes = append(s.RawBytes, b...)
-	} else if length < 0x100 {
-		s.PushOpCode(PUSHDATA1)
-		s.RawBytes = append(s.RawBytes, trimmedCountByte...)
-		s.RawBytes = append(s.RawBytes, b...)
-	} else if length < 0x10000 {
-		s.PushOpCode(PUSHDATA2)
-		s.RawBytes = append(s.RawBytes, trimmedCountByte...)
-		s.RawBytes = append(s.RawBytes, b...)
+	} else if length < 0xFFFFFFFF {
+		binary.Write(buff, binary.LittleEndian, byte(0xfe))
+		binary.Write(buff, binary.LittleEndian, uint32(length))
+
 	} else {
-		s.PushOpCode(PUSHDATA4)
-		s.RawBytes = append(s.RawBytes, trimmedCountByte...)
-		s.RawBytes = append(s.RawBytes, b...)
+		binary.Write(buff, binary.LittleEndian, byte(0xff))
+		binary.Write(buff, binary.LittleEndian, length)
 	}
+	//length
+	s.RawBytes = append(s.RawBytes, buff.Bytes()...)
+	//actual data
+	s.RawBytes = append(s.RawBytes, b...)
+
+	// countBytes := make([]byte, 8)
+
+	// binary.LittleEndian.PutUint64(countBytes, uint64(length))
+
+	// trimmedCountByte := bytes.TrimRight(countBytes, "\x00")
+
+	// if length < int(PUSHBYTES75) {
+	// 	s.RawBytes = append(s.RawBytes, trimmedCountByte...)
+	// 	s.RawBytes = append(s.RawBytes, b...)
+	// } else if length < 0x100 {
+	// 	s.PushOpCode(PUSHDATA1)
+	// 	s.RawBytes = append(s.RawBytes, trimmedCountByte...)
+	// 	s.RawBytes = append(s.RawBytes, b...)
+	// } else if length < 0x10000 {
+	// 	s.PushOpCode(PUSHDATA2)
+	// 	s.RawBytes = append(s.RawBytes, trimmedCountByte...)
+	// 	s.RawBytes = append(s.RawBytes, b...)
+	// } else {
+	// 	s.PushOpCode(PUSHDATA4)
+	// 	s.RawBytes = append(s.RawBytes, trimmedCountByte...)
+	// 	s.RawBytes = append(s.RawBytes, b...)
+	// }
 
 }
 
@@ -219,13 +243,15 @@ func (s *ScriptBuilder) PushSysCall(command string) {
 }
 
 func (s *ScriptBuilder) pushData(data interface{}) error {
+
 	switch e := data.(type) {
 	case TransactionValidationScript:
-		s.pushData(e.StackScript)
-		if e.RedeemScript == nil {
+		b := e.Invocation.([]byte)
+		s.pushData(b)
+		if e.Verification == nil {
 			s.RawBytes = append(s.RawBytes, 0x00)
 		} else {
-			s.pushData(e.RedeemScript)
+			s.PushVarData(e.Verification)
 		}
 		return nil
 	case TransactionSignature:
@@ -521,7 +547,7 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 			Address: receiver,
 		}
 		list = append(list, sendingOutput)
-
+		log.Printf("output %+v", sendingOutput)
 		//second output is the returning amount you will be sending back to yourself.
 		returningAmount := totalAmountInInputs - amountToSend
 
@@ -530,6 +556,9 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 		if needAnotherAssetForFee == false && float64(feeAmount) > 0 {
 			returningAmount -= float64(feeAmount)
 		}
+		log.Printf("feeAmount %v", feeAmount)
+
+		log.Printf("RoundFixed8(returningAmount) %v", (RoundFixed8(returningAmount) * math.Pow10(8)))
 		//return the left over to sender
 		returningOutput := TransactionOutput{
 			Asset:   assetToSend,
@@ -537,6 +566,8 @@ func (s *ScriptBuilder) GenerateTransactionOutput(sender NEOAddress, receiver NE
 			Address: sender,
 		}
 		list = append(list, returningOutput)
+
+		log.Printf("output %+v", returningOutput)
 	} else if amountToSend > 0 && needTwoOutputTransaction == false {
 
 		out := TransactionOutput{

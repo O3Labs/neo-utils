@@ -7,15 +7,15 @@ import (
 )
 
 type Transaction struct {
-	Type       TransactionType
-	Version    TradingVersion
-	Data       []byte
-	Attributes []byte
-	Inputs     []byte
-	Outputs    []byte
+	Type       TransactionType `json:"type"`
+	Version    TradingVersion  `json:"version"`
+	Data       []byte          `json:"data"`
+	Attributes []byte          `json:"attributes"`
+	Inputs     []byte          `json:"vin"`
+	Outputs    []byte          `json:"vout"`
 	//scripts contains two parts, Invocation script and Verification script
-	Script []byte
-	GAS    uint64 //only for version 1
+	Script []byte `json:"script"`
+	GAS    uint64 `json:"gas"` //only for version 1
 }
 
 type TransactionOutput struct {

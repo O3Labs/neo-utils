@@ -42,16 +42,6 @@ func ScriptHashToNEOAddress(scriptHash string) string {
 	return address
 }
 
-// // Convert NEO address to script hash
-// func NEOAddressToScriptHash(neoAddress string) string {
-// 	v, b, _ := btckey.B58checkdecode(neoAddress)
-// 	if v != 0x17 {
-// 		return ""
-// 	}
-// 	//reverse from little endian to big endian
-// 	return fmt.Sprintf("%x", ReverseBytes(b))
-// }
-
 // Convert NEO address to script hash
 func NEOAddressToScriptHashWithEndian(neoAddress string, endian binary.ByteOrder) string {
 	v, b, _ := btckey.B58checkdecode(neoAddress)
@@ -124,6 +114,28 @@ func Hash256(b []byte) []byte {
 	hash := sha256.Sum256(b)
 	hash = sha256.Sum256(hash[:])
 	return hash[:]
+}
+
+func PublicKeyToCustomAddress(prefix uint8, publicKeyBytes []byte) string {
+	publicKeyBytes = append([]byte{0x43}, publicKeyBytes...)
+	publicKeyBytes = append(publicKeyBytes, 0xAC)
+
+	/* SHA256 Hash */
+	sha256_h := sha256.New()
+	sha256_h.Reset()
+	sha256_h.Write(publicKeyBytes)
+	pub_hash_1 := sha256_h.Sum(nil)
+
+	/* RIPEMD-160 Hash */
+	ripemd160_h := ripemd160.New()
+	ripemd160_h.Reset()
+	ripemd160_h.Write(pub_hash_1)
+	pub_hash_2 := ripemd160_h.Sum(nil)
+
+	program_hash := pub_hash_2
+
+	address := btckey.B58checkencodeNEO(prefix, program_hash)
+	return address
 }
 
 func PublicKeyToNEOAddress(publicKeyBytes []byte) string {

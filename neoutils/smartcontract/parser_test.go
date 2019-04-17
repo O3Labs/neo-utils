@@ -172,7 +172,7 @@ func TestParserNEP5Transfer(t *testing.T) {
 
 func TestParserNEP5TransferAnother(t *testing.T) {
 
-	p := smartcontract.NewParserWithScript("0500f902950014d7d92d13e360f3e8040b572a7d665951bf1ab7fb14b0b382920911028a2f90fcc93a69372375cbb89b53c1087472616e7366657267187fc13bec8ff0906c079e7f4cc8276709472913")
+	p := smartcontract.NewParserWithScript("0500e8764817146063795d3b9b3cd55aef026eae992b91063db0db1464154408e06e9ecc022f446bab9e73310b85173b53c1087472616e73666572673fbc607c12c28736343224a4b4d8f513a5c27ca8f1661b0e1ad0fb1ba07c")
 
 	//the order of your method signature has the be exact to the one
 	//in your deployed smart contract

@@ -10,25 +10,46 @@ import (
 )
 
 func WriteVarUint(w io.Writer, val uint64) error {
+	// if val < 0xfd {
+	// 	binary.Write(w, binary.LittleEndian, uint8(val))
+	// 	return nil
+	// }
+	// if val < 0xFFFF {
+	// 	binary.Write(w, binary.LittleEndian, byte(0xfd))
+	// 	binary.Write(w, binary.LittleEndian, uint16(val))
+	// 	return nil
+	// }
+	// if val < 0xFFFFFFFF {
+	// 	binary.Write(w, binary.LittleEndian, byte(0xfe))
+	// 	binary.Write(w, binary.LittleEndian, uint32(val))
+	// 	return nil
+	// }
+
+	// binary.Write(w, binary.LittleEndian, byte(0xff))
+	// binary.Write(w, binary.LittleEndian, val)
+
+	// return nil
 	if val < 0xfd {
-		binary.Write(w, binary.LittleEndian, uint8(val))
-		return nil
+		return binary.Write(w, binary.LittleEndian, uint8(val))
 	}
 	if val < 0xFFFF {
-		binary.Write(w, binary.LittleEndian, byte(0xfd))
-		binary.Write(w, binary.LittleEndian, uint16(val))
-		return nil
+		if err := binary.Write(w, binary.LittleEndian, byte(0xfd)); err != nil {
+			return err
+		}
+		return binary.Write(w, binary.LittleEndian, uint16(val))
 	}
 	if val < 0xFFFFFFFF {
-		binary.Write(w, binary.LittleEndian, byte(0xfe))
-		binary.Write(w, binary.LittleEndian, uint32(val))
-		return nil
+		if err := binary.Write(w, binary.LittleEndian, byte(0xfe)); err != nil {
+			return err
+		}
+		return binary.Write(w, binary.LittleEndian, uint32(val))
 	}
 
-	binary.Write(w, binary.LittleEndian, byte(0xff))
-	binary.Write(w, binary.LittleEndian, val)
+	if err := binary.Write(w, binary.LittleEndian, byte(0xff)); err != nil {
+		return err
+	}
 
-	return nil
+	return binary.Write(w, binary.LittleEndian, val)
 }
 
 type SmartContractInfo struct {
@@ -65,7 +86,7 @@ func (s *SmartContractInfo) Serialize() []byte {
 	scriptBuilder.Push(int(s.Properties))
 	scriptBuilder.Push([]byte{s.ReturnType.Byte()})
 	scriptBuilder.Push(params)
-	scriptBuilder.PushVarData(hex2bytes(s.AVMHEX))
+	scriptBuilder.Push(hex2bytes(s.AVMHEX))
 	scriptBuilder.PushSysCall("Neo.Contract.Create")
 
 	b := scriptBuilder.ToBytes()
@@ -82,7 +103,7 @@ func DeploySmartContractScript(contractInfo SmartContractInfo, wallet Wallet, as
 	tx := smartcontract.NewInvocationTransactionPayable()
 
 	tx.Data = contractInfo.Serialize()
-	tx.GAS = uint64(490)
+	tx.GAS = uint64(amount)
 
 	amountToSend := amount
 	assetToSend := asset

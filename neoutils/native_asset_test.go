@@ -89,9 +89,9 @@ func TestSendingGAS(t *testing.T) {
 		t.Fail()
 		return
 	}
-	asset := smartcontract.NEO
-	amount := float64(3)
-	toAddress := "ANoW2zD8HmhbWJAjL4yKJWCZcF2WFb1ire" //this is multi signature adddress 3/2
+	asset := smartcontract.GAS
+	amount := float64(490)
+	toAddress := ""
 	to := smartcontract.ParseNEOAddress(toAddress)
 	// remark := "O3TX"
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
