@@ -47,7 +47,7 @@ func newScryptParams() scryptParams {
 func NEP2Encrypt(wif string, passphrase string) (s string, address string, err error) {
 	var privateKey btckey.PrivateKey
 	errFromWIF := privateKey.FromWIF(wif)
-	if err != nil {
+	if errFromWIF != nil {
 		return "", "", errFromWIF
 	}
 
