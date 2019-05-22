@@ -126,6 +126,47 @@ func NEP2Decrypt(key, passphrase string) (s string, err error) {
 	return privKey.ToWIFC(), nil
 }
 
+func NEP2DecryptToPrivateKey(key, passphrase string) (pk btckey.PrivateKey, err error) {
+	encrypted, err := crypto.Base58CheckDecode(key)
+	if err != nil {
+		return pk, err
+	}
+	if err := validateNEP2Format(encrypted); err != nil {
+		return pk, err
+	}
+
+	addrHash := encrypted[3:7]
+
+	// Normalize the passphrase according to the NFC standard.
+	phraseNorm := norm.NFC.Bytes([]byte(passphrase))
+	derivedKey, err := scrypt.Key(phraseNorm, addrHash, n, r, p, keyLen)
+	if err != nil {
+		return pk, err
+	}
+
+	derivedKey1 := derivedKey[:32]
+	derivedKey2 := derivedKey[32:]
+	encryptedBytes := encrypted[7:]
+
+	decrypted, err := crypto.AESDecrypt(encryptedBytes, derivedKey2)
+	if err != nil {
+		return pk, err
+	}
+	privBytes := xor(decrypted, derivedKey1)
+	// Rebuild the private key.
+	var privKey btckey.PrivateKey
+	err = privKey.FromBytes(privBytes)
+	if err != nil {
+		return pk, err
+	}
+
+	if !compareAddressHash(&privKey, addrHash) {
+		return pk, errors.New("password mismatch")
+	}
+
+	return privKey, nil
+}
+
 func compareAddressHash(priv *btckey.PrivateKey, hash []byte) bool {
 	address := priv.ToNeoAddress()
 	addrHash := hashAddress(address)[0:4]
