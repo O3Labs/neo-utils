@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/o3labs/neo-utils/neoutils"
+	"github.com/o3labs/neo-utils/neoutils/neorpc"
 	"github.com/o3labs/neo-utils/neoutils/o3"
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
 )
@@ -108,24 +109,25 @@ func TestSendingGAS(t *testing.T) {
 	log.Printf("%v\n%x", txid, rawtx)
 }
 
-func TestSendingNEO(t *testing.T) {
-	//TEST WIF on privatenet
-	wif := ""
-	privateNetwallet, err := neoutils.GenerateFromWIF(wif)
+func TestSendingNativeAsset(t *testing.T) {
+
+	key := ""
+	passphrase := ""
+	privateNetwallet, err := neoutils.NEP2DecryptToWallet(key, passphrase)
 	if err != nil {
 		log.Printf("%v", err)
 		t.Fail()
 	}
 
-	unspent, err := utxoFromO3Platform("private", privateNetwallet.Address)
+	unspent, err := utxoFromO3Platform("test", privateNetwallet.Address)
 	if err != nil {
 		log.Printf("error %v", err)
 		t.Fail()
 		return
 	}
 	asset := smartcontract.GAS
-	amount := float64(1000)
-	toAddress := "Adm9ER3UwdJfimFtFhHq1L5MQ5gxLLTUes"
+	amount := float64(10)
+	toAddress := privateNetwallet.Address
 	to := smartcontract.ParseNEOAddress(toAddress)
 	// remark := "O3TX"
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
@@ -139,21 +141,48 @@ func TestSendingNEO(t *testing.T) {
 		t.Fail()
 		return
 	}
-	log.Printf("%v\n%x", txid, rawtx)
+	log.Printf("%v\n%x %v", txid, rawtx, len(rawtx))
 }
 
-func TestSendingGASFromMultiSig(t *testing.T) {
-	fromAddress := "AFrFrNjKKLc6vEztHeDhNmqpdHuciKzBqt" //this is multi signature adddress 3/2
-	unspent, err := utxoFromO3Platform("test", fromAddress)
-	if err != nil {
-		log.Printf("error %v", err)
-		t.Fail()
-		return
-	}
-	asset := smartcontract.NEO
-	amount := float64(1)
+func TestSendingNEOFromMultiSig(t *testing.T) {
+	fromAddress := "AXeKhuHRUXMJFAXLwyHxvyCNQb8X7mtnQU" //this is multi signature adddress 3/2
+	neoclient := neorpc.NewClient("http://localhost:30333")
+	unspentResponse := neoclient.GetUnspents(fromAddress)
 
-	toAddress := "ANovQs3YXipL4HxRmj4D62YLCLEGsK7iDG"
+	unspent := smartcontract.Unspent{
+		Assets: map[smartcontract.NativeAsset]*smartcontract.Balance{},
+	}
+
+	gasBalance := smartcontract.Balance{
+		Amount: float64(0),
+		UTXOs:  []smartcontract.UTXO{},
+	}
+
+	neoBalance := smartcontract.Balance{
+		Amount: float64(10000000),
+		UTXOs:  []smartcontract.UTXO{},
+	}
+
+	for _, v := range unspentResponse.Result.Balance {
+		for _, unspent := range v.Unspent {
+
+			utxo := smartcontract.UTXO{
+				TXID:  fmt.Sprintf("0x%v", unspent.Txid),
+				Index: unspent.N,
+				Value: float64(unspent.Value),
+			}
+			log.Printf("asset %+v", utxo)
+			neoBalance.UTXOs = append(neoBalance.UTXOs, utxo)
+
+		}
+	}
+	unspent.Assets[smartcontract.GAS] = &gasBalance
+	unspent.Assets[smartcontract.NEO] = &neoBalance
+
+	asset := smartcontract.NEO
+	amount := float64(100 * 1000000)
+
+	toAddress := "AVFobKv2y7i66gbGPAGDT67zv1RMQQj9GB"
 	to := smartcontract.ParseNEOAddress(toAddress)
 
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
@@ -162,7 +191,7 @@ func TestSendingGASFromMultiSig(t *testing.T) {
 	nativeAsset := neoutils.UseNativeAsset(fee)
 	rawtx, txid, err := nativeAsset.GenerateRawTx(fromAddress, asset, amount, to, unspent, attributes)
 	if err != nil {
-		log.Printf("error sending natie %v", err)
+		log.Printf("error sending native %v", err)
 		t.Fail()
 		return
 	}
@@ -170,7 +199,6 @@ func TestSendingGASFromMultiSig(t *testing.T) {
 	log.Printf("raw %x\n", rawtx)
 
 	wallet1, _ := neoutils.GenerateFromWIF("")
-	// wallet2, _ := neoutils.GenerateFromWIF("")
 
 	wallets := []*neoutils.Wallet{wallet1}
 
@@ -205,7 +233,7 @@ func TestSendingGASFromMultiSig(t *testing.T) {
 	endPayload = append(endPayload, rawtx...)
 	endPayload = append(endPayload, verificationScripts...)
 
-	redeemScript := "5121030adab68b3eeb02734f65b8ced64f023e70c15bcdfae94c3e74b9d647ddf9c97621024e543aee592c4dd2361f8e02b4275e18eb665bcfb1c4b6c09bc6aed125b2f13c52ae"
+	redeemScript := "5121020ef8767aeb514780a8fb0a21f2568c521eb1e633a161dcdc39e78745762cb84351ae"
 	b := neoutils.HexTobytes(redeemScript)
 	length := len(b)
 	log.Printf("%x%x%v", endPayload, length, redeemScript)

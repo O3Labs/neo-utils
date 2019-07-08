@@ -22,6 +22,7 @@ type NEORPCInterface interface {
 	GetAccountState(address string) GetAccountStateResponse
 	InvokeScript(scriptInHex string) InvokeScriptResponse
 	GetTokenBalance(tokenHash string, adddress string) TokenBalanceResponse
+	GetUnspents(adddress string) GetUnspentsResponse
 }
 
 type NEORPCClient struct {
@@ -170,6 +171,16 @@ func (n *NEORPCClient) InvokeScript(scriptInHex string) InvokeScriptResponse {
 	response := InvokeScriptResponse{}
 	params := []interface{}{scriptInHex, 1}
 	err := n.makeRequest("invokescript", params, &response)
+	if err != nil {
+		return response
+	}
+	return response
+}
+
+func (n *NEORPCClient) GetUnspents(adddress string) GetUnspentsResponse {
+	response := GetUnspentsResponse{}
+	params := []interface{}{adddress}
+	err := n.makeRequest("getunspents", params, &response)
 	if err != nil {
 		return response
 	}

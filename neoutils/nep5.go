@@ -120,7 +120,7 @@ func (n *NEP5) TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract
 
 func (n *NEP5) MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract.NativeAsset, amount float64, unspent smartcontract.Unspent, remark string) ([]byte, string, error) {
 
-	needVerification := false
+	needVerification := true
 	operation := "mintTokens"
 	args := []interface{}{}
 	attributes := map[smartcontract.TransactionAttribute][]byte{}
