@@ -14,7 +14,7 @@ import (
 )
 
 func TestMintTokens(t *testing.T) {
-	scripthash := ""
+	scripthash := "06360b85b04bded387aa633bcc4bdda4354b5493"
 	fee := smartcontract.NetworkFeeAmount(0)
 	nep5 := neoutils.UseNEP5WithNetworkFee(scripthash, fee)
 
@@ -25,12 +25,12 @@ func TestMintTokens(t *testing.T) {
 		t.Fail()
 		return
 	}
-	unspent := smartcontract.Unspent{}
+	unspent, _ := utxo("test", "AeNkbJdiMx49kBStQdDih7BzfDwyTNVRfb")
 
 	remark := "APISIT FROM O3 IS HERE."
 
-	asset := smartcontract.NEO
-	amount := float64(10)
+	asset := smartcontract.GAS
+	amount := float64(1)
 
 	tx, txID, err := nep5.MintTokensRawTransaction(*privateNetwallet, asset, amount, unspent, remark)
 	if err != nil {

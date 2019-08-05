@@ -23,9 +23,9 @@ var _ MultiSigInterface = (*MultiSig)(nil)
 func (m *MultiSig) CreateMultiSigRedeemScript() ([]byte, error) {
 
 	numberOfPublicKeys := len(m.PublicKeys)
-	if numberOfPublicKeys <= 1 {
-		return nil, fmt.Errorf("Number of required Signature must be more than one")
-	}
+	// if numberOfPublicKeys <= 1 {
+	// 	return nil, fmt.Errorf("Number of required Signature must be more than one")
+	// }
 	if m.NumberOfRequiredSignatures > numberOfPublicKeys {
 		return nil, fmt.Errorf("Number of required Signature is more than public keys provided.")
 	}

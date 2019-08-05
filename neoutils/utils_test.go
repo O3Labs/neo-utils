@@ -10,8 +10,8 @@ import (
 )
 
 func TestScriptHashToNEOAddress(t *testing.T) {
-	hashLittleEndian := "2b41aea9d405fef2e809e3c8085221ce944527a7"
-	expectedAddress := "AKibPRzkoZpHnPkF6qvuW2Q4hG9gKBwGpR"
+	hashLittleEndian := "d3c3e2d374c2bb9471e7e66010caf176cb407a88"
+	expectedAddress := "Ab5atNiFFWzFTq55HAniJu4tMKN6hzdGEQ"
 	bigEndian := ReverseBytes(hex2bytes(hashLittleEndian))
 
 	//ScriptHashToNEOAddress always takes big endian hash
@@ -91,8 +91,15 @@ func TestHash256(t *testing.T) {
 }
 
 func TestPublicKeyToNEOAddress(t *testing.T) {
-	publicKey := "022c9652d3ad5cc065aa9147dc2ad022f80001e8ed233de20f352950d351d472b7"
+	publicKey := "020ef8767aeb514780a8fb0a21f2568c521eb1e633a161dcdc39e78745762cb843"
 	b, _ := hex.DecodeString(publicKey)
 	address := PublicKeyToNEOAddress(b)
+	log.Printf("%v", address)
+}
+
+func TestVMCodeToNEOAdress(t *testing.T) {
+	code := "5121020ef8767aeb514780a8fb0a21f2568c521eb1e633a161dcdc39e78745762cb843ae"
+	b, _ := hex.DecodeString(code)
+	address := VMCodeToNEOAddress(b)
 	log.Printf("%v", address)
 }

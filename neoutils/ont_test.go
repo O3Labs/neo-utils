@@ -118,3 +118,39 @@ func TestOntologyInvoke(t *testing.T) {
 		log.Printf("tx id = %s", txid)
 	}
 }
+
+func TestOEP4Transfer(t *testing.T) {
+	wif := ""
+	if wif == "" {
+		log.Printf("No wif")
+		return
+	}
+	account, _ := neoutils.GenerateFromWIF(wif)
+	address := account.Address
+
+	gasPrice := int(500)
+	gasLimit := int(20000)
+
+	endpoint := "http://polaris2.ont.io:20336"
+	oep4Contract := "35666bb22c59d20925d7c761a4d1088be52f000d" //testnet
+	fromAddress := address
+	toAddress := "AMgVktoAhY8wX8byyNjUX3Jhiq94T7hSak"
+	amount := float64(1000)
+	decimals := 8
+
+	txid, err := neoutils.OEP4Transfer(endpoint,
+		oep4Contract,
+		fromAddress,
+		toAddress,
+		amount,
+		decimals,
+		gasPrice,
+		gasLimit,
+		wif)
+	if err != nil {
+		log.Printf("Error creating invocation transaction: %s", err)
+		t.Fail()
+	} else {
+		log.Printf("tx id = %s", txid)
+	}
+}
