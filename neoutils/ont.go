@@ -50,6 +50,9 @@ func BuildOntologyInvocationTransaction(contract string, method string, args str
 // OntologyInvoke : Invoke a neovm contract in Ontology
 func OntologyInvoke(endpoint string, contract string, method string, args string, gasPrice int, gasLimit int, wif string, payer string) (string, error) {
 	raw, err := ontmobile.BuildInvocationTransaction(contract, method, args, uint(gasPrice), uint(gasLimit), wif, payer)
+	if err != nil {
+		return "", err
+	}
 
 	txid, err := ontmobile.SendRawTransaction(endpoint, raw)
 	if err != nil {
@@ -59,6 +62,7 @@ func OntologyInvoke(endpoint string, contract string, method string, args string
 	return txid, nil
 }
 
+// OEP4Transfer : Transfer OEP4 token
 func OEP4Transfer(endpoint string, contract string, fromAddress string, toAddress string, amount float64, tokenDecimals int, gasPrice int, gasLimit int, wif string) (string, error) {
 
 	transferringAmount := uint(ontmobile.RoundFixed(float64(amount), tokenDecimals) * float64(math.Pow10(tokenDecimals)))
