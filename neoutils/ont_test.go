@@ -79,7 +79,7 @@ func TestBuildOntologyInvocation(t *testing.T) {
 	gasPrice := int(500)
 	gasLimit := int(20000)
 
-	txData, err := neoutils.BuildOntologyInvocationTransaction("c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", argString, gasPrice, gasLimit, wif)
+	txData, err := neoutils.BuildOntologyInvocationTransaction("c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", argString, gasPrice, gasLimit, wif, address)
 	if err != nil {
 		log.Printf("Error creating invocation transaction: %s", err)
 		t.Fail()
@@ -110,7 +110,7 @@ func TestOntologyInvoke(t *testing.T) {
 
 	endpoint := "http://polaris2.ont.io:20336"
 
-	txid, err := neoutils.OntologyInvoke(endpoint, "c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", argString, gasPrice, gasLimit, wif)
+	txid, err := neoutils.OntologyInvoke(endpoint, "c168e0fb1a2bddcd385ad013c2c98358eca5d4dc", "put", argString, gasPrice, gasLimit, wif, address)
 	if err != nil {
 		log.Printf("Error creating invocation transaction: %s", err)
 		t.Fail()
